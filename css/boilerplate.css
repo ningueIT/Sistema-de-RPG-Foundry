@@ -1,0 +1,2964 @@
+/* ============================================================
+   TEMA JUJUTSU KAISEN - FEITICEIROS E MALDIÇÕES
+   ============================================================ */
+
+/* 1. CONFIGURAÇÕES GERAIS DA JANELA */
+.feiticeiros-e-maldicoes.sheet.actor .window-content {
+    background: #121212; /* Fundo quase preto */
+    color: #e0e0e0;      /* Texto branco suave */
+    font-family: "Roboto", "Arial", sans-serif;
+    border: 1.5px solid #333;
+    padding: 0; /* Remove borda branca interna */
+}
+
+/* ============================================================
+   1.1 FIELDSETS / LEGENDS (evita “fundo padrão” do navegador)
+   ============================================================ */
+.feiticeiros-e-maldicoes fieldset {
+    border: 1px solid #2a2a2a;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    padding: 10px 12px 12px;
+}
+
+.feiticeiros-e-maldicoes legend {
+    padding: 2px 10px;
+    background: linear-gradient(180deg, #1a1a1a, #0f0f0f);
+    border: 1px solid rgba(155, 77, 202, 0.18);
+    border-radius: 999px;
+    color: #f0eefe;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+/* Títulos com a linha roxa embaixo */
+.feiticeiros-e-maldicoes h1, 
+.feiticeiros-e-maldicoes h2, 
+.feiticeiros-e-maldicoes h3 {
+    border-bottom: 2px solid #5d1b7e; /* Roxo Jujutsu */
+    color: #ffffff;
+    margin-bottom: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ============================================================
+   2. INPUTS (CAMPOS DE TEXTO E NÚMERO)
+   ============================================================ */
+.feiticeiros-e-maldicoes input[type="text"],
+.feiticeiros-e-maldicoes input[type="number"] {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 4px;
+    transition: 0.3s box-shadow, 0.3s border-color;
+}
+
+/* Efeito de brilho ao clicar */
+.feiticeiros-e-maldicoes input:focus,
+.feiticeiros-e-maldicoes select:focus {
+    box-shadow: 0 0 8px #9b4dca; /* Brilho Roxo */
+    border-color: #9b4dca;
+}
+
+/* Campos Bloqueados (Automáticos) */
+.feiticeiros-e-maldicoes .bloqueado {
+    background: rgba(0, 0, 0, 0.4);
+    color: #a0a0a0;
+    border: 1px dashed #555;
+    cursor: not-allowed;
+    font-weight: bold;
+}
+
+/* ============================================================
+   3. HEADER (CABEÇALHO)
+   ============================================================ */
+.sheet-header {
+    background: linear-gradient(to bottom, #1a1a1a, #0d0d0d);
+    padding: 15px;
+    border-bottom: 3px solid #5d1b7e;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.profile-img {
+    border: 2px solid #fff;
+    box-shadow: 0 0 10px rgba(93, 27, 126, 0.5); /* Sombra roxa */
+    background: #000;
+    object-fit: cover; /* Garante que a imagem não estique */
+}
+
+.header-fields {
+    flex: 1;
+}
+
+/* Nome do Personagem Gigante */
+.charname input {
+    height: 50px;
+    font-size: 30px;
+    font-family: "Georgia", serif; /* Fonte mais elegante pro nome */
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 2px solid #555 !important;
+    border-radius: 0 !important;
+    padding-left: 0;
+}
+
+/* ============================================================
+   4. RESOURCES (XP, NÍVEL, DROPDOWNS)
+   ============================================================ */
+.resources.grid {
+    gap: 30px !important; 
+    margin-top: 15px;
+    padding: 0 5px; 
+    align-items: end; 
+}
+
+/* Estilo para os inputs ficarem mais imponentes */
+.resource input,
+.resource select {
+    height: 30px;
+    font-size: 14px;
+}
+
+/* Labels (títulos pequenos acima dos campos) */
+.resource label, 
+.flex-group-center label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #888;
+    font-weight: bold;
+    margin-bottom: 3px;
+    display: block;
+}
+
+/* Caixas de Seleção (Dropdowns) Estilizadas */
+.feiticeiros-e-maldicoes select {
+    width: 100%;
+    background: #222;
+    color: #fff;
+    border: 1px solid #5d1b7e;
+    padding: 3px;
+    border-radius: 4px;
+}
+
+/* ========================
+   SELECTS: Origem / Classe / Multiclasse (estilo aprimorado)
+   ======================== */
+select[name="system.detalhes.origem.value"],
+select[name="system.detalhes.classe.value"],
+select[name="system.detalhes.multiclasse.value"] {
+    width: 100%;
+    height: 36px;
+    padding: 6px 12px;
+    background: linear-gradient(180deg,#181818,#0f0f0f);
+    color: #f0eefe;
+    border: 1px solid rgba(var(--main-rgb,155,77,202),0.28);
+    border-radius: 8px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    box-shadow: 0 6px 18px rgba(var(--main-rgb,155,77,202),0.06);
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'><path fill='%23ffffff' d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+}
+
+/* Garantir contraste nas opções (funciona em Chromium/Electron) */
+select[name="system.detalhes.origem.value"] option,
+select[name="system.detalhes.classe.value"] option,
+select[name="system.detalhes.multiclasse.value"] option {
+    background-color: #121212;
+    color: #e8e8e8;
+}
+
+/* Estilo das opções dentro do select (quando a lista abre) */
+select[name="system.detalhes.origem.value"] option,
+select[name="system.detalhes.classe.value"] option,
+select[name="system.detalhes.multiclasse.value"] option {
+    font-weight: 600;
+    padding: 6px 10px;
+    line-height: 1.4;
+}
+
+/* Destaque específico para opções de Maldição */
+select[name="system.detalhes.origem.value"] option[value="Maldição"] {
+    color: #ffb3b3;
+}
+
+/* Quando uma opção está selecionada na lista (dropdown aberto) */
+select[name="system.detalhes.origem.value"] option:checked,
+select[name="system.detalhes.classe.value"] option:checked,
+select[name="system.detalhes.multiclasse.value"] option:checked {
+    background: linear-gradient(90deg, rgba(var(--main-rgb,155,77,202),0.12), rgba(176,0,32,0.06));
+    color: #fff;
+}
+
+/* Garante boa leitura do texto selecionado exibido no select fechado */
+select[name="system.detalhes.origem.value"],
+select[name="system.detalhes.classe.value"],
+select[name="system.detalhes.multiclasse.value"] {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+select[name="system.detalhes.origem.value"]:focus,
+select[name="system.detalhes.classe.value"]:focus,
+select[name="system.detalhes.multiclasse.value"]:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(var(--main-rgb,155,77,202),0.28);
+    border-color: var(--main-color, #9b4dca);
+}
+
+/* Pequeno ajuste visual para o label dentro do resource */
+.resource.flex-group-center > label { display: block; margin-bottom: 6px; }
+
+/* ========================
+   INPUTS: XP e Bônus de Treino (estilo parecido com selects)
+   ======================== */
+input[name="system.detalhes.xp.value"],
+.resource.flex-group-center input.bloqueado {
+    height: 36px;
+    padding: 6px 12px;
+    background: linear-gradient(180deg,#161616,#0b0b0b);
+    color: #f0eefe;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 8px;
+    font-weight: 700;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+input[name="system.detalhes.xp.value"]:focus,
+.resource.flex-group-center input.bloqueado:focus {
+    outline: none;
+    box-shadow: 0 0 10px rgba(var(--main-rgb,255,68,68),0.22);
+    border-color: var(--main-color, #ff4444);
+}
+
+/* Centraliza o número do XP para combinar com o estilo dos badges */
+input[name="system.detalhes.xp.value"] {
+    text-align: center;
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+/* Remove os spinners numéricos no Chromium/Electron */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* ============================================================
+   5. ATRIBUTOS (CARTAS GRANDES)
+   ============================================================ */
+.sheet-body {
+    padding: 15px;
+    overflow-y: auto; /* Permite rolar se for muito grande */
+}
+
+.atributos-grid {
+    gap: 15px;
+    padding-bottom: 25px;
+}
+
+.atributo-card:hover {
+    border-color: #5d1b7e;
+    transform: translateY(-2px); /* Sobe um pouquinho */
+}
+
+.atributo-card label {
+    font-size: 14px;
+    color: #dcdcdc;
+    text-align: center;
+    width: 100%;
+    border-bottom: 1px solid #333;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+}
+
+.atributo-card input {
+    font-size: 28px; /* Número BEM grande */
+    font-weight: bold;
+    height: 50px;
+    text-align: center;
+    background: transparent !important;
+    border: none !important;
+}
+
+/* ============================================================
+   6. UTILITÁRIOS FOUNDRY (Não apagar)
+   ============================================================ */
+.flexrow { display: flex; flex-direction: row; flex-wrap: wrap; }
+.flexcol { display: flex; flex-direction: column; flex-wrap: nowrap; }
+.flex-group-center { justify-content: center; align-items: center; text-align: center; }
+.grid { display: grid; }
+.grid-2col { grid-template-columns: repeat(2, 1fr); }
+.grid-3col { grid-template-columns: repeat(3, 1fr); }
+
+/* ============================================================
+   CORREÇÃO DE CORES DOS MENUS (DROPDOWNS)
+   ============================================================ */
+
+/* Força o fundo preto e letra branca nas opções quando a lista abre */
+.feiticeiros-e-maldicoes select option {
+    background-color: #121212 !important; /* Fundo Preto */
+    color: #ffffff !important;            /* Texto Branco */
+}
+
+/* Garante que o menu fechado também tenha contraste */
+.feiticeiros-e-maldicoes select {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+}
+
+/* ESTILO DAS ABAS DE NAVEGAÇÃO */
+.sheet-tabs {
+    margin: 10px 0;
+    border-bottom: 2px solid var(--dark-color, #444);
+}
+.sheet-tabs .item {
+    padding: 5px 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #888;
+}
+.sheet-tabs .item.active {
+    color: #fff;
+    text-shadow: 0 0 5px rgba(var(--main-rgb,255,68,68), 0.25);
+    border-bottom: 3px solid var(--main-color, #ff4444);
+}
+
+/* ========================
+   ESTILO DE PERÍCIAS & MAESTRIAS
+   ======================= */
+
+/* Container das Perícias (Checkboxes) */
+.pericia-item {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Alinha tudo à esquerda */
+}
+
+.pericia-item:hover {
+    background: rgba(var(--main-rgb,255,68,68), 0.12);
+    border-color: rgba(var(--main-rgb,255,68,68), 0.35);
+}
+
+.pericia-item input[type="checkbox"] {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--main-color, #ff4444);
+    cursor: pointer;
+}
+
+.pericia-item label {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Container das Maestrias (Números) */
+.maestria-item {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 5px;
+    border-bottom: 2px solid var(--dark-color, #444);
+    justify-content: space-between; 
+}
+
+.maestria-item label {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.maestria-item input {
+    width: 50px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+}
+/* Ajuste Perícias e Maestrias */
+.pericia-row {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid #333;
+    padding: 8px 10px;
+    border-radius: 6px;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.35);
+    text-align: center;
+}
+
+.pericia-row:hover {
+    background: rgba(var(--main-rgb,255,68,68), 0.12);
+    border-color: var(--main-color, #ff4444);
+    box-shadow: 0 0 10px rgba(var(--main-rgb,255,68,68), 0.15);
+}
+
+.pericia-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--main-color, #ff4444);
+}
+
+.maestria-row input {
+    height: 30px;
+    font-size: 16px;
+}
+/* ========================
+     TESTES DE MORTE - VISUAL
+     ======================== */
+.death-pills { display:flex; gap:8px; justify-content:center; align-items:center; margin-top:6px; }
+.death-pill {
+    width:18px; height:18px; border-radius:50%; background:rgba(255,255,255,0.06); border:1px solid #333; box-shadow: inset 0 -2px 0 rgba(0,0,0,0.4); cursor:pointer; transition: transform .12s ease, box-shadow .12s ease;
+}
+.death-pill:hover { transform: scale(1.12); box-shadow: 0 0 6px rgba(155,77,202,0.12); }
+.death-pill.active { background: linear-gradient(180deg,#9b4dca,#5d1b7e); border-color:#7a2e9b; box-shadow: 0 0 8px rgba(155,77,202,0.18); }
+.death-pill.fail.active { background: linear-gradient(180deg,#ff8a80,#ff5252); border-color:#c93a3a; }
+
+/* --------------------------------------------------
+    DIALOGS E ROLLS: estilos para modal de descanso
+    e diálogo de gastar Dados de Vida / Energia
+    -------------------------------------------------- */
+.mass-rest-dialog { font-family: inherit; }
+.mass-rest-dialog .form-group { display:flex; flex-direction:column; gap:8px; }
+.mass-rest-dialog .title { font-weight:700; margin-bottom:6px; color: #fff; }
+.mass-rest-dialog .form-fields { display:flex; flex-direction:column; gap:6px; }
+.mass-rest-dialog .form-fields label.option { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:6px; cursor:pointer; background: linear-gradient(180deg,#0f0f0f,#0b0b0b); border:1px solid rgba(255,255,255,0.03); }
+.mass-rest-dialog .form-fields label.option:hover { box-shadow: 0 2px 12px rgba(155,77,202,0.08); border-color: rgba(155,77,202,0.12); }
+.mass-rest-dialog .hint { font-size:0.85em; color: #bdbdbd; margin-top:6px; }
+
+/* Dialog para gastar dados (DV/DE) */
+.dice-spend-dialog { font-family: inherit; }
+.dice-spend-dialog .form-group { display:flex; flex-direction:column; gap:8px; padding: 6px 4px; }
+.dice-spend-dialog .title { font-weight:700; color:#fff; }
+.dice-spend-dialog .fields { display:flex; align-items:center;  gap:8px; }
+.dice-spend-dialog input[type=number] { width:75px; text-align:center; max-width:60%; height:36px; padding:8px 10px; border-radius:8px; border:1px solid #444; background: rgba(255,255,255,0.03); color:#fff; font-size:16px; }
+.dice-spend-dialog .hint { font-size:0.85em; align-items:center; color:#bdbdbd; }
+
+/* Forçar fundo escuro e texto branco nos modais específicos */
+.mass-rest-dialog, .dice-spend-dialog {
+    background: #121212; /* mesmo tom do resto do sheet */
+    color: #ffffff;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #222;
+}
+.mass-rest-dialog input, .dice-spend-dialog input, .mass-rest-dialog label, .dice-spend-dialog label {
+    color: #ffffff;
+}
+
+/* Forçar o estilo da janela de diálogo (conteúdo + botões) para tons escuros */
+.dialog .window-content {
+    background: #121212 !important;
+    color: #ffffff !important;
+}
+.dialog .window-content .dialog-content {
+    background: transparent !important;
+    color: inherit !important;
+}
+.dialog .window-content .dialog-buttons {
+    background: transparent !important;
+    border-top: 1px solid #222;
+    padding: 10px 12px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+.dialog .window-content .dialog-button {
+    background: linear-gradient(180deg,#161616,#0b0b0b);
+    color: #fff;
+    border: 1px solid #333;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+.dialog .window-content .dialog-button.default.bright {
+    background: linear-gradient(180deg,#5d1b7e,#7a2e9b);
+    border-color: rgba(155,77,202,0.28);
+    box-shadow: 0 6px 18px rgba(93,27,126,0.12);
+}
+
+/* Esconder header do diálogo de gasto de dados para UI mais limpa */
+#dice-spend-dialog .window-header { display: none !important; }
+#dice-spend-dialog .window-content { padding-top: 12px !important; }
+
+/* Aumentar tamanho e ajustar layout do modal de Descanso em Massa */
+#mass-rest-dialog .window { width: 760px !important; max-width: 92vw !important; }
+/* Mass rest dialog sizing & layout */
+#mass-rest-dialog .window { width: 860px !important; max-width: 96vw !important; height: auto !important; min-height: 260px !important; }
+#mass-rest-dialog .window-content { padding: 18px !important; display:flex; flex-direction:column; gap:12px; }
+#mass-rest-dialog .mass-rest-dialog .form-group { margin:0; }
+#mass-rest-dialog .mass-rest-dialog .form-fields { display:flex; gap:14px; flex-wrap:wrap; }
+#mass-rest-dialog .mass-rest-dialog .form-fields label.option { flex: 1 1 45%; min-width:180px; }
+#mass-rest-dialog .mass-rest-dialog .hint { margin-top:8px; }
+#mass-rest-dialog .dialog-buttons { padding: 12px 18px !important; }
+
+@media (max-width: 820px) {
+    #mass-rest-dialog .window { width: 92vw !important; left: 4vw !important; }
+    #mass-rest-dialog .mass-rest-dialog .form-fields { flex-direction: column; gap:8px; }
+    #mass-rest-dialog .mass-rest-dialog .form-fields label.option { min-width: auto; flex: 1 1 100%; }
+}
+
+/* Roll buttons styling (override inline colors in template) */
+.roll-dice.rollable { cursor:pointer; font-size:11px; padding:4px 6px; border-radius:6px; border:1px solid transparent; }
+.roll-dice.rollable[data-flavor*="Vida"] { color: #ff6b6b; background: linear-gradient(180deg, rgba(255,107,107,0.04), transparent); }
+.roll-dice.rollable[data-flavor*="Energia"] { color: #8a3fb2; background: linear-gradient(180deg, rgba(138,63,178,0.04), transparent); }
+.roll-dice.rollable:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,0.4); }
+
+/* Chat message recovery block */
+.dice-recovery { display:block; padding:8px 10px; border-radius:6px; background: linear-gradient(180deg,#0f0f0f,#0b0b0b); border:1px solid rgba(255,255,255,0.03); color:#fff; }
+.dice-recovery strong { color:#ffd966; }
+.mass-rest, .mass-short-rest { padding:8px 10px; border-radius:6px; background: linear-gradient(180deg,#111,#0b0b0b); border:1px solid rgba(155,77,202,0.08); color:#fff; }
+.death-row-label { font-weight:700; }
+.death-test-btn, .death-reset-btn { padding:6px 10px; color:#fff; border-radius:6px; cursor:pointer; font-weight:700; }
+
+/* Botão Testar: usa mesmo gradiente das barras de HP */
+.death-test-btn {
+    background: linear-gradient(to right, #800000, #ff4444);
+    border: 1px solid rgba(255,68,68,0.25);
+}
+.death-test-btn:hover {
+    filter: brightness(1.05);
+}
+
+/* Botão Resetar: discreto mas com borda vermelha para combinar */
+.death-reset-btn {
+    background: transparent;
+    border: 1px solid rgba(255,68,68,0.12);
+    color: #ffcccc;
+}
+.death-reset-btn:hover { border-color: #ff4444; color:#fff; }
+
+/* Kokusen chat banner */
+.kokusen-chat { background: linear-gradient(90deg, rgba(155,77,202,0.12), rgba(0,0,0,0.5)); border-left: 4px solid #9b4dca; padding: 8px 10px; border-radius: 6px; color:#fff; }
+.kokusen-chat__title { font-weight:900; color:#ffd1d1; font-size:14px; margin-bottom:4px; text-shadow:0 1px 0 rgba(0,0,0,0.6); }
+.kokusen-chat__body { color:#f0eefe; font-size:13px; }
+.kokusen-badge { background:#9b4dca; color:#fff; padding:2px 6px; border-radius:4px; font-weight:800; margin:0 4px; }
+
+/* ESTILO DOS MENUS DE PERÍCIA */
+.pericia-select {
+    width: 70px !important; /* Tamanho fixo menor, mas legível (cabe 'Mestre') */
+    font-size: 11px !important;
+    height: 22px !important;
+    background: #000 !important;
+    color: var(--main-color, #ff4444) !important;
+    border: 1px solid #444 !important;
+}
+
+/* ========================
+   ATAQUES + SALVAGUARDAS (CENTRALIZAR E LIMITAR LARGURA)
+   ======================= */
+
+.pericias-top-grid {
+    max-width: 920px;
+    margin-left: auto;
+    margin-right: auto;
+    justify-items: center;
+}
+
+.pericias-top-grid .panel-group {
+    width: 100%;
+    max-width: 440px;
+}
+
+.pericias-top-grid .panel-group .flexcol {
+    align-items: center;
+    background: rgba(var(--main-rgb,255,68,68), 0.06);
+    border: 1px solid rgba(var(--main-rgb,255,68,68), 0.10);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.pericias-top-grid .pericia-row {
+    width: 100%;
+    max-width: 380px;
+    justify-content: center;
+}
+
+/* Destaque para as perícias mais importantes (Ataques/Salvaguardas) */
+.pericias-top-grid .pericia-row {
+    border: 1px solid rgba(var(--main-rgb,255,68,68), 0.35);
+    background: rgba(var(--main-rgb,255,68,68), 0.10);
+}
+
+.pericias-top-grid .pericia-row:hover {
+    background: rgba(var(--main-rgb,255,68,68), 0.18);
+    box-shadow: 0 0 14px rgba(var(--main-rgb,255,68,68), 0.22);
+}
+
+.pericias-top-grid .pericia-select {
+    height: 26px !important;
+    font-size: 12px !important;
+    border-color: var(--main-color, #ff4444) !important;
+}
+
+.pericias-top-grid .pericia-label {
+    font-size: 13px;
+    letter-spacing: 0.2px;
+}
+
+.pericias-top-grid .pericia-label i {
+    font-size: 16px;
+}
+
+/* Destaca quando está treinado ou mestre */
+.pericia-select option[value="1"] { color: #fff; font-weight: bold; }
+.pericia-select option[value="2"] { color: #ffd700; font-weight: bold; } /* Dourado para Mestre */
+
+/* Botão de Rolar Perícia */
+.pericia-label {
+    cursor: pointer;
+    margin-left: 0;
+    font-weight: bold;
+    color: #e0e0e0;
+    transition: color 0.2s;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+    text-align: center;
+}
+
+.pericia-label i {
+    color: var(--main-color, #ff4444);
+    transition: transform 0.3s;
+}
+
+.pericia-label:hover {
+    color: #fff;
+    text-shadow: 0 0 5px rgba(var(--main-rgb,255,68,68), 0.25);
+}
+
+.pericia-label:hover i {
+    transform: rotate(20deg); /* O dado gira quando passa o mouse */
+}
+
+/* Cards do topo (Ataques/Salvaguardas) mais consistentes */
+.pericias-top-grid .panel-group {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.pericias-top-grid .panel-group h3 {
+    margin-top: 0;
+}
+
+/* Títulos das seções (Ataques / Salvaguardas / Perícias Gerais) sem roxo hardcoded */
+.feiticeiros-e-maldicoes.sheet.actor .pericias-section-title {
+    margin: 0 0 8px;
+    padding-bottom: 4px;
+    border-bottom: 2px solid rgba(var(--main-rgb,255,68,68), 0.55);
+    color: var(--main-color, #ff4444);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .pericias-section-title.pericias-section-title--spaced {
+    margin-top: 10px;
+}
+
+
+/* ========================
+   ESTILO DOS STATUS (HP, PE...)
+   ======================== */
+
+/* ========================
+   APTIDÕES
+   ======================== */
+
+.feiticeiros-e-maldicoes .aptidoes-title {
+    border-bottom: 2px solid var(--main-color, #ff4444);
+    color: var(--main-color, #ff4444);
+    margin-top: 10px;
+}
+
+.feiticeiros-e-maldicoes .aptidoes-grid {
+    gap: 16px;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+
+/* Card: Níveis de Aptidão */
+.feiticeiros-e-maldicoes .aptidao-niveis-card {
+    margin: 10px 0 16px 0;
+}
+
+.feiticeiros-e-maldicoes .aptidao-niveis-body {
+    padding: 10px 12px;
+}
+
+.feiticeiros-e-maldicoes .aptidao-pontos {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px;
+    color: #e6e6e6;
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.18));
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.feiticeiros-e-maldicoes .aptidao-pontos__label {
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    color: #ffffff;
+}
+
+.feiticeiros-e-maldicoes .aptidao-pontos__ganhos,
+.feiticeiros-e-maldicoes .aptidao-pontos__restantes,
+.feiticeiros-e-maldicoes .aptidao-pontos__gastos {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-weight: 900;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(0,0,0,0.30);
+}
+
+.feiticeiros-e-maldicoes .aptidao-pontos__restantes {
+    color: #ffffff;
+    border-color: rgba(var(--main-rgb,255,68,68), 0.35);
+    background: rgba(var(--dark-rgb,139,0,0), 0.16);
+}
+
+.feiticeiros-e-maldicoes .aptidao-pontos__ganhos {
+    color: #ffffff;
+}
+
+.feiticeiros-e-maldicoes .aptidao-pontos__gastos {
+    font-weight: 800;
+    color: #ddd;
+}
+
+.feiticeiros-e-maldicoes .aptidao-niveis-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.feiticeiros-e-maldicoes .aptidao-nivel-row {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.feiticeiros-e-maldicoes .aptidao-nivel-label {
+    font-weight: 800;
+    font-size: 12px;
+    color: #ffffff;
+    margin-bottom: 8px;
+}
+
+.feiticeiros-e-maldicoes .aptidao-nivel-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.feiticeiros-e-maldicoes .aptidao-nivel-value {
+    min-width: 22px;
+    text-align: center;
+    font-weight: 900;
+    font-size: 14px;
+    color: #ffffff;
+}
+
+.feiticeiros-e-maldicoes .aptidao-nivel-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid rgba(var(--main-rgb,255,68,68), 0.35);
+    background: rgba(var(--dark-rgb,139,0,0), 0.16);
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.feiticeiros-e-maldicoes .aptidao-nivel-btn:hover {
+    background: rgba(var(--dark-rgb,139,0,0), 0.26);
+    border-color: rgba(var(--main-rgb,255,68,68), 0.6);
+}
+
+/* Aptidões: Derivados + Treino (Interlúdio) */
+.feiticeiros-e-maldicoes .aptidao-derivados-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 10px 0 16px 0;
+}
+
+.feiticeiros-e-maldicoes .aptidao-derivados-card,
+.feiticeiros-e-maldicoes .aptidao-treino-card {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.feiticeiros-e-maldicoes .aptidao-derivados-card h3,
+.feiticeiros-e-maldicoes .aptidao-treino-card h3 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.2px;
+}
+
+.feiticeiros-e-maldicoes .aptidao-derivados-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.feiticeiros-e-maldicoes .aptidao-derivado {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.30);
+    border: 1px solid rgba(255,255,255,0.10);
+}
+
+.feiticeiros-e-maldicoes .aptidao-derivado .label {
+    font-weight: 700;
+    color: #e6e6e6;
+}
+
+.feiticeiros-e-maldicoes .aptidao-derivado .valor {
+    font-weight: 900;
+    color: #ffffff;
+}
+
+.feiticeiros-e-maldicoes .aptidao-treino-notas textarea {
+    width: 100%;
+    min-height: 96px;
+    resize: vertical;
+}
+
+/* Estilo melhorado para o cartão Treino (Interlúdio) */
+.feiticeiros-e-maldicoes .aptidao-treino-card .condition-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 0;
+    font-weight: 900;
+    color: #fff;
+}
+
+.feiticeiros-e-maldicoes .aptidao-treino-add {
+    background: linear-gradient(180deg, rgba(155,77,202,0.98), rgba(93,27,126,0.95));
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    transition: transform 0.08s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+.feiticeiros-e-maldicoes .aptidao-treino-add:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(93,27,126,0.35);
+    opacity: 0.98;
+}
+.feiticeiros-e-maldicoes .aptidao-treino-add:active { transform: translateY(0); }
+
+/* Botão Criar Paredes no Mapa (preto/roxo) */
+.feiticeiros-e-maldicoes .aptidao-open-map-btn {
+    background: linear-gradient(180deg, rgba(40,14,40,0.95), rgba(32,8,48,0.95));
+    color: #f3eaff;
+    border: 1px solid rgba(155,77,202,0.12);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 800;
+    margin-bottom: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(10,6,12,0.6);
+    transition: transform 0.08s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+.feiticeiros-e-maldicoes .aptidao-open-map-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(93,27,126,0.22);
+}
+.feiticeiros-e-maldicoes .aptidao-open-map-btn:active { transform: translateY(0); }
+
+@media (max-width: 680px) {
+    .feiticeiros-e-maldicoes .aptidao-treino-card .condition-header { font-size: 13px; }
+    .feiticeiros-e-maldicoes .aptidao-treino-add { padding: 5px 8px; }
+    .feiticeiros-e-maldicoes .aptidao-open-map-btn { width: 100%; display: block; }
+}
+
+/* Controles e contador para Treino (Interlúdio) */
+.feiticeiros-e-maldicoes .aptidao-treino-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.feiticeiros-e-maldicoes .aptidao-treino-counter {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.04);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 800;
+    color: #eaeaea;
+    font-size: 13px;
+}
+.feiticeiros-e-maldicoes .aptidao-treino-help {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #d7d7d7;
+}
+
+/* Pequeno ajuste de espaçamento no corpo do cartão */
+.feiticeiros-e-maldicoes .aptidao-treino-body { padding-top: 8px; }
+
+/* Botão distinto para Treino: aparência diferente do título */
+.feiticeiros-e-maldicoes .aptidao-treino-title {
+    font-size: 14px;
+    font-weight: 900;
+    color: #fff;
+}
+
+.feiticeiros-e-maldicoes .aptidao-treino-btn {
+    /* estilo mais sutil, outline, para diferenciar do texto */
+    background: transparent;
+    color: #9b4dca;
+    border: 1px dashed rgba(155,77,202,0.35);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease, transform 0.08s ease;
+}
+.feiticeiros-e-maldicoes .aptidao-treino-btn:hover {
+    background: rgba(155,77,202,0.06);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 680px) {
+    .feiticeiros-e-maldicoes .aptidao-treino-controls { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .feiticeiros-e-maldicoes .aptidao-treino-counter { width: 100%; }
+    .feiticeiros-e-maldicoes .aptidao-treino-btn { width: 100%; text-align: center; }
+}
+
+@media (max-width: 780px) {
+    .feiticeiros-e-maldicoes .aptidao-derivados-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.feiticeiros-e-maldicoes .aptidao-help summary {
+    cursor: pointer;
+    font-weight: 800;
+    color: #9b4dca;
+}
+
+.feiticeiros-e-maldicoes .aptidao-help-text {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #ddd;
+    line-height: 1.35;
+}
+
+@media (max-width: 900px) {
+    .feiticeiros-e-maldicoes .aptidao-niveis-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Lista de aptidões (sem checkbox, entradas clicáveis) */
+.feiticeiros-e-maldicoes .aptidoes-list {
+    display: grid;
+    gap: 6px;
+    padding: 8px;
+}
+
+.feiticeiros-e-maldicoes .aptidoes-entry {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    /* Reserve space on the right for the 'Ativa' badge */
+    padding: 10px 44px 10px 12px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: #121212; /* Fundo quase preto */
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, transform 0.06s;
+    position: relative;
+}
+
+.feiticeiros-e-maldicoes .aptidoes-entry:hover {
+    background: rgba(93, 27, 126, 0.06);
+    border-color: rgba(155, 77, 202, 0.12);
+    transform: translateY(-1px);
+}
+
+.feiticeiros-e-maldicoes .aptidoes-entry[aria-pressed="true"] {
+    background: rgba(93, 27, 126, 0.16);
+    border-color: #9b4dca;
+}
+
+.feiticeiros-e-maldicoes .aptidoes-entry .aptidoes-label { font-weight: 600; color: #eaeaea; }
+.feiticeiros-e-maldicoes .aptidoes-entry .aptidoes-state {
+    font-size: 11px;
+    color: #ddd;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.35);
+    position: absolute;
+    top: 6px;
+    right: 8px;
+}
+
+/* Tooltip customizado baseado em data-desc/title */
+.feiticeiros-e-maldicoes .aptidoes-entry {
+    position: relative; /* para posicionar o tooltip */
+}
+.feiticeiros-e-maldicoes .aptidoes-entry::after {
+    content: attr(data-desc);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(100% + 8px);
+    white-space: normal;
+    max-width: 280px;
+    background: rgba(20, 20, 20, 0.95);
+    color: #e0e0e0;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+    font-size: 12px;
+    line-height: 1.2;
+    display: none;
+    z-index: 40;
+}
+
+/* ========================
+     DIALOG: APTIDÃO (visual melhorado)
+     ======================== */
+.aptidao-dialog.window-app .window-content {
+    background: #0b0b0b; /* fundo preto igual level-up */
+    color: #e0e0e0;
+    padding: 0;
+    border-radius: 0 0 8px 8px;
+    overflow: hidden;
+    border: 2px solid rgba(155,77,202,0.35); /* borda roxa */
+    box-shadow: 0 0 28px rgba(155,77,202,0.35); /* brilho roxo em todas as bordas */
+}
+.aptidao-dialog .window-header,
+.aptidao-dialog .level-up-header {
+    background: linear-gradient(to bottom, #2a0a38, #121212);
+    padding: 20px;
+    text-align: center;
+    border-bottom: 2px solid #5d1b7e;
+}
+.aptidao-dialog .window-header .window-title,
+.aptidao-dialog .level-up-header h2 {
+    color: #ffffff; /* texto em branco, mais discreto */
+    border: none;
+    font-size: 18px;
+    margin: 0 0 5px 0;
+    text-transform: none; /* sem uppercase */
+    text-shadow: none;    /* remove brilho text-shadow */
+    font-weight: 700;
+    letter-spacing: 0.4px;
+}
+
+/* Remove o título padrão (h4.window-title) que o Foundry insere no header do diálogo */
+.aptidao-dialog .window-header .window-title {
+    display: none !important;
+}
+
+/* Remove completamente o botão fechar gerado pelo Foundry apenas no diálogo de Aptidões */
+.aptidao-dialog .window-header .header-button.control.close {
+    display: none !important;
+}
+.aptidao-dialog .window-header p,
+.aptidao-dialog .level-up-header p { font-size: 13px; color: #aaa; margin: 0; font-style: italic; }
+.aptidao-dialog .dialog-content { padding: 14px 18px; color: #ddd; }
+.aptidao-dialog .aptidao-dialog-body { display: flex; gap: 14px; align-items: flex-start; }
+.aptidao-dialog .aptidao-icon { width: 56px; height: 56px; display:flex; align-items:center; justify-content:center; border-radius:8px; background: rgba(255,255,255,0.03); color:#9b4dca; font-size:24px; }
+.aptidao-dialog .aptidao-main { flex:1; }
+.aptidao-dialog .aptidao-badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; margin-left:8px; }
+.aptidao-dialog .aptidao-badge.active { background: rgba(34,139,34,0.15); color: #7ee07e; border:1px solid rgba(34,139,34,0.12); }
+.aptidao-dialog .aptidao-badge.inactive { background: rgba(200,200,200,0.04); color:#ccc; border:1px solid rgba(255,255,255,0.03); }
+.aptidao-dialog .aptidao-desc {
+    margin-top: 12px;
+    max-height: 340px;
+    overflow-y: auto;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.01);
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.03);
+    color: #ddd;
+    font-size: 13px;
+    line-height: 1.45;
+}
+.aptidao-dialog .aptidao-desc h4 { margin: 8px 0 6px 0; color: #e6e6e6; font-size: 14px; }
+.aptidao-dialog .aptidao-desc p { margin: 6px 0; }
+.aptidao-dialog .dialog-buttons { padding: 12px 18px; display:flex; gap:10px; justify-content:flex-end; background:#121212; }
+.aptidao-dialog .dialog-buttons .dialog-button { min-width:110px; border-radius:8px; padding:10px 12px; font-weight:700; background: rgba(255,255,255,0.03); border:1px solid #333; }
+.aptidao-dialog .dialog-buttons .dialog-button.confirm {
+    background: linear-gradient(180deg,#9b4dca,#5d1b7e); /* gradiente roxo */
+    color: #fff;
+    border: none;
+    box-shadow: 0 6px 18px rgba(155,77,202,0.14);
+}
+.aptidao-dialog .dialog-buttons .dialog-button.cancel { background: transparent; border:1px solid rgba(255,255,255,0.06); color:#ddd; }
+.aptidao-dialog .dialog-buttons .dialog-button:hover { transform: translateY(-2px); }
+
+.feiticeiros-e-maldicoes .aptidoes-entry[data-desc]:hover::after {
+    display: block;
+}
+
+.status-card {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+.status-card label {
+    display: block;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.status-inputs {
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+}
+
+.status-inputs input {
+    width: 45px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.status-inputs .sep {
+    font-weight: bold;
+    color: #888;
+}
+
+/* Cores Específicas */
+
+/* HP - Vermelho */
+.status-card.hp { border-top: 3px solid #ff4444; }
+.status-card.hp label { color: #ff4444; }
+
+/* PE - Roxo Azulado */
+.status-card.pe { border-top: 3px solid #5d1b7e; }
+.status-card.pe label { color: #a655ff; }
+
+/* Integridade - Branco/Prata */
+.status-card.alma { border-top: 3px solid #e0e0e0; }
+.status-card.alma label { color: #e0e0e0; }
+
+/* Sanidade - Amarelo */
+.status-card.sanidade { border-top: 3px solid #ffbb33; }
+.status-card.sanidade label { color: #ffbb33; }
+
+/* Cartas de Combate (Defesa e CD) */
+.combat-card {
+    /* Alinha visualmente com os status-cards (fundo cinza suave) */
+    background: rgba(0,0,0,0.3);
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    box-shadow: 0 0 5px rgba(0,0,0,0.35);
+}
+
+.combat-card label {
+    font-weight: bold;
+    color: #fff;
+    font-size: 14px;
+    margin-bottom: 5px;
+    letter-spacing: 1px;
+}
+
+/* ========================
+   ITEM SHEET (FICHAS DE ITEM / APTIDÃO)
+   ======================== */
+.feiticeiros-e-maldicoes .item-sheet .sheet-header {
+    background: linear-gradient(180deg,#151515,#0d0d0d);
+    border-bottom: 2px solid rgba(93,27,126,0.25);
+    padding: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+.feiticeiros-e-maldicoes .item-sheet .profile-img {
+    width: 86px;
+    height: 86px;
+    border-radius: 8px;
+    border: 2px solid rgba(155,77,202,0.12);
+    box-shadow: 0 6px 18px rgba(155,77,202,0.06);
+    object-fit: cover;
+}
+.feiticeiros-e-maldicoes .item-sheet .header-fields { flex: 1; }
+.feiticeiros-e-maldicoes .item-sheet .charname input {
+    font-size: 20px;
+    font-weight: 700;
+    background: transparent !important;
+    border: none !important;
+    color: #fff;
+}
+.feiticeiros-e-maldicoes .item-sheet .resource {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid #2a2a2a;
+    padding: 8px;
+    border-radius: 6px;
+}
+.feiticeiros-e-maldicoes .item-sheet .resource label { font-size: 12px; color: #cfc7e6; margin-bottom: 6px; display:block; }
+.feiticeiros-e-maldicoes .item-sheet .resource input[type="text"],
+.feiticeiros-e-maldicoes .item-sheet .resource input[type="number"] {
+    width: 100%;
+    padding: 6px 8px;
+    background: linear-gradient(180deg,#121212,#0a0a0a);
+    border: 1px solid rgba(155,77,202,0.12);
+    color: #fff;
+    border-radius: 6px;
+}
+.feiticeiros-e-maldicoes .item-sheet .grid-3col { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; }
+.feiticeiros-e-maldicoes .item-sheet .editor-container {
+    background: rgba(0,0,0,0.18);
+    border: 1px solid #222;
+    padding: 8px;
+    border-radius: 6px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+}
+.feiticeiros-e-maldicoes .item-sheet .sheet-body h3 { margin-top: 0; }
+
+/* Pequenas melhorias responsivas */
+@media (max-width: 720px) {
+    .feiticeiros-e-maldicoes .item-sheet .grid-3col { grid-template-columns: 1fr; }
+    .feiticeiros-e-maldicoes .item-sheet .profile-img { width:72px; height:72px; }
+}
+
+.combat-card input {
+    height: 40px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #9b4dca; /* Número Roxo */
+    border: none;
+    background: transparent;
+    text-align: center;
+}
+
+/* ==================================================
+   Estados de HP (aplicados no root .sheet.actor)
+   Quanto menos HP, mais elementos ficam avermelhados.
+   hp-zero / hp-dead aplica transparência/efeito de falha.
+================================================== */
+.sheet.actor.hp-high .combat-card {
+    box-shadow: 0 0 10px rgba(155,77,202,0.25);
+}
+.sheet.actor.hp-medium .combat-card {
+    border-color: rgba(255,68,68,0.12);
+    box-shadow: 0 0 8px rgba(255,68,68,0.12);
+}
+.sheet.actor.hp-low .combat-card {
+    background: linear-gradient(180deg, rgba(120,0,0,0.06), rgba(0,0,0,0.18));
+    border-color: rgba(255,68,68,0.22);
+    box-shadow: 0 0 12px rgba(255,68,68,0.18);
+}
+.sheet.actor.hp-zero .combat-card {
+    background: rgba(0,0,0,0.18);
+    border-color: rgba(255,68,68,0.35);
+    box-shadow: 0 0 18px rgba(255,68,68,0.25);
+}
+
+/* Quando estiver com 0 HP, deixar a ficha mais translúcida e atenuar detalhes roxos */
+.sheet.actor.hp-dead {
+    opacity: 0.85;
+}
+.sheet.actor.hp-dead .status-card,
+.sheet.actor.hp-dead .combat-card {
+    filter: contrast(0.95) saturate(0.9);
+}
+
+/* Mudar cores de labels/detalhes roxos para vermelho conforme cair o HP */
+.sheet.actor.hp-medium .combat-card label { color: #ffb3b3; }
+.sheet.actor.hp-low .combat-card label { color: #ff8a80; }
+.sheet.actor.hp-zero .combat-card label { color: #ff5252; }
+
+/* Em hp-zero, as 'falhas' ficam parcialmente transparentes */
+.sheet.actor.hp-zero .death-pill.fail { opacity: 0.45; }
+.sheet.actor.hp-zero .death-pills { opacity: 0.85; }
+
+/* ============================================================
+   SISTEMA DE CORES DINÂMICO (Variáveis / “balde de tinta”)
+   O JS adiciona as classes .hp-medium/.hp-low/.hp-zero no root do sheet.
+   A partir disso, só trocamos variáveis e o resto herda.
+   ============================================================ */
+
+/* ESTADO PADRÃO (Vida Cheia/Alta) -> TEMA ROXO */
+.feiticeiros-e-maldicoes.sheet.actor {
+    --main-color: #9b4dca;
+    --main-rgb: 155,77,202;
+    --dark-color: #5d1b7e;
+    --dark-rgb: 93,27,126;
+    --glow-color: rgba(var(--main-rgb), 0.5);
+    --bg-tint: rgba(93, 27, 126, 0.05);
+    --gradient-btn: linear-gradient(90deg, var(--dark-color), var(--main-color));
+
+    /* Mapeia para as variáveis já usadas no CSS (POLISH v2) */
+    --jem-accent: var(--main-color);
+    --jem-accent-2: var(--dark-color);
+    --jem-border-strong: rgba(var(--main-rgb),0.28);
+}
+
+/* ESTADO MÉDIO -> TEMA “ALERTA” (laranja/vermelho) */
+.feiticeiros-e-maldicoes.sheet.actor.hp-medium {
+    --main-color: #ff8a50;
+    --main-rgb: 255,138,80;
+    --dark-color: #c43e00;
+    --dark-rgb: 196,62,0;
+    --glow-color: rgba(var(--main-rgb), 0.5);
+    --bg-tint: rgba(var(--dark-rgb), 0.06);
+    --gradient-btn: linear-gradient(90deg, var(--dark-color), var(--main-color));
+
+    --jem-border-strong: rgba(255,68,68,0.22);
+}
+
+/* ESTADO BAIXO -> TEMA VERMELHO PERIGO */
+.feiticeiros-e-maldicoes.sheet.actor.hp-low {
+    --main-color: #ff4444;
+    --main-rgb: 255,68,68;
+    --dark-color: #8b0000;
+    --dark-rgb: 139,0,0;
+    --glow-color: rgba(var(--main-rgb), 0.6);
+    --bg-tint: rgba(var(--dark-rgb), 0.10);
+    --gradient-btn: linear-gradient(90deg, var(--dark-color), var(--main-color));
+
+    --jem-border-strong: rgba(255,68,68,0.30);
+}
+
+/* ESTADO ZERO -> TEMA “MORTE” (cinza/sangue seco) */
+.feiticeiros-e-maldicoes.sheet.actor.hp-zero,
+.feiticeiros-e-maldicoes.sheet.actor.hp-dead {
+    --main-color: #b3b3b3;
+    --main-rgb: 179,179,179;
+    --dark-color: #4a0000;
+    --dark-rgb: 74,0,0;
+    --glow-color: rgba(var(--main-rgb), 0.20);
+    --bg-tint: rgba(0, 0, 0, 0.30);
+    --gradient-btn: linear-gradient(90deg, #333, #555);
+
+    --jem-border-strong: rgba(255,68,68,0.38);
+    filter: grayscale(0.8) contrast(1.1);
+}
+
+/* Aplicação: onde for roxo “temático”, use as variáveis */
+.feiticeiros-e-maldicoes.sheet.actor .combat-card input {
+    color: var(--main-color) !important;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .kokusen-badge {
+    background: var(--main-color) !important;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .death-pill.active {
+    background: linear-gradient(180deg, var(--main-color), var(--dark-color)) !important;
+    border-color: rgba(var(--main-rgb),0.35);
+}
+
+/* Acentos do sheet (decorativos) seguindo o tema dinâmico */
+.feiticeiros-e-maldicoes.sheet.actor h1,
+.feiticeiros-e-maldicoes.sheet.actor h2,
+.feiticeiros-e-maldicoes.sheet.actor h3 {
+    border-bottom-color: var(--dark-color) !important;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .sheet-header {
+    border-bottom-color: var(--dark-color) !important;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .sheet-tabs {
+    border-bottom-color: var(--dark-color) !important;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .sheet-tabs .item.active {
+    border-bottom-color: var(--main-color) !important;
+    text-shadow: 0 0 5px var(--main-color) !important;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .rollable,
+.feiticeiros-e-maldicoes.sheet.actor .pericia-label i {
+    color: var(--main-color) !important;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor input[type="checkbox"],
+.feiticeiros-e-maldicoes.sheet.actor input[type="radio"] {
+    accent-color: var(--main-color) !important;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor input[type="text"]:focus,
+.feiticeiros-e-maldicoes.sheet.actor input[type="number"]:focus,
+.feiticeiros-e-maldicoes.sheet.actor textarea:focus,
+.feiticeiros-e-maldicoes.sheet.actor select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.05), 0 0 18px var(--glow-color) !important;
+    border-color: var(--main-color) !important;
+}
+
+/* Layout interno dos Testes de Morte */
+.death-grid {
+    width: 100%;
+    justify-content: space-around; /* Espalha Sucesso e Falha */
+    align-items: center;
+}
+
+.death-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.checks {
+    display: flex;
+    gap: 5px; /* Espaço entre as caixinhas */
+}
+
+.death-label {
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+
+/* Checkboxes */
+.death-block input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #9b4dca;
+}
+
+/* ========================
+   BARRAS DE PROGRESSO
+   ======================== */
+
+.bar-bg {
+    width: 100%;
+    height: 6px;
+    background: #222; /* Fundo da barra (vazio) */
+    border-radius: 3px;
+    margin-top: 8px;
+    border: 1px solid #000;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    transition: width 0.5s ease-in-out; /* Animação suave ao mudar valor */
+    box-shadow: 0 0 5px rgba(0,0,0,0.5) inset;
+}
+
+/* Cores das Barras */
+
+/* Vida: Vermelho Sangue */
+.hp .bar-fill { 
+    background: linear-gradient(to right, #800000, #ff4444); 
+}
+
+/* Energia: Roxo Jujutsu */
+.pe .bar-fill { 
+    background: linear-gradient(to right, #4a0d67, #9b4dca); 
+}
+
+/* Integridade: Branco/Cinza */
+.alma .bar-fill { 
+    background: linear-gradient(to right, #666, #e0e0e0); 
+}
+
+/* Sanidade: Amarelo Queimado */
+.sanidade .bar-fill { 
+    background: linear-gradient(to right, #cc8800, #ffbb33); 
+}
+
+/* CONDIÇÕES */
+.condition-group {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid #444;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.condition-header {
+    text-align: center;
+    font-weight: bold;
+    font-size: 13px;
+    color: #fff;
+    padding: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Cores dos cabeçalhos */
+.condition-header.physical { background: #8b0000; }
+.condition-header.mental { background: #4a0d67; }
+.condition-header.sensory { background: #0d4a67; }
+.condition-header.movement { background: #674a0d; }
+
+.condition-list {
+    padding: 8px; /* Mais espaço interno */
+    font-size: 12px;
+}
+
+/* ALINHAMENTO DO CHECKBOX COM O TEXTO */
+.condition-list label {
+    display: flex;
+    align-items: center; /* Isso é o que alinha o centro verticalmente */
+    gap: 6px; /* Espaço entre a caixa e o texto */
+    cursor: pointer;
+    margin-bottom: 4px; /* Espaço entre uma condição e a de baixo */
+    line-height: 1; /* Garante que a altura da linha não atrapalhe */
+}
+
+/* Tira as margens estranhas do navegador */
+.condition-list input[type="checkbox"] {
+    margin: 0; 
+    width: 14px;  /* Tamanho fixo */
+    height: 14px; /* Tamanho fixo */
+    position: relative;
+    top: -1px; /* Ajuste fino para subir um pouquinho se precisar */
+    accent-color: var(--main-color, #ff4444);
+}
+
+/* Efeito ao passar o mouse */
+.condition-list label:hover {
+    color: var(--main-color, #ff4444);
+    text-shadow: 0 0 5px rgba(var(--main-rgb,255,68,68), 0.25);
+}
+
+/* CARTÃO DE ATRIBUTO REFORMULADO */
+.atributo-card {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid #9b4dca;
+    border-radius: 8px;
+    padding: 5px;
+    position: relative;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+.atributo-card label {
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: #ccc;
+    margin-bottom: 2px;
+}
+
+/* O Modificador Gigante (+3, -1) */
+.atributo-mod {
+    font-size: 28px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 8px #9b4dca; /* Brilho Roxo */
+    margin: 5px 0;
+    line-height: 1;
+}
+
+/* Container do Input Pequeno */
+.atributo-base {
+    background: rgba(0,0,0,0.5);
+    border-radius: 4px;
+    padding: 2px 5px;
+    width: 80%;
+}
+
+.small-label {
+    font-size: 10px;
+    color: #888;
+    margin-right: 5px;
+}
+
+.atributo-base input {
+    height: 18px;
+    font-size: 12px;
+    text-align: center;
+    background: transparent;
+    border: none;
+    color: #fff;
+    width: 30px;
+}
+
+.atributo-base input:focus {
+    box-shadow: none;
+    border-bottom: 1px solid #9b4dca;
+}
+
+/* ========================
+   BOTÃO DE SUBIR NÍVEL
+   ======================== */
+
+.level-up-btn {
+    font-size: 16px;       /* Tamanho do ícone */
+    color: #9b4dca;        /* Roxo padrão */
+    cursor: pointer;       /* Mãozinha ao passar mouse */
+    margin-left: 8px;      /* Espaço entre o número e o botão */
+    transition: all 0.2s ease-in-out; /* Animação suave */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.level-up-btn:hover {
+    color: #d69dfc;        /* Roxo mais claro ao passar mouse */
+    text-shadow: 0 0 8px #9b4dca; /* Brilho neon */
+    transform: scale(1.2); /* Aumenta um pouquinho */
+}
+
+.level-up-btn:active {
+    transform: scale(0.9); /* Diminui ao clicar (efeito tátil) */
+}
+
+/* ============================================================
+   JANELA DE LEVEL UP (MODAL) - REFORMULADO (CSS LIMPO)
+   ============================================================ */
+
+/* 1. O CORPO DA JANELA (GLOBAL) */
+.level-up-dialog.window-app .window-content {
+    background: #121212; /* Fundo quase preto */
+    color: #e0e0e0;
+    padding: 0;
+    border-radius: 0 0 5px 5px; /* Arredonda só embaixo */
+    overflow: hidden;
+}
+
+/* 2. CABEÇALHO INTERNO (Onde diz "Nível Disponível") */
+.level-up-header {
+    background: linear-gradient(to bottom, rgba(var(--dark-rgb,139,0,0),0.55), #121212);
+    padding: 20px;
+    text-align: center;
+    border-bottom: 2px solid var(--dark-color, #8b0000);
+}
+
+.level-up-header h2 {
+    color: var(--main-color, #ff4444);
+    border: none;
+    font-size: 20px;
+    margin: 0 0 5px 0;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(var(--main-rgb,255,68,68), 0.25);
+}
+
+.level-up-header p {
+    font-size: 13px;
+    color: #aaa;
+    margin: 0;
+    font-style: italic;
+}
+
+/* 3. ÁREA DOS BOTÕES (CONTAINER) */
+.level-up-dialog .dialog-buttons {
+    display: flex;
+    flex-direction: column; /* Força um botão embaixo do outro */
+    gap: 10px;              /* Espaço entre os botões */
+    padding: 15px 20px 20px 20px;
+    background: #121212;
+}
+
+/* 4. O BOTÃO EM SI */
+.level-up-dialog .dialog-button {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid #333;
+    border-radius: 6px;
+    
+    /* Layout Flex para alinhar Ícone e Texto */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Alinha à esquerda */
+    
+    padding: 10px 15px;
+    margin: 0;
+    height: auto;      /* Permite crescer se tiver muito texto */
+    min-height: 60px;  /* Altura mínima confortável */
+    line-height: 1.4;  /* Espaçamento de linha do texto */
+    
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+/* Hover (Passar o mouse) */
+.level-up-dialog .dialog-button:hover,
+.level-up-dialog .dialog-button:focus {
+    background: rgba(var(--main-rgb,255,68,68), 0.10);
+    border-color: var(--main-color, #ff4444);
+    box-shadow: 0 0 15px rgba(var(--main-rgb,255,68,68), 0.18);
+    transform: translateY(-1px);         /* Leve subida */
+}
+
+/* 5. CONTEÚDO INTERNO DO BOTÃO (Classes que usaremos no JS) */
+.level-opt-icon {
+    font-size: 28px;
+    color: var(--main-color, #ff4444);
+    flex: 0 0 40px; /* Largura fixa para o ícone */
+    text-align: center;
+    margin-right: 15px;
+    transition: transform 0.2s;
+}
+
+.level-up-dialog .dialog-button:hover .level-opt-icon {
+    transform: scale(1.2) rotate(5deg);
+    color: #fff;
+    text-shadow: 0 0 5px rgba(var(--main-rgb,255,68,68),0.25);
+}
+
+.level-opt-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.level-opt-title {
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #fff;
+}
+
+.level-opt-desc {
+    font-size: 12px;
+    color: #888;
+}
+
+/* Seta de evolução */
+.arrow-up {
+    color: var(--main-color, #ff4444);
+    font-weight: bold;
+    margin: 0 3px;
+}
+
+/* ========================
+   SCROLLBAR PERSONALIZADA
+   ======================== */
+.feiticeiros-e-maldicoes .window-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.feiticeiros-e-maldicoes .window-content::-webkit-scrollbar-track {
+    background: #0d0d0d; 
+}
+
+.feiticeiros-e-maldicoes .window-content::-webkit-scrollbar-thumb {
+    background: #444; 
+    border-radius: 4px;
+    border: 1px solid #1a1a1a;
+}
+
+.feiticeiros-e-maldicoes .window-content::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+.charname input:focus {
+    box-shadow: 0 1px 0 var(--main-color, #ff4444) !important; 
+    outline: none;
+}
+
+.grid-3col {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+}
+
+/* ========================
+   ESTILO DOS NÍVEIS (Header)
+   ======================== */
+
+/* 1. ETIQUETA DE NÍVEL DA CLASSE (Aparece ao lado do nome "Classe") */
+.class-level-badge {
+    background: var(--dark-color, #5d1b7e);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: bold;
+    margin-left: 5px;
+    text-shadow: none;
+    border: 1px solid var(--main-color, #9b4dca);
+    box-shadow: 0 0 5px rgba(var(--dark-rgb,93,27,126), 0.5);
+}
+
+/* 2. EMBLEMA DO NÍVEL TOTAL (O input principal) */
+.level-container {
+    background: radial-gradient(circle, rgba(var(--dark-rgb,93,27,126),0.55), #000);
+    border: 2px solid var(--main-color, #9b4dca);
+    border-radius: 50%; /* Faz ficar redondo se quiser, ou tire para quadrado */
+    width: 60px;
+    height: 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 10px rgba(var(--dark-rgb,93,27,126), 0.75);
+    position: relative;
+    margin: 0 auto; /* Centraliza */
+}
+
+/* O texto "NÍVEL" pequeno dentro do emblema */
+.level-container label {
+    font-size: 9px !important;
+    color: #d69dfc !important;
+    margin: 0;
+    position: absolute;
+    top: 8px;
+}
+
+/* O Número do Nível */
+.level-container input {
+    height: 30px !important;
+    width: 40px !important;
+    background: transparent !important;
+    border: none !important;
+    font-size: 24px !important;
+    font-weight: bold !important;
+    color: #fff !important;
+    text-align: center;
+    margin-top: 5px;
+    padding: 0 !important;
+}
+
+/* O Botão de Upar (+) posicionado no canto */
+.level-up-btn-floating {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    background: #000;
+    border-radius: 50%;
+    border: 1px solid var(--main-color, #ff4444);
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    color: #fff;
+    transition: transform 0.2s;
+}
+
+.level-up-btn-floating:hover {
+    transform: scale(1.2);
+    background: var(--dark-color, #8b0000);
+}
+
+/* ========================
+    GRID DE PERÍCIAS (3 POR LINHA)
+    ======================== */
+
+.pericias-grid-4col {
+    display: grid;
+    /* Divide em 3 colunas iguais */
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px; /* Mais distância entre itens */
+    padding: 12px 0 16px 0;
+}
+
+/* Estilo do item individual */
+.pericias-grid-4col .pericia-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    overflow: visible;
+    white-space: normal;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 5px rgba(0,0,0,0.35);
+    text-align: center;
+}
+
+.pericias-grid-4col .pericia-item:hover {
+    border-color: rgba(var(--main-rgb,255,68,68), 0.45);
+    background: rgba(var(--main-rgb,255,68,68), 0.10);
+    box-shadow: 0 0 10px rgba(var(--main-rgb,255,68,68), 0.15);
+}
+
+.pericias-grid-4col .pericia-label:hover {
+    color: #fff;
+    text-shadow: 0 0 5px rgba(var(--main-rgb,255,68,68), 0.25);
+}
+
+/* Ajuste do texto */
+.pericias-grid-4col .pericia-label {
+    font-size: 11px;
+    display: grid;
+    grid-template-columns: 16px auto 1fr;
+    align-items: center;
+    column-gap: 6px;
+    row-gap: 2px;
+    min-width: 0;
+    white-space: normal;
+    overflow: visible;
+    line-height: 1.15;
+    justify-items: center;
+    text-align: center;
+}
+
+/* Estilo do Ícone D20 */
+.pericias-grid-4col .pericia-label i {
+    color: var(--main-color, #ff4444);
+    font-size: 14px;
+}
+
+.pericias-grid-4col .pericia-item:hover i {
+     text-shadow: 0 0 5px rgba(var(--main-rgb,255,68,68), 0.25);
+}
+
+/* --- ATUALIZADO: Sigla do Atributo dentro da Perícia (Ex: FOR +3) --- */
+.atributo-tag {
+    color: #bbb;             /* Cor da letra da sigla (FOR) */
+    font-size: 10px;         
+    font-family: monospace; 
+    margin-right: 6px;       
+    border: 1px solid #444;
+    padding: 1px 4px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    display: inline-flex;    /* Mantém alinhado */
+    align-items: center;
+    gap: 3px;                /* Espaço entre FOR e o +3 */
+    white-space: nowrap;
+}
+
+/* O Valor Numérico (+3) */
+.mod-valor {
+    color: var(--main-color, #ff4444);
+    font-weight: bold;
+    font-size: 11px;
+}
+
+/* Efeito ao passar o mouse */
+.pericia-item:hover .atributo-tag {
+    border-color: var(--main-color, #ff4444);
+    background: rgba(var(--main-rgb,255,68,68), 0.12);
+}
+
+.pericia-item:hover .mod-valor {
+    color: #fff;             /* Fica branco brilhante no hover */
+    text-shadow: 0 0 5px rgba(var(--main-rgb,255,68,68), 0.25);
+}
+
+/* ========================
+     MODAL: ORIGEM MALDIÇÃO (estilizada)
+     ======================== */
+.origem-maldicao-dialog.window-app .window-header {
+    background: linear-gradient(180deg, rgba(180,8,24,0.12), rgba(12,0,0,0.0));
+    border-bottom: 2px solid rgba(176,0,32,0.25);
+}
+.origem-maldicao-dialog .window-header { display: none !important; }
+.origem-maldicao-dialog.window-app .window-header .window-title {
+    color: #ff4b4b;
+    font-weight: 800;
+    font-size: 18px;
+    text-shadow: 0 0 8px rgba(176,0,32,0.24);
+}
+.origem-maldicao-dialog.window-app .window-content{
+    background: linear-gradient(180deg,#0b0606 0%, #070707 60%);
+    color: #f6f1f1;
+    padding: 0;
+    border-radius: 6px;
+    box-shadow: 0 8px 32px rgba(176,0,32,0.12), inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+.origem-maldicao-dialog .maldicao-origem__header{
+    padding: 18px 20px 12px 20px;
+}
+.origem-maldicao-dialog .maldicao-origem__header h2{
+    margin: 0 0 6px 0;
+    color: #ff6b6b;
+    font-size: 20px;
+}
+.origem-maldicao-dialog .maldicao-origem__header p{
+    margin: 0;
+    color: #e3dede;
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+.origem-maldicao-dialog .maldicao-origem__choices{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    padding: 16px 18px 18px 18px;
+}
+
+.origem-maldicao-dialog .maldicao-origem__choice{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.28));
+    border: 1px solid rgba(255,80,80,0.08);
+    border-radius: 12px;
+    padding: 12px 14px;
+    text-align: left;
+    cursor: pointer;
+    transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
+    color: #f6f1f1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.origem-maldicao-dialog .maldicao-origem__choice::before{
+    display: none; /* removido, usamos ícone inline */
+}
+
+.origem-maldicao-dialog .maldicao-origem__choice .maldicao-icon{
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 6px;
+    font-size: 20px;
+    box-shadow: 0 6px 16px rgba(176,0,32,0.06);
+    color: #fff;
+}
+
+/* Cores específicas por variação */
+.origem-maldicao-dialog .maldicao-origem__choice .colosso-icon{
+    background: linear-gradient(135deg, rgba(200,40,40,0.25), rgba(120,8,8,0.18));
+    color: #fffbe6;
+}
+.origem-maldicao-dialog .maldicao-origem__choice .soberano-icon{
+    background: linear-gradient(135deg, rgba(180,20,60,0.20), rgba(80,8,20,0.12));
+    color: #ffe8ec;
+}
+.origem-maldicao-dialog .maldicao-origem__choice .parasita-icon{
+    background: linear-gradient(135deg, rgba(60,60,80,0.16), rgba(16,16,24,0.14));
+    color: #e8f5ff;
+}
+.origem-maldicao-dialog .maldicao-origem__choice .espreitador-icon{
+    background: linear-gradient(135deg, rgba(30,30,30,0.16), rgba(8,8,12,0.18));
+    color: #dcdcdc;
+}
+
+.origem-maldicao-dialog .maldicao-origem__choice:hover{
+    transform: translateY(-4px);
+    border-color: rgba(255,80,80,0.45);
+    box-shadow: 0 8px 30px rgba(176,0,32,0.14);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(12,2,2,0.45));
+}
+
+.origem-maldicao-dialog .maldicao-origem__choice .title{
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: #ffb3b3;
+    font-size: 13px;
+}
+
+.origem-maldicao-dialog .maldicao-origem__choice .sub{
+    margin-top: 0;
+    font-size: 12px;
+    color: #e0dede;
+    opacity: 0.95;
+}
+
+.origem-maldicao-dialog .maldicao-origem__choice.active,
+.origem-maldicao-dialog .maldicao-origem__choice[aria-pressed="true"]{
+    border: 2px solid rgba(255,80,80,0.85);
+    box-shadow: 0 10px 36px rgba(176,0,32,0.22);
+    background: linear-gradient(180deg, rgba(255,80,80,0.02), rgba(20,4,4,0.55));
+}
+
+.origem-maldicao-dialog .maldicao-origem__current{
+    padding: 10px 18px 18px 18px;
+    color: #f0eaea;
+    font-size: 13px;
+}
+
+/* Botões do diálogo (confirm/cancel) — estilo vermelho */
+.origem-maldicao-dialog .dialog-buttons{
+    padding: 12px 18px;
+    display:flex;
+    gap:10px;
+    justify-content:flex-end;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.15));
+}
+.origem-maldicao-dialog .dialog-buttons .dialog-button.confirm{
+    background: linear-gradient(180deg,#ff5a5a,#c03939);
+    color: #fff;
+    border: none;
+    box-shadow: 0 6px 20px rgba(192,24,24,0.22);
+}
+.origem-maldicao-dialog .dialog-buttons .dialog-button.cancel{
+    background: transparent;
+    border:1px solid rgba(255,255,255,0.06);
+    color:#f0eaea;
+}
+
+/* ============================================================
+   POLISH (v2) — CONSISTÊNCIA E QUALIDADE VISUAL
+   - Sem trocar a paleta: usa os roxos/vermelhos já existentes
+   ============================================================ */
+
+.feiticeiros-e-maldicoes {
+    --jem-bg: #121212;
+    --jem-surface: #0f0f0f;
+    --jem-surface-2: rgba(255,255,255,0.03);
+    --jem-border: rgba(255,255,255,0.08);
+    --jem-border-strong: rgba(155,77,202,0.28);
+    --jem-text: #e0e0e0;
+    --jem-text-muted: #a7a7a7;
+    --jem-accent: #9b4dca;
+    --jem-accent-2: #5d1b7e;
+    --jem-danger: #c03939;
+    --jem-danger-2: #ff5a5a;
+    --jem-radius: 10px;
+    --jem-radius-sm: 8px;
+    --jem-shadow: 0 10px 28px rgba(0,0,0,0.55);
+}
+
+/* Inputs e selects mais consistentes (sem brigar com regras antigas) */
+.feiticeiros-e-maldicoes input[type="text"],
+.feiticeiros-e-maldicoes input[type="number"],
+.feiticeiros-e-maldicoes select,
+.feiticeiros-e-maldicoes textarea {
+    border-radius: var(--jem-radius-sm);
+}
+
+.feiticeiros-e-maldicoes input[type="text"]:focus,
+.feiticeiros-e-maldicoes input[type="number"]:focus,
+.feiticeiros-e-maldicoes textarea:focus,
+.feiticeiros-e-maldicoes select:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(155,77,202,0.12), 0 0 18px rgba(155,77,202,0.18);
+}
+
+/* ============================================================
+   ITEM SHEET — layout mais “premium”
+   ============================================================ */
+
+/* Dá cara de “card” para o corpo do item */
+.feiticeiros-e-maldicoes.sheet.item .window-content,
+.feiticeiros-e-maldicoes .item-sheet .window-content {
+    background: radial-gradient(circle at 20% 0%, rgba(155,77,202,0.10), rgba(0,0,0,0) 45%),
+                linear-gradient(180deg, #101010, #0b0b0b);
+}
+
+.feiticeiros-e-maldicoes .item-sheet form {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.feiticeiros-e-maldicoes .item-sheet .sheet-header {
+    background: linear-gradient(180deg, rgba(155,77,202,0.14), rgba(0,0,0,0.0));
+    border-bottom: 1px solid rgba(155,77,202,0.22);
+    padding: 16px;
+    gap: 14px;
+}
+
+.feiticeiros-e-maldicoes .item-sheet .profile-img {
+    width: 92px;
+    height: 92px;
+    border-radius: var(--jem-radius);
+    border: 1px solid rgba(155,77,202,0.24);
+    background: rgba(0,0,0,0.35);
+}
+
+.feiticeiros-e-maldicoes .item-sheet .charname input {
+    font-size: 22px;
+    height: 40px;
+    letter-spacing: 0.2px;
+    border-bottom: 1px solid rgba(255,255,255,0.12) !important;
+    padding-bottom: 6px;
+}
+
+.feiticeiros-e-maldicoes .item-sheet .item-fields {
+    margin-top: 12px;
+    gap: 10px;
+    align-items: end;
+}
+
+.feiticeiros-e-maldicoes .item-sheet .resource {
+    background: rgba(0,0,0,0.22);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--jem-radius-sm);
+    padding: 10px;
+}
+
+.feiticeiros-e-maldicoes .item-sheet .resource label {
+    color: var(--jem-text-muted);
+    font-size: 11px;
+    letter-spacing: 0.6px;
+}
+
+.feiticeiros-e-maldicoes .item-sheet .resource input[type="text"],
+.feiticeiros-e-maldicoes .item-sheet .resource input[type="number"] {
+    height: 34px;
+    padding: 6px 10px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.22));
+    border: 1px solid rgba(155,77,202,0.16);
+}
+
+.feiticeiros-e-maldicoes .item-sheet .sheet-body {
+    padding: 14px 16px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.feiticeiros-e-maldicoes .item-sheet .item-section-title {
+    margin: 0;
+    padding: 0 0 8px 0;
+    border-bottom: 1px solid rgba(155,77,202,0.22);
+    color: #f0eefe;
+    font-size: 14px;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+}
+
+/* Editor mais bonito e legível */
+.feiticeiros-e-maldicoes .item-sheet .editor-container {
+    flex: 1;
+    min-height: 260px;
+    border-radius: var(--jem-radius);
+    border: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.22));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    overflow: hidden;
+}
+
+.feiticeiros-e-maldicoes .item-sheet .editor-container .editor,
+.feiticeiros-e-maldicoes .item-sheet .editor-container .editor-content,
+.feiticeiros-e-maldicoes .item-sheet .editor-container .prosemirror {
+    height: 100%;
+}
+
+.feiticeiros-e-maldicoes .item-sheet .editor-container .prosemirror {
+    padding: 10px 12px;
+    color: var(--jem-text);
+}
+
+/* Força a cor branca dentro da descrição (editor ProseMirror / visualização)
+   para garantir legibilidade mesmo com conteúdo enriquecido/links. */
+.feiticeiros-e-maldicoes .item-sheet .editor-container .prosemirror,
+.feiticeiros-e-maldicoes .item-sheet .editor-container .prosemirror p,
+.feiticeiros-e-maldicoes .item-sheet .editor-container .prosemirror li,
+.feiticeiros-e-maldicoes .item-sheet .editor-container .prosemirror h1,
+.feiticeiros-e-maldicoes .item-sheet .editor-container .prosemirror h2,
+.feiticeiros-e-maldicoes .item-sheet .editor-container .prosemirror h3,
+.feiticeiros-e-maldicoes .item-sheet .editor-container .prosemirror a,
+.feiticeiros-e-maldicoes .item-sheet .editor-container .prosemirror strong,
+.feiticeiros-e-maldicoes .item-sheet .editor-container .prosemirror em {
+    color: #ffffff !important;
+}
+
+/* ProseMirror também pode renderizar com .editor-content/.ProseMirror (varia por versão/estado). */
+.feiticeiros-e-maldicoes.sheet.item .editor-container .editor-content,
+.feiticeiros-e-maldicoes.sheet.item .editor-container .editor-content * ,
+.feiticeiros-e-maldicoes.sheet.item .editor-container .ProseMirror,
+.feiticeiros-e-maldicoes.sheet.item .editor-container .ProseMirror * {
+    color: #ffffff !important;
+}
+
+/* Links dentro da descrição ficam com um tom suave para destacar sem quebrar o tema */
+.feiticeiros-e-maldicoes .item-sheet .editor-container .prosemirror a {
+    color: #9b4dca !important;
+    text-decoration: underline !important;
+}
+
+.feiticeiros-e-maldicoes.sheet.item .editor-container .editor-content a,
+.feiticeiros-e-maldicoes.sheet.item .editor-container .ProseMirror a {
+    color: #9b4dca !important;
+    text-decoration: underline !important;
+}
+
+.feiticeiros-e-maldicoes .item-sheet .editor-container .editor-menu {
+    background: rgba(0,0,0,0.35);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Botões padrão do Foundry dentro das sheets */
+.feiticeiros-e-maldicoes button,
+.feiticeiros-e-maldicoes .button {
+    border-radius: 10px;
+}
+
+/* Responsivo */
+@media (max-width: 720px) {
+    .feiticeiros-e-maldicoes .item-sheet .profile-img { width: 76px; height: 76px; }
+    .feiticeiros-e-maldicoes .item-sheet .item-fields { grid-template-columns: 1fr !important; }
+}
+
+/* ============================================================
+   ABA ITENS (ATOR) — lista e controles mais “premium”
+   ============================================================ */
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .jem-section-title,
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-section-title,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-section-title {
+    margin-top: 0;
+    border-bottom: 1px solid rgba(155,77,202,0.22);
+    color: #f0eefe;
+    font-size: 14px;
+    letter-spacing: 0.7px;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .jem-items-list,
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-items-list,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-items-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .jem-item-row,
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-item-row,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-item-row {
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-radius: var(--jem-radius-sm);
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.18));
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .jem-item-row:hover,
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-item-row:hover,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-item-row:hover {
+    border-color: rgba(155,77,202,0.28);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.42), 0 0 0 1px rgba(155,77,202,0.10);
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .jem-item-row .item-name,
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-item-row .item-name,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-item-row .item-name {
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+/* “Tabela” para listas: colunas (PE / Ação) + cabeçalho */
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-items-list[data-aptidao-tipo] .items-header {
+    padding: 8px 12px;
+    background: rgba(0,0,0,0.22);
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: none;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-items-list[data-aptidao-tipo] .items-header:hover {
+    border-color: rgba(255,255,255,0.10);
+    box-shadow: none;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-items-list[data-aptidao-tipo] .items-header .item-name {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--jem-text-muted);
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-items-list[data-aptidao-tipo] .jem-item-col {
+    flex: 0 0 auto;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    color: #ddd;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-items-list[data-aptidao-tipo] .jem-item-col--pe {
+    width: 72px;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-items-list[data-aptidao-tipo] .jem-item-col--acao {
+    width: 110px;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-items-list[data-aptidao-tipo] .items-header .jem-item-col {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--jem-text-muted);
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .jem-item-row .item-image,
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-item-row .item-image,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-item-row .item-image {
+    width: 16px !important;
+    height: 16px !important;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid rgba(155,77,202,0.18);
+    background: rgba(0,0,0,0.30);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.36);
+}
+
+/* Ação como label no sheet de Item */
+.sheet.item .action-label,
+.feiticeiros-e-maldicoes.sheet.item .action-label {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(155,77,202,0.14);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+/* Pequeno badge ao lado do nome na lista de aptidões */
+.sheet.actor .tab.itens .jem-item-row .item-action,
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .jem-item-row .item-action {
+    /* Espaçamento em ambos os lados */
+    margin: 0 8px;
+    /* Menor padding para reduzir largura visual */
+    padding: 2px 4px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    color: #ddd;
+    font-size: 11px;
+    font-weight: 700;
+    align-self: center;
+    display: inline-block;
+    white-space: nowrap;
+    max-width: 6.5rem; /* evita que textos longos alarguem demais */
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .jem-item-name,
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-item-name,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-item-name {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    color: #ffffff;
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Quando o nome do item for um botão de uso (transformado em <button>) */
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .jem-item-name.item-use,
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-item-name.item-use,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-item-name.item-use {
+    background: transparent;
+    border: none;
+    padding: 6px 8px;
+    margin: 0;
+    cursor: pointer;
+    display: inline-block;
+    text-align: left;
+    color: #ffdfe9; /* nome levemente rosado para destaque */
+    transition: color 0.12s ease, transform 0.08s ease, box-shadow 0.12s ease;
+}
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .jem-item-name.item-use:hover,
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-item-name.item-use:hover,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-item-name.item-use:hover {
+    color: #ffffff;
+    transform: translateY(-1px);
+    text-shadow: 0 0 8px rgba(155,77,202,0.12);
+}
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .jem-item-name.item-use:focus,
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-item-name.item-use:focus,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-item-name.item-use:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(155,77,202,0.12);
+    border-radius: 6px;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .jem-item-controls,
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-item-controls,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-item-controls {
+    gap: 8px;
+    justify-content: flex-end;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .item-controls .item-control,
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .item-controls .item-control,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .item-controls .item-control {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--jem-text);
+    transition: transform 0.08s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .item-controls .item-control:hover,
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .item-controls .item-control:hover,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .item-controls .item-control:hover {
+    transform: translateY(-1px);
+    border-color: rgba(155,77,202,0.28);
+    box-shadow: 0 10px 18px rgba(0,0,0,0.40), 0 0 0 1px rgba(155,77,202,0.10);
+    color: #fff;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .item-controls .item-control.item-delete:hover,
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .item-controls .item-control.item-delete:hover,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .item-controls .item-control.item-delete:hover {
+    border-color: rgba(192,57,57,0.45);
+    box-shadow: 0 10px 18px rgba(0,0,0,0.40), 0 0 0 1px rgba(192,57,57,0.18);
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.itens .jem-empty,
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-empty,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-empty {
+    margin: 10px 0 0;
+    padding: 12px;
+    border-radius: var(--jem-radius-sm);
+    background: rgba(0,0,0,0.22);
+    border: 1px dashed rgba(255,255,255,0.10);
+    color: var(--jem-text-muted);
+}
+
+/* ============================================================
+   ITEM SHEET — botão X de fechar (já que o header padrão está oculto)
+   ============================================================ */
+
+.feiticeiros-e-maldicoes.sheet.item .sheet-header {
+    position: relative;
+}
+
+.feiticeiros-e-maldicoes.sheet.item .jem-sheet-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.10);
+    color: #ffffff;
+    cursor: pointer;
+    z-index: 5;
+    transition: transform 0.08s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.feiticeiros-e-maldicoes.sheet.item .jem-sheet-close:hover {
+    transform: translateY(-1px);
+    border-color: rgba(155,77,202,0.28);
+    box-shadow: 0 10px 18px rgba(0,0,0,0.40), 0 0 0 1px rgba(155,77,202,0.10);
+}
+
+.feiticeiros-e-maldicoes.sheet.item .jem-sheet-close:active {
+    transform: translateY(0);
+}
+
+.feiticeiros-e-maldicoes.sheet.item .jem-sheet-close:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(155,77,202,0.12);
+}
+
+/* Ajuste: quando o placeholder está dentro de <ol>, não precisa margin-top */
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-items-list .jem-empty,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-items-list .jem-empty {
+    margin: 0;
+}
+
+/* Drop zones de aptidões: sutil e consistente com o tema */
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-items-list[data-aptidao-tipo],
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-items-list[data-aptidao-tipo] {
+    padding: 8px;
+    border-radius: var(--jem-radius-sm);
+    background: rgba(0,0,0,0.18);
+    border: 1px dashed rgba(155,77,202,0.18);
+}
+
+/* Deixa as rows “encaixadas” dentro do container com padding */
+.feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-items-list[data-aptidao-tipo] .jem-item-row,
+.feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-items-list[data-aptidao-tipo] .jem-item-row {
+    margin: 0;
+}
+
+/* ============================================================
+   MODAL/JANELA DO ITEM (ItemSheet) — header e botões
+   ============================================================ */
+
+/* Remove o header padrão do Foundry (título/uuid/config/close) nas fichas de Item.
+   Mantemos um botão de fechar dentro do template (jem-sheet-close). */
+.feiticeiros-e-maldicoes.sheet.item.item-sheet.window-app > header.window-header {
+    display: none !important;
+}
+
+/* Quando o header some, o conteúdo pode ficar “colado” no topo; arredonda bem. */
+.feiticeiros-e-maldicoes.sheet.item.item-sheet.window-app .window-content {
+    border-radius: var(--jem-radius);
+    overflow: hidden;
+}
+
+.feiticeiros-e-maldicoes.sheet.item .window-header,
+.feiticeiros-e-maldicoes.item-sheet.window-app .window-header {
+    background: linear-gradient(180deg, rgba(155,77,202,0.22), rgba(0,0,0,0.10));
+    border-bottom: 1px solid rgba(155,77,202,0.22);
+}
+
+.feiticeiros-e-maldicoes.sheet.item .window-header .window-title,
+.feiticeiros-e-maldicoes.item-sheet.window-app .window-header .window-title {
+    color: #ffffff;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.feiticeiros-e-maldicoes.sheet.item .window-header .header-button,
+.feiticeiros-e-maldicoes.item-sheet.window-app .window-header .header-button {
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.feiticeiros-e-maldicoes.sheet.item .window-header .header-button:hover,
+.feiticeiros-e-maldicoes.item-sheet.window-app .window-header .header-button:hover {
+    border-color: rgba(155,77,202,0.28);
+    box-shadow: 0 10px 18px rgba(0,0,0,0.40), 0 0 0 1px rgba(155,77,202,0.10);
+}
+
+/* ============================================================
+   ESTILO DO DIALOG: ÚLTIMA AÇÃO (Tema Jujutsu)
+   ============================================================ */
+
+/* 1. A JANELA PRINCIPAL (Borda e Fundo)
+   O 'body' na frente garante alta especificidade contra temas/módulos */
+body .ultima-acao.window-app .window-content {
+    background: #1a1a1a !important;
+    background-image: none !important;
+    border: 1px solid #5d1b7e !important;
+    box-shadow: 0 0 20px rgba(93, 27, 126, 0.5) !important;
+    color: #e0e0e0 !important;
+    padding: 0 !important;
+}
+
+/* 2. O CABEÇALHO DA JANELA */
+body .ultima-acao.window-app .window-header {
+    background: #0d0d0d !important;
+    border-bottom: 2px solid #5d1b7e !important;
+    color: #fff !important;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+body .ultima-acao.window-app .window-title {
+    text-shadow: 0 0 5px #9b4dca;
+}
+
+body .ultima-acao.window-app .window-close {
+    color: #9b4dca !important;
+}
+
+/* 3. O CONTEÚDO INTERNO */
+body .ultima-acao .dialog-content {
+    padding: 20px !important;
+    background: transparent !important;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+/* 4. ÁREA DOS BOTÕES */
+body .ultima-acao .dialog-buttons {
+    display: flex !important;
+    gap: 15px !important;
+    padding: 10px 20px 20px 20px !important;
+    background: transparent !important;
+}
+
+/* 5. ESTILO GERAL DOS BOTÕES */
+body .ultima-acao button.dialog-button {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid #444 !important;
+    color: #ccc !important;
+    height: 40px !important;
+    line-height: 38px !important;
+    text-transform: uppercase;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: none !important;
+}
+
+/* ========================
+   PROTEÇÃO DE CORES SEMÂNTICAS
+   (Garante que Recursos mantenham sua identidade visual)
+   ======================== */
+
+/* PE (Energia) - Sempre Roxo */
+.status-card.pe { 
+    border-top-color: #5d1b7e !important; 
+}
+.status-card.pe label { 
+    color: #a655ff !important; 
+}
+.status-card.pe .bar-fill {
+    background: linear-gradient(to right, #4a0d67, #9b4dca) !important;
+}
+
+/* Sanidade - Sempre Amarelo */
+.status-card.sanidade { 
+    border-top-color: #ffbb33 !important; 
+}
+.status-card.sanidade label { 
+    color: #ffbb33 !important; 
+}
+.status-card.sanidade .bar-fill {
+    background: linear-gradient(to right, #cc8800, #ffbb33) !important;
+}
+
+/* Integridade (Alma) - Sempre Branco/Cinza */
+.status-card.alma { 
+    border-top-color: #e0e0e0 !important; 
+}
+.status-card.alma label { 
+    color: #e0e0e0 !important; 
+}
+.status-card.alma .bar-fill {
+    background: linear-gradient(to right, #666, #e0e0e0) !important;
+}
+
+/* Vida (HP) - Sempre Vermelho */
+.status-card.hp { 
+    border-top-color: #ff4444 !important; 
+}
+.status-card.hp label { 
+    color: #ff4444 !important; 
+}
+.status-card.hp .bar-fill {
+    background: linear-gradient(to right, #800000, #ff4444) !important;
+}
+
+/* Quando HP estiver baixo, o PE também entra em modo alerta (vermelho) */
+.feiticeiros-e-maldicoes.sheet.actor.hp-low .status-card.pe {
+    border-top-color: #ff4444 !important;
+}
+.feiticeiros-e-maldicoes.sheet.actor.hp-low .status-card.pe label {
+    color: #ff4444 !important;
+}
+.feiticeiros-e-maldicoes.sheet.actor.hp-low .status-card.pe .bar-fill {
+    background: linear-gradient(to right, #800000, #ff4444) !important;
+}
+
+body .ultima-acao button.dialog-button:hover {
+    border-color: #fff !important;
+    color: #fff !important;
+}
+
+/* 6. BOTÃO: TRY (DESTAQUE ROXO) */
+body .ultima-acao button.dialog-button.try {
+    background: linear-gradient(90deg, #5d1b7e, #9b4dca) !important;
+    border: 1px solid #9b4dca !important;
+    color: #fff !important;
+    text-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+body .ultima-acao button.dialog-button.try:hover {
+    box-shadow: 0 0 15px #9b4dca !important;
+    transform: scale(1.02);
+}
+
+/* 7. BOTÃO: ACCEPT (DISCRETO) */
+body .ultima-acao button.dialog-button.accept {
+    background: transparent !important;
+    border: 1px solid #555 !important;
+}
+
+body .ultima-acao button.dialog-button.accept:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Força cor branca nas opções do select dentro do diálogo Última Ação */
+body .ultima-acao select.ultima-acao-select {
+    color: #ffffff !important;
+    background: #08080a !important;
+    border: 1px solid rgba(155,77,202,0.12) !important;
+}
+
+/* Alguns renderers usam estilos nativos para <option> — reforçamos a cor */
+body .ultima-acao select.ultima-acao-select option {
+    color: #ffffff !important;
+    background: #08080a !important;
+}
+
+/* ==================================================
+   OVERRIDES: substituir ocorrências literais de roxo
+   por variáveis do tema (alto nível, com !important)
+   ================================================== */
+
+
+/* Elementos com uso decorativo do roxo — forçamos o tema dinâmico */
+.feiticeiros-e-maldicoes.sheet.actor .kokusen-chat {
+    background: linear-gradient(90deg, rgba(var(--main-rgb),0.12), rgba(0,0,0,0.5)) !important;
+    border-left: 4px solid var(--main-color) !important;
+    color: #fff !important;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .kokusen-badge {
+    background: var(--main-color) !important;
+    color: #fff !important;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .death-pill,
+.feiticeiros-e-maldicoes.sheet.actor .death-pill.active {
+    background: linear-gradient(180deg, var(--main-color), var(--dark-color)) !important;
+    border-color: rgba(var(--main-rgb),0.35) !important;
+    box-shadow: 0 0 8px rgba(var(--main-rgb),0.18) !important;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .aptidao-dialog .aptidao-icon {
+    color: var(--main-color) !important;
+}
+
+/* Inputs / controles que usam accent-color */
+.feiticeiros-e-maldicoes.sheet.actor input[type="checkbox"],
+.feiticeiros-e-maldicoes.sheet.actor input[type="radio"] {
+    accent-color: var(--main-color) !important;
+}
+
+/* Forçar bordas e sombras decorativas com a variável tema */
+.feiticeiros-e-maldicoes.sheet.actor .panel,
+.feiticeiros-e-maldicoes.sheet.actor .card,
+.feiticeiros-e-maldicoes.sheet.actor .combat-card,
+.feiticeiros-e-maldicoes.sheet.actor .status-card {
+    border-color: rgba(var(--main-rgb),0.12) !important;
+    box-shadow: 0 6px 18px rgba(var(--main-rgb),0.06) !important;
+}
+
+/* Proteção para manter cores semânticas (HP/PE/Sanidade/Alma) */
+.feiticeiros-e-maldicoes.sheet.actor .status-card.hp { border-top-color: #ff4444 !important; }
+.feiticeiros-e-maldicoes.sheet.actor .status-card.pe { border-top-color: #5d1b7e !important; }
+.feiticeiros-e-maldicoes.sheet.actor .status-card.sanidade { border-top-color: #ffbb33 !important; }
+.feiticeiros-e-maldicoes.sheet.actor .status-card.alma { border-top-color: #e0e0e0 !important; }
+
+/* Pequenas proteções finais para text-shadow/border-color */
+.feiticeiros-e-maldicoes.sheet.actor * {
+    text-shadow: none !important;
+}
+
+/* Ajustes específicos solicitados pelo usuário: substituir roxos por variáveis */
+.feiticeiros-e-maldicoes.sheet.actor .atributo-card {
+    border: 1px solid rgba(var(--main-rgb),0.18) !important;
+}
+.feiticeiros-e-maldicoes.sheet.actor .atributo-mod {
+    text-shadow: none !important;
+    color: var(--main-color) !important;
+}
+.feiticeiros-e-maldicoes.sheet.actor .atributo-base input:focus {
+    border-bottom: 1px solid var(--main-color) !important;
+}
+
+/* Nível (badge / emblema / botão subir nível) */
+.feiticeiros-e-maldicoes.sheet.actor .class-level-badge {
+    background: var(--dark-color) !important;
+    border: 1px solid var(--main-color) !important;
+    box-shadow: 0 0 5px rgba(var(--dark-rgb),0.45) !important;
+}
+.feiticeiros-e-maldicoes.sheet.actor .level-container {
+    border: 2px solid var(--main-color) !important;
+    box-shadow: 0 0 10px rgba(var(--main-rgb),0.18) !important;
+}
+.feiticeiros-e-maldicoes.sheet.actor .level-container label {
+    color: var(--main-color) !important;
+}
+.feiticeiros-e-maldicoes.sheet.actor .level-up-btn {
+    color: var(--main-color) !important;
+}
+
+/* Ataques + Salvaguardas (cards e selects) */
+.feiticeiros-e-maldicoes.sheet.actor .pericia-select,
+.feiticeiros-e-maldicoes.sheet.actor .pericias-top-grid .pericia-select {
+    color: var(--main-color) !important;
+    border-color: rgba(var(--main-rgb),0.18) !important;
+}
+.feiticeiros-e-maldicoes.sheet.actor .pericias-top-grid .pericia-row {
+    border: 1px solid rgba(var(--main-rgb),0.12) !important;
+    background: rgba(var(--main-rgb),0.06) !important;
+}
+.feiticeiros-e-maldicoes.sheet.actor .pericias-top-grid .pericia-row:hover {
+    background: rgba(var(--main-rgb),0.10) !important;
+    box-shadow: 0 0 14px rgba(var(--main-rgb),0.12) !important;
+}
+.feiticeiros-e-maldicoes.sheet.actor .pericia-label i {
+    color: var(--main-color) !important;
+}
+.feiticeiros-e-maldicoes.sheet.actor .pericia-label:hover {
+    text-shadow: 0 0 5px rgba(var(--main-rgb),0.18) !important;
+}
+
+/* Aptidões: título, pontos restantes, botões de nível */
+.feiticeiros-e-maldicoes.sheet.actor .aptidoes-title {
+    border-bottom: 2px solid var(--main-color) !important;
+    color: var(--main-color) !important;
+}
+.feiticeiros-e-maldicoes.sheet.actor .aptidao-pontos__restantes {
+    border-color: rgba(var(--main-rgb),0.35) !important;
+    background: rgba(var(--main-rgb),0.16) !important;
+}
+.feiticeiros-e-maldicoes.sheet.actor .aptidao-nivel-btn {
+    border: 1px solid rgba(var(--main-rgb),0.35) !important;
+    background: rgba(var(--main-rgb),0.16) !important;
+}
+.feiticeiros-e-maldicoes.sheet.actor .aptidao-nivel-btn:hover {
+    border-color: rgba(var(--main-rgb),0.6) !important;
+    background: rgba(var(--main-rgb),0.26) !important;
+}
+
+/* Fundo de 'mentais' em status */
+.feiticeiros-e-maldicoes.sheet.actor .condition-header.mental {
+    background: rgba(var(--main-rgb),0.06) !important;
+}

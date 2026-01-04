@@ -1,0 +1,43 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <button type="button" class="jem-sheet-close" title="Fechar" aria-label="Fechar">
+      <i class="fas fa-times"></i>
+    </button>
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}"/>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Nome do Item"/></h1>
+
+      <div class="item-fields grid grid-3col">
+        {{#unless (eq item.type "aptidao")}}
+          <div class="resource">
+            <label>Fonte</label>
+            <input type="text" name="system.fonte.value" value="{{system.fonte.value}}" placeholder="Ex: Livro / Mestre"/>
+          </div>
+        {{/unless}}
+        {{#unless (eq item.type "aptidao")}}
+          <div class="resource">
+            <label>Custo (PE)</label>
+            <input type="number" name="system.custo.value" value="{{system.custo.value}}"/>
+          </div>
+          <div class="resource">
+            <label>Tipo</label>
+            <div class="action-label">{{system.acao.value}}</div>
+          </div>
+        {{/unless}}
+        {{#unless (eq item.type "aptidao")}}
+          <div class="resource">
+            <label>Requisito</label>
+            <input type="text" name="system.requisito.value" value="{{system.requisito.value}}" placeholder="Ex: Nv 2"/>
+          </div>
+        {{/unless}}
+      </div>
+    </div>
+  </header>
+
+  <section class="sheet-body">
+    <h3 class="item-section-title">Descrição</h3>
+    <div class="editor-container">
+      {{editor system.descricao.value target="system.descricao.value" engine="prosemirror" button=true owner=owner editable=editable}}
+    </div>
+  </section>
+</form>

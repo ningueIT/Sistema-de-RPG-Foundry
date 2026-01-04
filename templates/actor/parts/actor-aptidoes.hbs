@@ -1,0 +1,155 @@
+<h3 class="aptidoes-title">Aptidões</h3>
+
+<div class="condition-group aptidao-niveis-card">
+  <div class="condition-header mental">Níveis de Aptidão</div>
+  <div class="aptidao-niveis-body">
+    <div class="aptidao-pontos">
+      <span class="aptidao-pontos__label">Pontos:</span>
+      <span class="aptidao-pontos__restantes">{{system.aptidaoPontos.restantes.value}}</span>
+      restantes /
+      <span class="aptidao-pontos__ganhos">{{system.aptidaoPontos.ganhos.value}}</span>
+      ganhos
+      <span class="aptidao-pontos__gastos">({{system.aptidaoPontos.gastos.value}} gastos)</span>
+    </div>
+
+    <div class="aptidao-niveis-grid">
+      <div class="aptidao-nivel-row">
+        <div class="aptidao-nivel-label">{{system.aptidaoNiveis.aura.label}}</div>
+        <div class="aptidao-nivel-controls">
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-dec" data-key="aura">-</button>
+          <span class="aptidao-nivel-value">{{system.aptidaoNiveis.aura.value}}</span>
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-inc" data-key="aura">+</button>
+        </div>
+      </div>
+
+      <div class="aptidao-nivel-row">
+        <div class="aptidao-nivel-label">{{system.aptidaoNiveis.controleELeitura.label}}</div>
+        <div class="aptidao-nivel-controls">
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-dec" data-key="controleELeitura">-</button>
+          <span class="aptidao-nivel-value">{{system.aptidaoNiveis.controleELeitura.value}}</span>
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-inc" data-key="controleELeitura">+</button>
+        </div>
+      </div>
+
+      <div class="aptidao-nivel-row">
+        <div class="aptidao-nivel-label">{{system.aptidaoNiveis.barreiras.label}}</div>
+        <div class="aptidao-nivel-controls">
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-dec" data-key="barreiras">-</button>
+          <span class="aptidao-nivel-value">{{system.aptidaoNiveis.barreiras.value}}</span>
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-inc" data-key="barreiras">+</button>
+        </div>
+      </div>
+
+      <div class="aptidao-nivel-row">
+        <div class="aptidao-nivel-label">{{system.aptidaoNiveis.dominio.label}}</div>
+        <div class="aptidao-nivel-controls">
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-dec" data-key="dominio">-</button>
+          <span class="aptidao-nivel-value">{{system.aptidaoNiveis.dominio.value}}</span>
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-inc" data-key="dominio">+</button>
+        </div>
+      </div>
+
+      <div class="aptidao-nivel-row">
+        <div class="aptidao-nivel-label">{{system.aptidaoNiveis.energiaReversa.label}}</div>
+        <div class="aptidao-nivel-controls">
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-dec" data-key="energiaReversa">-</button>
+          <span class="aptidao-nivel-value">{{system.aptidaoNiveis.energiaReversa.value}}</span>
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-inc" data-key="energiaReversa">+</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<h3 class="jem-section-title">Aptidões (Ativas)</h3>
+
+<ol class="items-list jem-items-list" data-aptidao-tipo="ativa">
+  <li class="items-header flexrow jem-item-row" aria-hidden="true">
+    <div class="item-name flexrow">Aptidão</div>
+    <div class="jem-item-col jem-item-col--pe">PE</div>
+    <div class="jem-item-col jem-item-col--acao">Ação</div>
+    <div class="item-controls flexrow jem-item-controls"></div>
+  </li>
+  {{#if aptidoesAtivas.length}}
+    {{#each aptidoesAtivas as |item|}}
+      <li class="item flexrow jem-item-row" data-item-id="{{item._id}}">
+        <div class="item-name flexrow">
+          <img class="item-image" src="{{item.img}}" title="{{item.name}}" width="24" height="24"/>
+          <button type="button" class="jem-item-name item-use" data-action="use-aptidao">{{item.name}}</button>
+        </div>
+        <div class="jem-item-col jem-item-col--pe">{{item.system.custo.value}} PE</div>
+        <div class="jem-item-col jem-item-col--acao">{{item.system.acao.value}}</div>
+        <div class="item-controls flexrow jem-item-controls">
+          <a class="item-control item-edit" title="Editar"><i class="fas fa-edit"></i></a>
+          <a class="item-control item-delete" title="Remover"><i class="fas fa-trash"></i></a>
+        </div>
+      </li>
+    {{/each}}
+  {{else}}
+    <li class="jem-empty">Arraste uma Aptidão ativa do Compendium para cá.</li>
+  {{/if}}
+</ol>
+
+<div class="aptidao-derivados-row">
+  <div class="condition-group aptidao-derivados-card">
+    <div class="condition-header sensory">Derivados</div>
+    <div class="aptidao-derivados-body">
+      <div class="aptidao-derivados-grid">
+        <div class="aptidao-derivado">
+          <div class="aptidao-derivado__label">{{system.aptidaoDerivados.limiteGastoPE.label}}</div>
+          <div class="aptidao-derivado__value">{{system.aptidaoDerivados.limiteGastoPE.value}}</div>
+        </div>
+        <div class="aptidao-derivado">
+          <div class="aptidao-derivado__label">{{system.aptidaoDerivados.rdBarreira.label}}</div>
+          <div class="aptidao-derivado__value">{{system.aptidaoDerivados.rdBarreira.value}}</div>
+        </div>
+        <div class="aptidao-derivado">
+          <div class="aptidao-derivado__label">{{system.aptidaoDerivados.refinamento.label}}</div>
+          <div class="aptidao-derivado__value">{{system.aptidaoDerivados.refinamento.value}}</div>
+        </div>
+        {{#if system.aptidoes.barreiras.tecnicasDeBarreiras}}
+        <div class="aptidao-derivado">
+          <div class="aptidao-derivado__label">PV por Parede (Padrão)</div>
+          <div class="aptidao-derivado__value">{{system.aptidaoDerivados.barreira.pvPadrao}}</div>
+        </div>
+        <div class="aptidao-derivado">
+          <div class="aptidao-derivado__label">PV Paredes Resistentes</div>
+          <div class="aptidao-derivado__value">{{system.aptidaoDerivados.barreira.pvParedesResistentes}}</div>
+        </div>
+        <div class="aptidao-derivado">
+          <div class="aptidao-derivado__label">PV Casca do Domínio</div>
+          <div class="aptidao-derivado__value">{{system.aptidaoDerivados.barreira.pvCascaDominio}}</div>
+        </div>
+        <div class="aptidao-derivado">
+          <div class="aptidao-derivado__label">Tamanho/PE por Parede</div>
+          <div class="aptidao-derivado__value">{{system.aptidaoDerivados.barreira.tamanhoSegmentoM}}m / {{system.aptidaoDerivados.barreira.custoPEporParede}} PE</div>
+        </div>
+        <div class="aptidao-derivado">
+          <div class="aptidao-derivado__label">Max Segmentos</div>
+          <div class="aptidao-derivado__value">{{system.aptidaoDerivados.barreira.maxSegmentos}}</div>
+        </div>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+
+  <div class="condition-group aptidao-treino-card">
+    <div class="condition-header physical">
+      <div class="aptidao-treino-title">Treino (Interlúdio)</div>
+    </div>
+    <div class="aptidao-treino-body">
+      <div class="aptidao-treino-controls">
+        <span class="aptidao-treino-counter" aria-live="polite">Extras: {{system.aptidaoTreino.pontosAdicionais.value}}</span>
+        <button type="button" class="aptidao-treino-btn aptidao-treino-add" title="Adicionar +1 ponto de Aptidão">Adicionar +1</button>
+      </div>
+      <div class="aptidao-treino-help">Pontos extras de treino são persistidos e somados aos Pontos Ganhos.</div>
+    </div>
+  </div>
+</div>
+
+{{#if system.aptidoes.barreiras.tecnicasDeBarreiras}}
+<div style="margin-top:8px;">
+  <button type="button" class="aptidao-open-map-btn" data-action="create-walls">Criar Paredes no Mapa</button>
+</div>
+{{/if}}
