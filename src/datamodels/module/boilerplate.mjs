@@ -9,6 +9,7 @@ import { preloadHandlebarsTemplates } from './helpers/templates.mjs';
 import { BOILERPLATE } from './helpers/config.mjs';
 // Import DataModel classes
 import * as models from './data/_module.mjs';
+import { activateAptidao, revertAptidao, hasSufficientResources } from './helpers/aptidoes.mjs';
 
 /* -------------------------------------------- */
 /*  Init Hook                                   */
@@ -21,6 +22,9 @@ Hooks.once('init', function () {
     BoilerplateActor,
     BoilerplateItem,
     rollItemMacro,
+    activateAptidao,
+    revertAptidao,
+    hasSufficientResources,
   };
 
   // Add custom constants for configuration.
@@ -51,6 +55,7 @@ Hooks.once('init', function () {
     feature: models.BoilerplateFeature,
     spell: models.BoilerplateSpell
   }
+  CONFIG.Item.dataModels.aptidao = models.BoilerplateAptidao;
 
   // Active Effects are never copied to the Actor,
   // but will still apply to the Actor from within the Item

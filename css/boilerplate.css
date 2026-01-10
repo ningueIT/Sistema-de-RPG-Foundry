@@ -398,6 +398,37 @@ input[type=number]::-webkit-inner-spin-button {
     justify-content: center;
     gap: 10px;
     box-shadow: 0 0 5px rgba(0,0,0,0.35);
+
+/* ============================================================
+   CHAT: estilo das mensagens (fundo preto, texto branco, nome roxo)
+   ============================================================ */
+.chat-log .message, .chat-log .chat-message, .chat-log .message-content {
+    background: #000 !important;
+    color: #ffffff !important;
+    border: 1px solid #222 !important;
+    border-radius: 8px;
+    padding: 8px 10px !important;
+}
+
+.chat-log .message .message-content, .chat-log .chat-message .message-content {
+    color: #ffffff !important;
+}
+
+/* Nome do personagem / remetente em roxo */
+.chat-log .message .message-sender,
+.chat-log .message .message-sender .alias,
+.chat-log .chat-message .message-sender,
+.chat-log .chat-message .message-sender .alias {
+    color: #9b4dca !important;
+    font-weight: 700;
+}
+
+/* Links dentro do chat devem ser legíveis */
+.chat-log .message .message-content a,
+.chat-log .chat-message .message-content a {
+    color: #9b4dca !important;
+    text-decoration: underline;
+}
     text-align: center;
 }
 

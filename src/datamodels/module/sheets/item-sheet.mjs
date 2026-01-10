@@ -89,5 +89,43 @@ export class BoilerplateItemSheet extends ItemSheet {
     html.on('click', '.effect-control', (ev) =>
       onManageActiveEffect(ev, this.item)
     );
+
+    // Aptidão actions (activate / revert)
+    if (this.item.type === 'aptidao') {
+      html.on('click', '.aptidao-activate', async (ev) => {
+        ev.preventDefault();
+        const actor = this.item.parent;
+        if (!actor) return ui.notifications.warn('Item não está em um ator.');
+
+        // Check resources first
+        const can = await game.boilerplate.hasSufficientResources(actor, this.item);
+        if (!can.ok) return ui.notifications.warn(can.message || 'Recursos insuficientes');
+
+        // Confirm
+        new Dialog({
+          title: `Ativar ${this.item.name}`,
+          content: `<p>Ativar <b>${this.item.name}</b>? Isso consumirá: ${this.item.displayCost || ''}</p>`,
+          buttons: {
+            ok: {
+              label: 'Confirmar',
+              callback: async () => {
+                await game.boilerplate.activateAptidao(actor, this.item, { consume: true });
+                this.render(false);
+              },
+            },
+            cancel: { label: 'Cancelar' },
+          },
+          default: 'ok',
+        }).render(true);
+      });
+
+      html.on('click', '.aptidao-revert', async (ev) => {
+        ev.preventDefault();
+        const actor = this.item.parent;
+        if (!actor) return ui.notifications.warn('Item não está em um ator.');
+        await game.boilerplate.revertAptidao(actor, this.item);
+        this.render(false);
+      });
+    }
   }
 }

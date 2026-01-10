@@ -242,8 +242,13 @@
     "aptidao": {
       "templates": ["base"],
       "custo": { "value": 0, "label": "Custo (PE)" },
+      "custoTexto": { "value": "", "label": "Custo (texto)" },
       "acao": { "value": "Passiva", "label": "Ação" },
-      "requisito": { "value": "", "label": "Requisito" }
+      "requisito": { "value": "", "label": "Requisito" },
+      "tipo": { "value": "", "label": "Tipo" },
+      "categoria": { "value": "", "label": "Categoria" },
+      "ativacao": { "value": "", "label": "Ativação" },
+      "duracao": { "value": "", "label": "Duração" }
     }
   }
 }

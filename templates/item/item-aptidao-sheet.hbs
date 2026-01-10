@@ -1,0 +1,76 @@
+<form class="sheet-body">
+  <header class="sheet-header">
+    <div class="item-image">
+      <img src="{{item.img}}" alt="">
+    </div>
+    <h1 class="item-name">{{item.name}}</h1>
+  </header>
+
+  <section class="sheet-body-content">
+    <div class="sheet-row">
+      <label>Tipo</label>
+      <div class="form-group">
+        <select name="system.aptType">
+          <option value="toggle" {{#if (eq system.aptType "toggle")}}selected{{/if}}>Toggle</option>
+          <option value="buff" {{#if (eq system.aptType "buff")}}selected{{/if}}>Buff</option>
+          <option value="invocacao" {{#if (eq system.aptType "invocacao")}}selected{{/if}}>Invocação</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sheet-row">
+      <label>Pré-requisitos</label>
+      <div class="form-group">
+        <textarea name="system.prerequisitos">{{system.prerequisitos}}</textarea>
+      </div>
+    </div>
+
+    <div class="sheet-row">
+      <label>Custos</label>
+      <div class="form-group costs">
+        <input type="number" name="system.custoPE" value="{{system.custoPE}}" min="0" step="1"> PE
+        <input type="number" name="system.custoDV" value="{{system.custoDV}}" min="0" step="1"> DV
+        <input type="number" name="system.custoDE" value="{{system.custoDE}}" min="0" step="1"> DE
+      </div>
+    </div>
+
+    <div class="sheet-row">
+      <label>Tempo de Execução</label>
+      <div class="form-group">
+        <input type="text" name="system.tempoExec" value="{{system.tempoExec}}">
+      </div>
+    </div>
+
+    <div class="sheet-row">
+      <label>Duração</label>
+      <div class="form-group">
+        <input type="text" name="system.duracao" value="{{system.duracao}}">
+      </div>
+    </div>
+
+    <div class="sheet-row">
+      <label>Descrição</label>
+      <div class="form-group">
+        <textarea name="system.description">{{system.description}}</textarea>
+      </div>
+    </div>
+
+    <div class="sheet-row">
+      <label>Efeitos</label>
+      <div class="form-group">
+        <button type="button" class="effect-control">Gerenciar Efeitos</button>
+      </div>
+    </div>
+
+    <div class="sheet-row">
+      <label>Ações</label>
+      <div class="form-group">
+        <button type="button" class="aptidao-activate">Ativar Aptidão</button>
+        <button type="button" class="aptidao-revert">Remover Aptidão</button>
+        <div class="aptidao-cost">{{this.displayCost}}</div>
+      </div>
+      </div>
+    </div>
+
+  </section>
+</form>

@@ -197,6 +197,115 @@ export class BoilerplateActor extends Actor {
             }
         }
     }
+
+    // ----------------------------------------------------
+    // 6. CÁLCULO AUTOMÁTICO DE DEFESA (CA)
+    // Regras:
+    // - Se estiver usando armadura equipada, usar a CA da armadura + Mod Destreza (respeitando limite da armadura)
+    // - Se NÃO usar armadura: Base = 10 + Mod Destreza
+    //   - Lutador: soma Mod Força limitado pelo Nível do Personagem
+    //   - Restringido: soma Mod Constituição
+    // - Soma bônus de escudo e bônus vindos de itens/aptidões (onde detectável)
+    // A implementação tenta detectar itens equipados com campos comuns (armor.base, ac, defensa, shield, equipped)
+    try {
+      const dexMod = Number(system.atributos?.destreza?.mod ?? 0) || 0;
+      const strMod = Number(system.atributos?.forca?.mod ?? 0) || 0;
+      const conMod = Number(system.atributos?.constituicao?.mod ?? 0) || 0;
+      const nivelChar = Number(system.detalhes?.nivel?.value ?? nivelTotal ?? 0) || nivelTotal || 0;
+
+      let baseCA = null;
+      let armorFound = null;
+
+      // Procura por item de armadura/traje equipado na coleção de items do ator (Documentos Item)
+      if (this.items && this.items.size > 0) {
+        for (const it of this.items.values()) {
+          // Considera apenas itens marcados como equipados (vários templates usam chaves diversas)
+          const equipped = it.system?.equipped ?? it.system?.equipado ?? it.system?.equip ?? false;
+          if (!equipped) continue;
+
+          // Tenta extrair um valor de CA/armadura em campos comuns
+          const armorBase = Number(it.system?.armor?.base ?? it.system?.defesa ?? it.system?.ac ?? it.system?.ca ?? it.system?.armorClass ?? 0) || 0;
+          if (armorBase > 0) {
+            armorFound = it;
+            break;
+          }
+
+          // Fallback por nome (ex.: 'traje', 'armadura', 'escudo') – assume armadura se o nome indicar
+          const n = (it.name || '').toLowerCase();
+          if (n.includes('traje') || n.includes('armadura')) {
+            armorFound = it;
+            break;
+          }
+        }
+      }
+
+      if (armorFound) {
+        // Determina tipo de armadura (leve/média/pesada) e valor base
+        const typeStr = String(armorFound.system?.armor?.type ?? armorFound.system?.tipo ?? '').toLowerCase();
+        const armorBase = Number(armorFound.system?.armor?.base ?? armorFound.system?.defesa ?? armorFound.system?.ac ?? armorFound.system?.ca ?? armorFound.system?.armorClass ?? 0) || 0;
+        let dexLimit = null; // null = sem limite
+        if (typeStr.includes('leve') || typeStr.includes('light')) dexLimit = null;
+        else if (typeStr.includes('media') || typeStr.includes('medium')) dexLimit = 2;
+        else if (typeStr.includes('pesada') || typeStr.includes('heavy')) dexLimit = 0;
+        // fallback: checa campo explícito
+        if (typeof armorFound.system?.armor?.dexCap !== 'undefined') dexLimit = armorFound.system.armor.dexCap;
+
+        const dexAdd = (dexLimit === null) ? dexMod : Math.min(dexMod, Number(dexLimit));
+        baseCA = armorBase + dexAdd;
+      } else {
+        // Sem armadura: base 10 + Destreza
+        baseCA = 10 + dexMod;
+
+        // Atributo secundário por classe (aplica somente sem armadura)
+        const classe = String(system.detalhes?.classe?.value ?? '').toLowerCase();
+        if (classe === 'lutador') {
+          baseCA += Math.min(strMod, nivelChar);
+        } else if (classe === 'restringido') {
+          baseCA += conMod;
+        }
+      }
+
+      // Bônus adicionais: escudo / bônus de itens / aptidões (tenta detectar campos comuns)
+      let bonusCA = 0;
+      if (this.items && this.items.size > 0) {
+        for (const it of this.items.values()) {
+          const equipped = it.system?.equipped ?? it.system?.equipado ?? it.system?.equip ?? false;
+          if (!equipped) continue;
+
+          // Escudo comum: campo shield.value, shield.bonus, ou nome contendo 'escudo'
+          const shieldVal = Number(it.system?.shield?.value ?? it.system?.shield?.bonus ?? it.system?.defesa ?? 0) || 0;
+          if (shieldVal > 0 || (String(it.name || '').toLowerCase().includes('escudo'))) {
+            bonusCA += (shieldVal > 0) ? shieldVal : 2; // padrão +2 se apenas nome indicar
+            continue;
+          }
+
+          // Bônus mágicos/objetos: campos comuns
+          bonusCA += Number(it.system?.bonus?.defesa ?? it.system?.magicBonus ?? it.system?.armor?.bonus ?? 0) || 0;
+        }
+      }
+
+      // Aptidões/efeitos simples: exemplo Aura Mássica (soma nível de aptidão em aura)
+      try {
+        if (system.aptidaoNiveis?.aura && Number(system.aptidaoNiveis.aura.value || 0) > 0) {
+          // apenas como exemplo: algumas aptidões descrevem bônus de Defesa
+          if (system.aptidaes?.aura?.auraMacica || system.aptidaes?.aura?.auraDoBastiao) {
+            bonusCA += Number(system.aptidaoNiveis.aura.value || 0);
+          }
+        }
+      } catch (e) { /* ignore */ }
+
+      // Atualiza o valor derivado
+      system.combate = system.combate || {};
+      system.combate.defesa = system.combate.defesa || {};
+      const calculated = Math.round((Number(baseCA || 0) + Number(bonusCA || 0)));
+      const misc = Number(system.combate?.defesa?.misc ?? 0) || 0;
+      system.combate.defesa.value = calculated;
+      system.combate.defesa.misc = misc;
+      system.combate.defesa.total = calculated + misc;
+    } catch (e) {
+      // Não interrompe o fluxo se algo falhar aqui
+      console.warn('Falha ao calcular Defesa (CA) automaticamente:', e);
+    }
   }
 
   /**

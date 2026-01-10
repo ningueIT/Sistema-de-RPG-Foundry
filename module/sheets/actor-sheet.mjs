@@ -450,6 +450,8 @@ export class BoilerplateActorSheet extends ActorSheet {
     const aptidoes = [];
     const aptidoesAtivas = [];
     const aptidoesPassivas = [];
+    const aptidoesAmaldicoadas = [];
+    const aptidoesAmaldicoadasCategorias = [];
 
     // Garante defaults pro template não quebrar
     context.equipamentos = equipamentos;
@@ -457,6 +459,8 @@ export class BoilerplateActorSheet extends ActorSheet {
     context.aptidoes = aptidoes;
     context.aptidoesAtivas = aptidoesAtivas;
     context.aptidoesPassivas = aptidoesPassivas;
+    context.aptidoesAmaldicoadas = aptidoesAmaldicoadas;
+    context.aptidoesAmaldicoadasCategorias = aptidoesAmaldicoadasCategorias;
 
     if (!Array.isArray(context.items)) {
       return;
@@ -476,6 +480,13 @@ export class BoilerplateActorSheet extends ActorSheet {
       // Aptidões (Aqui entra a Aura Anuladora)
       else if (i.type === 'aptidao') {
           aptidoes.push(i);
+
+          // Aptidões Amaldiçoadas (pipeline novo): marcadas via system.tipo === 'aptidao'
+          // Nota: isso NÃO interfere na aba de Aptidões existente; só alimenta a nova aba.
+          const tipo = String(i.system?.tipo?.value ?? i.system?.tipo ?? '').trim().toLowerCase();
+          if (tipo === 'aptidao') {
+            aptidoesAmaldicoadas.push(i);
+          }
       }
     }
 
@@ -492,6 +503,67 @@ export class BoilerplateActorSheet extends ActorSheet {
 
     context.aptidoesAtivas = aptidoesAtivas;
     context.aptidoesPassivas = aptidoesPassivas;
+
+    // Agrupa Aptidões Amaldiçoadas por categoria
+    // Ordem preferida (mas aceita categorias livres)
+    const ordemCategorias = [
+      { key: 'aura', label: 'Aura' },
+      { key: 'controle', label: 'Controle' },
+      { key: 'barreira', label: 'Barreira' },
+      { key: 'domínio', label: 'Domínio' },
+      { key: 'dominio', label: 'Domínio' },
+      { key: 'reversa', label: 'Reversa' },
+      { key: 'lutador', label: 'Lutador' },
+      { key: 'outros', label: 'Outros' },
+    ];
+
+    const buckets = new Map();
+    for (const it of aptidoesAmaldicoadas) {
+      const raw = String(it.system?.categoria?.value ?? it.system?.categoria ?? '').trim();
+      const key = (raw || 'Outros').toLowerCase();
+      if (!buckets.has(key)) buckets.set(key, { key, label: raw || 'Outros', items: [] });
+      buckets.get(key).items.push(it);
+    }
+
+    // Monta lista final na ordem conhecida + quaisquer extras
+    const seen = new Set();
+    for (const c of ordemCategorias) {
+      if (!buckets.has(c.key)) continue;
+      const entry = buckets.get(c.key);
+      // normaliza label para os conhecidos
+      entry.label = c.label;
+      // separa itens ativos / passivos para facilitar o template
+      entry.itemsAtivas = [];
+      entry.itemsPassivas = [];
+      for (const it of entry.items || []) {
+        const ativ = String(it.system?.ativacao?.value ?? it.system?.acao?.value ?? 'Passiva').trim().toLowerCase();
+        if (!ativ || ativ === 'passiva') entry.itemsPassivas.push(it);
+        else entry.itemsAtivas.push(it);
+      }
+      // garante contadores numéricos (evita strings '0' tratados como truthy)
+      entry.itemsAtivasCount = Number(entry.itemsAtivas.length || 0);
+      entry.itemsPassivasCount = Number(entry.itemsPassivas.length || 0);
+      aptidoesAmaldicoadasCategorias.push(entry);
+      seen.add(c.key);
+    }
+
+    for (const [key, entry] of buckets.entries()) {
+      if (seen.has(key)) continue;
+      entry.itemsAtivas = [];
+      entry.itemsPassivas = [];
+      for (const it of entry.items || []) {
+        const ativ = String(it.system?.ativacao?.value ?? it.system?.acao?.value ?? 'Passiva').trim().toLowerCase();
+        if (!ativ || ativ === 'passiva') entry.itemsPassivas.push(it);
+        else entry.itemsAtivas.push(it);
+      }
+      // garante contadores numéricos (evita strings '0' tratados como truthy)
+      entry.itemsAtivasCount = Number(entry.itemsAtivas.length || 0);
+      entry.itemsPassivasCount = Number(entry.itemsPassivas.length || 0);
+      aptidoesAmaldicoadasCategorias.push(entry);
+    }
+
+    context.aptidoesAmaldicoadas = aptidoesAmaldicoadas;
+    context.aptidoesAmaldicoadasCategorias = aptidoesAmaldicoadasCategorias;
   }
 
   /* -------------------------------------------- */
@@ -506,6 +578,37 @@ export class BoilerplateActorSheet extends ActorSheet {
   /** @override */
   async _onDropItemCreate(itemData, event) {
     try {
+      // Antes de criar, valida pré-requisitos (nível e requisitos de aptidão)
+      if (itemData?.type === 'aptidao') {
+        // calcula nível do personagem (mesma lógica do getData)
+        const detalhes = this.actor.system?.detalhes || {};
+        const nivelPrincipal = Number(detalhes?.niveis?.principal?.value ?? 0) || 0;
+        const nivelSecundario = Number(detalhes?.niveis?.secundario?.value ?? 0) || 0;
+        const nivelTotalDerivado = detalhes?.nivel?.value ?? (nivelPrincipal + nivelSecundario);
+        const actorLvl = Number(nivelTotalDerivado) || 0;
+
+        const textoReq = String(itemData?.system?.requisito?.value ?? itemData?.system?.descricao?.value ?? itemData?.description ?? '');
+        const prereq = extrairPrereqsDaDescricao(textoReq, String(itemData?.system?.categoria?.value ?? '').toLowerCase());
+
+        if (prereq?.nivelPersonagemMin && actorLvl < prereq.nivelPersonagemMin) {
+          ui.notifications.warn(`Pré-requisito não atendido: Nível ${prereq.nivelPersonagemMin}.`);
+          return null;
+        }
+
+        if (prereq?.aptidaoCampo && Number.isFinite(prereq.aptidaoMin)) {
+          const aptVal = Number(this.actor.system?.aptidaoNiveis?.[prereq.aptidaoCampo]?.value ?? 0) || 0;
+          if (aptVal < prereq.aptidaoMin) {
+            ui.notifications.warn(`Pré-requisito não atendido: requer Nível de Aptidão ${prereq.aptidaoCampo} ${prereq.aptidaoMin}.`);
+            return null;
+          }
+        }
+
+        if (Array.isArray(prereq.prereqTokens) && prereq.prereqTokens.length) {
+          ui.notifications.warn(`Pré-requisitos não atendidos: ${prereq.prereqTokens.join(', ')}.`);
+          return null;
+        }
+      }
+
       if (itemData?.type === 'aptidao' && this._dropAptidaoTipo) {
         itemData.system ??= {};
         itemData.system.acao ??= {};

@@ -8,3 +8,4 @@ export {default as BoilerplateItemBase} from "./base-item.mjs";
 export {default as BoilerplateItem} from "./item-item.mjs";
 export {default as BoilerplateFeature} from "./item-feature.mjs";
 export {default as BoilerplateSpell} from "./item-spell.mjs";
+export {default as BoilerplateAptidao} from "./item-aptidao.mjs";

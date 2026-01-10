@@ -7,7 +7,10 @@
 
     <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
         <label>DEFESA</label>
-        <input type="number" name="system.combate.defesa.value" value="{{system.combate.defesa.value}}"/>
+        <div style="display:flex; gap:6px; align-items:center;">
+            <input type="number" value="{{system.combate.defesa.total}}" readonly disabled style="font-size:14px; height:30px; text-align:center;" />
+            <input type="number" name="system.combate.defesa.misc" value="{{system.combate.defesa.misc}}" style="width:60px; font-size:12px; height:26px;" title="Bônus Misc" />
+        </div>
     </div>
 
     <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
@@ -63,7 +66,10 @@
 
     <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
         <label>DEFESA</label>
-        <input type="number" name="system.combate.defesa.value" value="{{system.combate.defesa.value}}"/>
+        <div style="display:flex; gap:6px; align-items:center;">
+            <input type="number" value="{{system.combate.defesa.total}}" readonly disabled style="font-size:14px; height:30px; text-align:center;" />
+            <input type="number" name="system.combate.defesa.misc" value="{{system.combate.defesa.misc}}" style="width:60px; font-size:12px; height:26px;" title="Bônus Misc" />
+        </div>
     </div>
 
     <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">

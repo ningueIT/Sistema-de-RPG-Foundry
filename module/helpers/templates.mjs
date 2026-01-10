@@ -13,6 +13,7 @@ export const preloadHandlebarsTemplates = async function () {
     "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-combat.hbs",
     "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-skills.hbs",
     "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-aptidoes.hbs",
+    "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-aptidoes-amaldicoadas.hbs",
     "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-itens.hbs",
     "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-passivas.hbs",
     

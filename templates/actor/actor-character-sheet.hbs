@@ -6,6 +6,7 @@
         <a class="item" data-tab="atributos">Status</a>
         <a class="item" data-tab="pericias">Perícias</a>
         <a class="item" data-tab="aptidoes">Aptidão</a>
+        <a class="item" data-tab="aptidoes-amaldicoadas">Habilidades</a>
         <a class="item" data-tab="passivas">Passivas</a>
         <a class="item" data-tab="itens">Itens</a>
     </nav>
@@ -35,6 +36,10 @@
 
         <div class="tab aptidoes" data-group="primary" data-tab="aptidoes">
             {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-aptidoes.hbs"}}
+        </div>
+
+        <div class="tab aptidoes-amaldicoadas" data-group="primary" data-tab="aptidoes-amaldicoadas">
+            {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-aptidoes-amaldicoadas.hbs"}}
         </div>
 
         <div class="tab passivas" data-group="primary" data-tab="passivas">
