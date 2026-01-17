@@ -1,0 +1,221 @@
+// Section Header
+.items-header {
+  height: 28px;
+  margin: 2px 0;
+  padding: 0;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.05);
+  border: $border-groove;
+  font-weight: bold;
+  > * {
+    font-size: 14px;
+    text-align: center;
+  }
+  .item-name {
+    font-weight: bold;
+    padding-left: 5px;
+    text-align: left;
+    display: flex;
+    // font-size: 16px;
+  }
+}
+
+// -----------------------------------------
+// Items Lists
+// -----------------------------------------
+
+.items-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  color: $c-tan;
+
+  // Child lists
+  .item-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  // Item Name
+  .item-name {
+    flex: 2;
+    margin: 0;
+    overflow: hidden;
+    font-size: 13px;
+    text-align: left;
+    align-items: center;
+    display: flex;
+    h3, h4 {
+      margin: 0;
+      white-space: nowrap;
+      overflow-x: hidden;
+    }
+  }
+
+  // Control Buttons
+  .item-controls {
+    display: flex;
+    flex: 0 0 100px;
+    justify-content: flex-end;
+    a {
+      font-size: 12px;
+      text-align: center;
+      margin: 0 6px;
+    }
+  }
+
+  // Individual Item
+  .item {
+    align-items: center;
+    padding: 0 2px; // to align with the header border
+    border-bottom: 1px solid $c-faint;
+    &:last-child { border-bottom: none; }
+    .item-name {
+      color: $c-dark;
+      .item-image {
+        flex: 0 0 30px;
+        height: 30px;
+        background-size: 30px;
+        border: none;
+        margin-right: 5px;
+      }
+    }
+  }
+
+  .item-prop {
+    text-align: center;
+    border-left: 1px solid #c9c7b8;
+    border-right: 1px solid #c9c7b8;
+    font-size: 12px;
+  }
+
+  // Section Header
+  .items-header {
+    height: 28px;
+    margin: 2px 0;
+    padding: 0;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.05);
+    border: $border-groove;
+    font-weight: bold;
+    > * {
+      font-size: 12px;
+      text-align: center;
+    }
+    .item-name {
+      padding-left: 5px;
+      text-align: left;
+      // font-size: 16px;
+    }
+  }
+}
+
+// Example style for Boilerplate (can be removed if not needed).
+.item-formula {
+  
+  flex: 0 0 200px;
+  padding: 0 8px;
+}
+
+// Generic table styles for item lists (aptidões, passivas, técnicas, etc.)
+.items-table,
+.jem-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 13px;
+
+  thead th {
+    text-align: left;
+    padding: 6px 10px;
+    background: rgba(0,0,0,0.04);
+    border-bottom: 1px solid $c-faint;
+    font-weight: 700;
+  }
+
+  tbody td {
+    padding: 8px 10px;
+    vertical-align: middle;
+    border-bottom: 1px solid $c-faint;
+    color: $c-tan;
+  }
+
+  .item-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    .item-image {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background-size: cover;
+    }
+  }
+
+  .jem-item-col--photo {
+    width: 48px;
+    padding: 4px 8px;
+    .item-image { width: 36px; height: 36px; border-radius:6px; }
+  }
+
+  .jem-item-col--name {
+    font-weight: 700;
+    .jem-item-name { background: transparent; border: none; color: inherit; font-size: 14px; cursor: pointer; }
+  }
+
+  .jem-item-col--remove {
+    width: 72px;
+    text-align: center;
+    .item-delete { background: transparent; border: 1px solid $c-faint; padding: 6px 8px; border-radius:6px; color: $c-dark; }
+  }
+
+  // Buttons inside table rows
+  .item-use-btn {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1px solid $c-faint;
+    background: transparent;
+    color: $c-dark;
+    transition: background .12s, color .12s, transform .08s;
+    &:hover { background: $c-beige; transform: translateY(-1px); }
+  }
+
+  .jem-item-name.item-use {
+    padding: 0; margin: 0; background: transparent; color: $c-white; font-weight:700; border: none; cursor: pointer;
+  }
+
+  // Edit / Delete control buttons inside table rows
+  .item-controls .item-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 28px;
+    margin-left: 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(0,0,0,0.08);
+    background: rgba(255,255,255,0.02);
+    color: $c-white;
+    cursor: pointer;
+    transition: background .12s, transform .08s;
+    i { margin: 0; }
+    &:hover { background: rgba(155,77,202,0.12); transform: translateY(-1px); }
+  }
+
+  // Emphasized 'Usar' button
+  .item-use-btn {
+    background: $c-dark;
+    color: $c-white;
+    border-color: transparent;
+    &:hover { opacity: 0.95; }
+  }
+
+  .jem-empty td { text-align: center; color: $c-beige; padding: 14px; }
+}

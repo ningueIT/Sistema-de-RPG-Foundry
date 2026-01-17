@@ -1,0 +1,59 @@
+<form class="{{cssClass}} level-up-form" autocomplete="off">
+  <header class="sheet-header header-fields">
+    <div>
+      <h2>{{classItem.name}}</h2>
+      <div class="muted">Destino: Nível {{nextLevel}}</div>
+    </div>
+  </header>
+
+  <section class="form-group">
+    <h3>Ganhos Automáticos</h3>
+    <div class="grid grid-2col">
+      <div class="resource-label">PV: <strong>+{{hpGain}}</strong></div>
+      <div class="resource-label">PE: <strong>+{{epGain}}</strong></div>
+    </div>
+  </section>
+
+  <section class="form-group">
+    <h3>Habilidades</h3>
+    <div class="drop-list grid">
+      {{#each featureSlots}}
+        <div class="drop-zone" data-type="feature" data-index="{{@index}}">
+          {{#if this}}
+            <div class="item-card" style="display:flex;align-items:center;gap:8px;">
+              <img src="{{this.img}}" alt="{{this.name}}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;"/>
+              <div class="item-name">{{this.name}}</div>
+            </div>
+          {{else}}
+            <div class="placeholder muted">Arraste uma Habilidade</div>
+          {{/if}}
+        </div>
+      {{/each}}
+    </div>
+  </section>
+
+  <section class="form-group">
+    <h3>Aptidões</h3>
+    <div class="drop-list grid">
+      {{#each aptitudeSlots}}
+        <div class="drop-zone" data-type="aptitude" data-index="{{@index}}">
+          {{#if this}}
+            <div class="item-card" style="display:flex;align-items:center;gap:8px;">
+              <img src="{{this.img}}" alt="{{this.name}}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;"/>
+              <div class="item-name">{{this.name}}</div>
+            </div>
+          {{else}}
+            <div class="placeholder muted">Arraste uma Aptidão</div>
+          {{/if}}
+        </div>
+      {{/each}}
+    </div>
+  </section>
+
+  <footer class="form-group">
+    <div class="form-buttons">
+      <button type="submit" class="button primary">Confirmar Ascensão</button>
+      <button type="button" class="button" data-action="cancel">Cancelar</button>
+    </div>
+  </footer>
+</form>

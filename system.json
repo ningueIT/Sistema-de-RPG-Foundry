@@ -1,0 +1,32 @@
+{
+  "id": "feiticeiros-e-maldicoes",
+  "title": "Feiticeiros e Maldições RPG",
+  "description": "Sistema não-oficial de Jujutsu Kaisen.",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "12",
+    "verified": "12"
+  },
+  "authors": [
+    {
+      "name": "NingueITs",
+      "discord": "ningue"
+    }
+  ],
+  "esmodules": ["module/boilerplate.mjs", "module/scripts/import-weapons.mjs"],
+  "styles": ["css/boilerplate.css"],
+  "packs": [
+    {
+      "name": "aptidoes",
+      "label": "Aptidões",
+      "path": "packs/aptidoes.db",
+      "type": "Item",
+      "system": "feiticeiros-e-maldicoes",
+      "private": false
+    }
+  ],
+  "documentTypes": {
+    "Actor": ["character", "npc", "maldicao"],
+    "Item": ["item", "tecnica", "arma", "aptidao"]
+  }
+}

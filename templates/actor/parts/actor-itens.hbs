@@ -1,0 +1,21 @@
+<h3 class="jem-section-title">Equipamentos</h3>
+
+{{#if equipamentos.length}}
+  <ol class="items-list jem-items-list">
+    {{#each equipamentos as |item|}}
+      <li class="item flexrow jem-item-row" data-item-id="{{item._id}}">
+        <div class="item-name flexrow">
+          <img class="item-image" src="{{item.img}}" title="{{item.name}}" width="24" height="24"/>
+          <h4 class="jem-item-name">{{item.name}}</h4>
+        </div>
+        <div class="item-controls flexrow jem-item-controls">
+          <button type="button" class="item-control item-edit" title="Editar"><i class="fas fa-edit"></i></button>
+          <button type="button" class="item-control item-delete" title="Remover"><i class="fas fa-trash"></i></button>
+        </div>
+      </li>
+    {{/each}}
+  </ol>
+{{else}}
+  <p class="jem-empty">Nenhum equipamento ainda.</p>
+{{/if}}
+ 

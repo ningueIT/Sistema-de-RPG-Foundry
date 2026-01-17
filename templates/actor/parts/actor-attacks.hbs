@@ -1,0 +1,36 @@
+<h3 class="jem-section-title">Ataques</h3>
+
+{{#if ataquesItems.length}}
+  <ol class="items-list jem-items-list jem-attacks-list">
+    {{#each ataquesItems as |item|}}
+      <li class="item flexrow jem-item-row" data-item-id="{{item._id}}">
+        <div class="item-name flexrow" style="gap: 8px; align-items: center;">
+          <img class="item-image" src="{{item.img}}" title="{{item.name}}" width="24" height="24"/>
+          <h4 class="jem-item-name" style="margin: 0;">{{item.name}}</h4>
+        </div>
+
+        <div class="jem-attack-meta" style="margin-left: auto; display:flex; gap: 10px; align-items:center;">
+          <div class="jem-attack-damage" style="font-size: 12px; opacity: 0.9;">
+            {{#if item.system.damage.base.value}}
+              {{item.system.damage.base.value}}
+            {{else if item.system.formula}}
+              {{item.system.formula}}
+            {{else}}
+              —
+            {{/if}}
+            {{#if item.system.damage.type.value}}
+              <span style="opacity:0.8;">({{item.system.damage.type.value}})</span>
+            {{/if}}
+          </div>
+
+          <div class="item-controls flexrow jem-item-controls" style="gap: 6px;">
+            <button type="button" class="item-control item-roll" title="Rolar"><i class="fas fa-dice"></i></button>
+            <button type="button" class="item-control item-edit" title="Editar"><i class="fas fa-edit"></i></button>
+          </div>
+        </div>
+      </li>
+    {{/each}}
+  </ol>
+{{else}}
+  <p class="jem-empty">Nenhum ataque ainda.</p>
+{{/if}}

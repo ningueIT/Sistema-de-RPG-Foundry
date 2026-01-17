@@ -1,0 +1,119 @@
+<form class='{{cssClass}}' autocomplete='off'>
+  <header class='sheet-header'>
+    <img
+      class='profile-img'
+      src='{{item.img}}'
+      data-edit='img'
+      title='{{item.name}}'
+    />
+    <div class='header-fields'>
+      <h1 class='charname'><input
+          name='name'
+          type='text'
+          value='{{item.name}}'
+          placeholder='Name'
+        /></h1>
+    </div>
+  </header>
+
+  {{! Sheet Tab Navigation }}
+  <nav class='sheet-tabs tabs' data-group='primary'>
+    <a class='item' data-tab='description'>Description</a>
+    <a class='item' data-tab='attributes'>Attributes</a>
+  </nav>
+
+  {{! Sheet Body }}
+  <section class='sheet-body'>
+
+    {{! Description Tab }}
+    <div class='tab' data-group='primary' data-tab='description'>
+      {{editor
+        enrichedDescription
+        target='system.description'
+        engine='prosemirror'
+        button=true
+        editable=editable
+      }}
+    </div>
+
+    {{! Attributes Tab }}
+    <div class='tab attributes' data-group='primary' data-tab='attributes'>
+      <div class='grid grid-2col'>
+        <div class='form-group'>
+          <h3>Spell Details</h3>
+
+          <div class='form-group'>
+            <label>Level</label>
+            <input type='number' name='system.level' value='{{system.level}}' min='0' max='6' class='form-control' />
+          </div>
+
+          <div class='form-group'>
+            <label>School</label>
+            <select name='system.school' class='form-control'>
+              {{selectOptions config.spellSchools selected=system.school localize=false}}
+            </select>
+          </div>
+
+          <div class='form-group'>
+            <label>Spell Ability</label>
+            <select name='system.ability' class='form-control'>
+              {{selectOptions config.abilities selected=system.ability localize=false}}
+            </select>
+          </div>
+        </div>
+
+        <div class='form-group'>
+          <h3>Energy Cost (PE)</h3>
+
+          <div class='form-group'>
+            <label>Effective Cost</label>
+            <input type='number' value='{{system.effectiveCost}}' disabled class='form-control' />
+          </div>
+
+          <div class='form-group'>
+            <label>Modifier</label>
+            <input type='number' name='system.cost.modifier' value='{{system.cost.modifier}}' class='form-control' />
+          </div>
+
+          <div class='form-group'>
+            <label>Override</label>
+            <input type='number' name='system.cost.override' value='{{system.cost.override}}' class='form-control' />
+          </div>
+        </div>
+      </div>
+
+      <hr />
+
+      <div class='grid grid-2col'>
+        <div class='form-group'>
+          <h3>Casting</h3>
+
+          <div class='form-group'>
+            <label>Action Type</label>
+            <input type='text' name='system.actionType' value='{{system.actionType}}' class='form-control' />
+          </div>
+
+          <div class='form-group'>
+            <label>Range</label>
+            <input type='text' name='system.range' value='{{system.range}}' class='form-control' />
+          </div>
+        </div>
+
+        <div class='form-group'>
+          <h3>&nbsp;</h3>
+
+          <div class='form-group'>
+            <label>Target</label>
+            <input type='text' name='system.target' value='{{system.target}}' class='form-control' />
+          </div>
+
+          <div class='form-group'>
+            <label>Duration</label>
+            <input type='text' name='system.duration' value='{{system.duration}}' class='form-control' />
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</form>

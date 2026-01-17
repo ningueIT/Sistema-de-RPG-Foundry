@@ -1,0 +1,67 @@
+<header class="sheet-header">
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100"/>
+
+    <div class="header-fields">
+        <h1 class="charname">
+            <input name="name" type="text" value="{{actor.name}}" placeholder="Nome do Personagem"/>
+        </h1>
+
+        <div class="resources grid grid-3col" style="align-items: center;">
+            
+            <div class="resource flex-group-center">
+                <label>{{system.detalhes.xp.label}}</label>
+                <div class="resource-content flexrow flex-group-center">
+                    <input type="number" name="system.detalhes.xp.value" value="{{system.detalhes.xp.value}}" data-dtype="Number"/>
+                </div>
+            </div>
+
+            <div class="resource flex-group-center">
+                <div class="level-container">
+                    <label>NÍVEL</label>
+                    <input type="number" value="{{system.detalhes.nivel.value}}" readonly/>
+                    
+                    <a class="level-up-btn level-up-btn-floating" title="Subir de Nível">
+                        <i class="fas fa-plus"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="resource flex-group-center">
+                <label>{{system.detalhes.treinamento.label}}</label>
+                <div class="resource-content flexrow flex-group-center">
+                    <input type="number" value="{{system.detalhes.treinamento.value}}" readonly class="bloqueado"/>
+                </div>
+            </div>
+        </div>
+
+        <div class="resources grid grid-3col" style="gap: 30px; margin-top: 15px; align-items: end;">
+            
+            <div class="resource flex-group-center">
+                <label>{{system.detalhes.origem.label}}</label>
+                <select name="system.detalhes.origem.value">
+                    {{selectOptions listas.origens selected=system.detalhes.origem.value}}
+                </select>
+            </div>
+
+            <div class="resource flex-group-center">
+                <label>
+                    {{system.detalhes.classe.label}}
+                    <span class="class-level-badge">Nv. {{system.detalhes.niveis.principal.value}}</span>
+                </label>
+                <select name="system.detalhes.classe.value">
+                    {{selectOptions listas.classes selected=system.detalhes.classe.value}}
+                </select>
+            </div>
+
+            <div class="resource flex-group-center">
+                <label>
+                    {{system.detalhes.multiclasse.label}}
+                    <span class="class-level-badge">Nv. {{system.detalhes.niveis.secundario.value}}</span>
+                </label>
+                <select name="system.detalhes.multiclasse.value">
+                    {{selectOptions listas.multiclasse selected=system.detalhes.multiclasse.value}}
+                </select>
+            </div>
+        </div>
+    </div>
+</header>

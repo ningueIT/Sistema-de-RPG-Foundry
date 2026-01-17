@@ -1,0 +1,135 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <button type="button" class="jem-sheet-close" title="Fechar" aria-label="Fechar">
+      <i class="fas fa-times"></i>
+    </button>
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}"/>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Nome do Item"/></h1>
+      <div class="item-meta grid grid-2col">
+        {{!-- Mostra metadados gerais exceto para armas --}}
+        {{#unless (eq item.type "arma")}}
+          <div>
+            <label>Fonte</label>
+            <input type="text" name="system.fonte.value" value="{{system.fonte.value}}" placeholder="Ex: Livro / Mestre"/>
+          </div>
+          <div>
+            <label>Custo (PE)</label>
+            <input type="number" name="system.custo.value" value="{{system.custo.value}}"/>
+          </div>
+          <div>
+            <label>Requisito</label>
+            <input type="text" name="system.requisito.value" value="{{system.requisito.value}}" placeholder="Ex: Nv 2"/>
+          </div>
+          <div>
+            <label>Tipo</label>
+            <div class="action-label">{{system.acao.value}}</div>
+          </div>
+        {{/unless}}
+
+        {{!-- Para armas: um bloco compacto com preview rápido --}}
+        {{#if (eq item.type "arma")}}
+          <div class="weapon-header">
+            <div class="weapon-meta">
+              <div class="meta-row"><strong>Tipo:</strong> {{system.acao.value}}</div>
+              <div class="meta-row"><strong>Alcance:</strong> {{system.ataque.alcance.valor.value}}{{system.ataque.alcance.unidade.value}}</div>
+              <div class="meta-row"><strong>Dano:</strong> {{system.damage.base.value}} {{system.damage.bonus.value}}</div>
+            </div>
+          </div>
+        {{/if}}
+      </div>
+    </div>
+  </header>
+
+  <section class="sheet-body">
+    <div class="sheet-main grid grid-2col">
+      {{#if (eq item.type "arma")}}
+        <fieldset class="attack-fieldset">
+          <legend>Ataque</legend>
+          <div class="weapon-attributes grid grid-2col">
+            <div class="field">
+              <label>Atributo</label>
+              <select name="system.ataque.atributo.value">
+                <option value="forca" {{#if (eq system.ataque.atributo.value "forca")}}selected{{/if}}>Força</option>
+                <option value="destreza" {{#if (eq system.ataque.atributo.value "destreza")}}selected{{/if}}>Destreza</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Perícia</label>
+              <select name="system.ataque.pericia.value">
+                <option value="">— Nenhuma —</option>
+                {{#each actorPericiasList}}
+                  <option value="{{this.key}}" {{#if (eq ../system.ataque.pericia.value this.key)}}selected{{/if}}>{{this.label}}</option>
+                {{/each}}
+              </select>
+            </div>
+            <div class="field">
+              <label>Bônus de Ataque</label>
+              <input type="number" name="system.ataque.bonus.value" value="{{system.ataque.bonus.value}}"/>
+            </div>
+            <div class="field">
+              <label>Alcance</label>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <input type="number" step="0.1" name="system.ataque.alcance.valor.value" value="{{system.ataque.alcance.valor.value}}" style="width:80px;"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>Crítico</label>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <input class="small" type="number" min="1" max="20" name="system.ataque.critico.min.value" value="{{system.ataque.critico.min.value}}"/>
+                <span style="opacity:0.7;">/ x</span>
+                <input class="small" type="number" min="1" name="system.ataque.critico.mult.value" value="{{system.ataque.critico.mult.value}}"/>
+              </div>
+            </div>
+          </div>
+          <div class="actions-row">
+            <button type="button" class="roll-button test-attack">Testar Ataque</button>
+            <div class="muted">Preview: <span class="preview-attack">+</span></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="damage-fieldset">
+          <legend>Dano</legend>
+          <div class="weapon-attributes grid grid-2col">
+            <div class="field">
+              <label>Tipo de Dano</label>
+              <input type="text" name="system.damage.type.value" value="{{system.damage.type.value}}" placeholder="corte, impacto, fogo..."/>
+            </div>
+            <div class="field">
+              <label>Dano Base</label>
+              <input type="text" name="system.damage.base.value" value="{{system.damage.base.value}}" placeholder="1d6"/>
+            </div>
+            <div class="field">
+              <label>Bônus de Dano</label>
+              <input type="text" name="system.damage.bonus.value" value="{{system.damage.bonus.value}}" placeholder="@forca"/>
+            </div>
+            <div class="field">
+              <label>Aumento de Nível</label>
+              <input type="number" name="system.damage.levelBoost.value" value="{{system.damage.levelBoost.value}}"/>
+            </div>
+            
+          </div>
+          <div class="actions-row">
+            <button type="button" class="roll-button test-damage">Testar Dano</button>
+            <div class="muted">Preview: <span class="preview-damage">{{system.damage.base.value}} {{system.damage.bonus.value}}</span></div>
+          </div>
+        </fieldset>
+      {{else}}
+        <div>
+          <h3 class="item-section-title">Descrição</h3>
+          <div class="editor-container">
+            {{editor system.descricao.value target="system.descricao.value" engine="prosemirror" button=true owner=owner editable=editable}}
+          </div>
+        </div>
+      {{/if}}
+    </div>
+
+    {{!-- Descrição sempre disponível abaixo para armas também --}}
+    <div class="sheet-footer">
+      <h3 class="item-section-title">Descrição</h3>
+      <div class="editor-container">
+        {{editor system.descricao.value target="system.descricao.value" engine="prosemirror" button=true owner=owner editable=editable}}
+      </div>
+    </div>
+  </section>
+</form>

@@ -1,0 +1,56 @@
+<div class="grid grid-2col pericias-top-grid" style="gap: 20px; margin-bottom: 20px;">
+    <div class="panel-group">
+        <h3 class="pericias-section-title">Ataques</h3>
+        <div class="flexcol" style="gap: 5px;">
+            {{#each system.ataques as |ataque key|}}
+            <div class="pericia-row flexrow">
+                <select name="system.ataques.{{key}}.value" data-dtype="Number" class="pericia-select">
+                    {{selectOptions ../niveisPericia selected=ataque.value localize=false}}
+                </select>
+                <a class="rollable pericia-label" data-roll-type="pericia" data-group="ataques" data-key="{{key}}">
+                    <i class="fas fa-dice-d20"></i> {{ataque.label}}
+                </a>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+
+    <div class="panel-group">
+        <h3 class="pericias-section-title">Salvaguardas</h3>
+        <div class="flexcol" style="gap: 5px;">
+            {{#each system.salvaguardas as |salva key|}}
+            <div class="pericia-row flexrow">
+                <select name="system.salvaguardas.{{key}}.value" data-dtype="Number" class="pericia-select">
+                    {{selectOptions ../niveisPericia selected=salva.value localize=false}}
+                </select>
+                <a class="rollable pericia-label" data-roll-type="pericia" data-group="salvaguardas" data-key="{{key}}">
+                    <i class="fas fa-dice-d20"></i> {{salva.label}}
+                </a>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+</div>
+
+<h3 class="pericias-section-title pericias-section-title--spaced">Perícias Gerais</h3>
+
+<div class="pericias-grid-4col">
+    {{#each system.pericias as |pericia key|}}
+    <div class="pericia-item flexrow">
+        <select name="system.pericias.{{key}}.value" data-dtype="Number" class="pericia-select">
+            {{selectOptions ../niveisPericia selected=pericia.value localize=false}}
+        </select>
+        
+        <a class="rollable pericia-label" data-roll-type="pericia" data-group="pericias" data-key="{{key}}">
+            <i class="fas fa-dice-d20"></i> 
+            
+            <span class="atributo-tag">
+                {{pericia.atributoLabel}} 
+                <span class="mod-valor">{{numberFormat pericia.atributoMod decimals=0 sign=true}}</span>
+            </span>
+
+            {{pericia.label}}
+        </a>
+    </div>
+    {{/each}}
+</div>

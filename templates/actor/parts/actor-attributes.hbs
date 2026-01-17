@@ -1,0 +1,16 @@
+<div class="atributos-grid grid grid-3col">
+    {{#each system.atributos as |atributo key|}}
+    <div class="atributo-card flexcol flex-group-center">
+        <label class="resource-label">{{atributo.label}}</label>
+        
+        <span class="atributo-mod" title="Modificador">
+            {{numberFormat atributo.mod decimals=0 sign=true}}
+        </span>
+
+        <div class="atributo-base flexrow flex-group-center">
+            <span class="small-label">Valor:</span>
+            <input type="number" name="system.atributos.{{key}}.value" value="{{atributo.value}}"/>
+        </div>
+    </div>
+    {{/each}}
+</div>

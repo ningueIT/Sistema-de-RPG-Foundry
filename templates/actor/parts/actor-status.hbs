@@ -1,0 +1,43 @@
+<div class="status-panel grid grid-2col" style="gap: 15px; margin-bottom: 10px;">
+    
+    <div class="status-card hp">
+        <label>Pontos de Vida</label>
+        <div class="status-inputs flexrow">
+            <input type="number" name="system.recursos.hp.value" value="{{system.recursos.hp.value}}" placeholder="Atual"/>
+            <span class="sep">/</span>
+            <input type="number" name="system.recursos.hp.max" value="{{system.recursos.hp.max}}" placeholder="Max"/>
+        </div>
+        <div class="bar-bg"><div class="bar-fill" style="width: {{system.recursos.hp.percent}}%;"></div></div>
+    </div>
+
+    <div class="status-card pe">
+        <label>Pontos de Energia</label>
+        <div class="status-inputs flexrow">
+            <input type="number" name="system.recursos.energia.value" value="{{system.recursos.energia.value}}" placeholder="Atual"/>
+            <span class="sep">/</span>
+            <input type="number" name="system.recursos.energia.max" value="{{system.recursos.energia.max}}" placeholder="Max"/>
+        </div>
+        <div class="bar-bg"><div class="bar-fill" style="width: {{system.recursos.energia.percent}}%;"></div></div>
+    </div>
+
+    <div class="status-card alma">
+        <label>Integridade</label>
+        <div class="status-inputs flexrow">
+            <input type="number" name="system.recursos.integridade.value" value="{{system.recursos.integridade.value}}" placeholder="Atual"/>
+            <span class="sep">/</span>
+            <input type="number" name="system.recursos.integridade.max" value="{{system.recursos.integridade.max}}" placeholder="Max"/>
+        </div>
+        <div class="bar-bg"><div class="bar-fill" style="width: {{system.recursos.integridade.percent}}%;"></div></div>
+    </div>
+
+    <div class="status-card sanidade">
+        <label>Sanidade</label>
+        <div class="status-inputs flexrow">
+            <input type="number" name="system.recursos.sanidade.value" value="{{system.recursos.sanidade.value}}" placeholder="Atual"/>
+            <span class="sep">/</span>
+            <input type="number" name="system.recursos.sanidade.max" value="{{system.recursos.sanidade.max}}" placeholder="Max"/>
+        </div>
+        <div class="bar-bg"><div class="bar-fill" style="width: {{system.recursos.sanidade.percent}}%;"></div></div>
+    </div>
+
+</div>

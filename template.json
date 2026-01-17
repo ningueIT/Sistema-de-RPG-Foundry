@@ -1,0 +1,269 @@
+{
+  "Actor": {
+    "types": ["character", "npc"],
+    "templates": {
+      "base": {
+        "biography": { "value": "" },
+        "recursos": {
+          "hp": { "value": 10, "max": 10, "label": "Vida" },
+          "energia": { "value": 5, "max": 5, "label": "Energia" },
+          "integridade": { "value": 10, "max": 10, "label": "Integridade" },
+          "sanidade": { "value": 10, "max": 10, "label": "Sanidade" }
+        }
+      }
+    },
+    "character": {
+      "templates": ["base"],
+    "detalhes": {
+        "xp": { "value": 0, "max": 1000, "label": "Experiência" },
+        "nivel": { "value": 1, "label": "Nível" },
+        
+        "niveis": {
+            "principal": { "value": 1 },
+            "secundario": { "value": 0 }
+        },
+
+        "treinamento": { "value": 2, "label": "Bônus de Treino" },
+        "origem": { "value": "Estudante", "label": "Origem" },
+        "racaMaldicao": { "value": "", "label": "Raça (Maldição)" },
+        "classe": { "value": "Lutador", "label": "Classe" },
+        "multiclasse": { "value": "Nenhuma", "label": "Multiclasse" }
+      },
+    "atributos": {
+        "forca": { "value": 10, "label": "Força" },
+        "destreza": { "value": 10, "label": "Destreza" },
+        "constituicao": { "value": 10, "label": "Constituição" },
+        "inteligencia": { "value": 10, "label": "Inteligência" },
+        "sabedoria": { "value": 10, "label": "Sabedoria" },
+        "presenca": { "value": 10, "label": "Presença" }
+      },
+    "aptidaoNiveis": {
+        "aura": { "value": 0, "label": "Aura (AU)" },
+        "controleELeitura": { "value": 0, "label": "Controle e Leitura (CL)" },
+        "barreiras": { "value": 0, "label": "Barreira (BAR)" },
+        "dominio": { "value": 0, "label": "Domínio (DOM)" },
+        "energiaReversa": { "value": 0, "label": "Energia Reversa (ER)" }
+      },
+    "aptidaoTreino": {
+        "notas": { "value": "", "label": "Treino (Interlúdio)" },
+        "pontosAdicionais": { "value": 0, "label": "Pontos de Treino (Adicionais)" }
+      },
+    "aptidoes": {
+        "aura": {
+          "aura": false,
+          "afinidadeAmpliada": false,
+          "auraAnuladora": false,
+          "auraChamativa": false,
+          "auraControlada": false,
+          "auraDeContencao": false,
+          "auraDoBastiao": false,
+          "auraDoComandante": false,
+          "auraDoComandanteEvoluida": false,
+          "auraDrenadora": false,
+          "auraElemental": false,
+          "auraReforcada": false,
+          "auraImpenetravel": false,
+          "casuloDeEnergia": false,
+          "auraElementalReforcada": false,
+          "absorcaoElemental": false,
+          "auraEmbacada": false,
+          "auraInofensiva": false,
+          "auraExcessiva": false,
+          "concentrarAura": false,
+          "enganacaoProjetada": false,
+          "golpeComAura": false,
+          "transferenciaDeAura": false,
+          "auraLacerante": false,
+          "auraMacabra": false,
+          "auraMacica": false,
+          "auraMovedica": false,
+          "auraRedirecionada": false
+        },
+        "controleELeitura": {
+          "canalizarEmGolpe": false,
+          "canalizacaoAvancada": false,
+          "canalizacaoMaxima": false,
+          "cobrirSe": false,
+          "coberturaAvancada": false,
+          "estimuloMuscular": false,
+          "estimuloMuscularAvancado": false,
+          "expandirAura": false,
+          "leituraDeAura": false,
+          "leituraRapidaDeEnergia": false,
+          "projetarEnergia": false,
+          "projecaoAvancada": false,
+          "projecaoMaxima": false,
+          "projecaoDividida": false,
+          "punhoDivergente": false,
+          "emocaoDaPetalaDecadente": false,
+          "rastreioAvancado": false
+        },
+        "energiaReversa": {
+          "energiaReversa": false,
+          "curaAmplificada": false,
+          "fluxoConstante": false,
+          "regeneracaoAprimorada": false,
+          "liberacaoDeEnergiaReversa": false,
+          "canalizarEmEnergiaReversa": false,
+          "curaEmGrupo": false
+        },
+        "dominio": {
+          "revestimentoDeDominio": false,
+          "anularTecnica": false,
+          "expansaoDeDominioIncompleta": false,
+          "expansaoDeDominioCompleta": false,
+          "acertoGarantido": false,
+          "expansaoDeDominioSemBarreiras": false
+        },
+        "barreiras": {
+          "tecnicasDeBarreiras": false,
+          "paredesResistentes": false,
+          "barreiraRapida": false,
+          "cestaOcaDeVime": false,
+          "cortina": false
+        },
+        "especiais": {
+          "raioNegro": false,
+          "abencoadoPelasFaiscasNegras": false,
+          "dominioSimples": false,
+          "reversaoDeTecnica": false,
+          "tecnicaMaxima": false
+        },
+        "maldicaoAnatomia": {
+          "absorcaoElemental": false,
+          "armasNaturais": false,
+          "armasNaturaisAprimoradas": false,
+          "composicaoElemental": false,
+          "crescimentoCorporal": false,
+          "desenvolvimentoFisico": false,
+          "olhosAdicionais": false,
+          "revestimento": false,
+          "revestimentoEvoluido": false,
+          "superioridadeFisica": false
+        },
+        "maldicaoControleELeitura": {
+          "absorcaoAmaldicoada": false,
+          "estoqueAmpliado": false,
+          "extracaoDePotencial": false,
+          "protecaoConstante": false
+        },
+        "maldicaoEspeciais": {
+          "regeneracaoCorporal": false,
+          "regeneracaoAmpliada": false,
+          "regeneracaoMaxima": false,
+          "regeneracaoDeMembros": false,
+          "fluxoImparavel": false,
+          "areaDeDominio": false
+        }
+      },
+      "combate": {
+        "defesa": { "value": 10, "label": "Defesa" },
+        "cd": { "value": 10, "label": "Classe de Dificuldade" },
+        "movimento": { "value": 9, "label": "Deslocamento" },
+        "iniciativa": { "value": 0, "label": "Iniciativa" },
+        "dadosVida": { "value": 1, "max": 1, "lado": "1d8", "label": "Dados de Vida" },
+        "dadosEnergia": { "value": 1, "max": 1, "lado": "1d6", "label": "Dados de Energia" },
+        "rd": { "value": 0, "special": "", "byType": {} },
+        "morte": {
+            "s1": false, "s2": false, "s3": false,
+            "f1": false, "f2": false, "f3": false
+        }
+      },
+      "condicoes": {
+        "fisicas": {
+            "condenado": false, "engasgando": false, "enjoado": false, "envenenado": false,
+            "sangramento": false, "sofrendo": false, "paralisado": false, "fragilizado": false
+        },
+        "mentais": {
+            "abalado": false, "amedrontado": false, "aterrorizado": false, "confuso": false,
+            "enfeiticado": false, "indefeso": false, "exposto": false
+        },
+        "sensoriais": {
+            "cego": false, "desorientado": false, "desprevenido": false,
+            "surdo": false, "surpreso": false, "inconsciente": false
+        },
+        "movimento": {
+            "agarrado": false, "caido": false, "enredado": false,
+            "imovel": false, "lento": false, "atordoado": false
+        }
+      },
+      "ataques": {
+        "corpo": { "value": 0, "label": "Corpo a Corpo" },
+        "distancia": { "value": 0, "label": "Distância" },
+        "amaldicoado": { "value": 0, "label": "Amaldiçoado" }
+      },
+      "salvaguardas": {
+        "reflexos": { "value": 0, "label": "Reflexos" },
+        "fortitude": { "value": 0, "label": "Fortitude" },
+        "integridade": { "value": 0, "label": "Integridade" },
+        "vontade": { "value": 0, "label": "Vontade" },
+        "astucia": { "value": 0, "label": "Astúcia" }
+      },
+      "pericias": {
+        "acrobacia": { "value": 0, "label": "Acrobacia" },
+        "atletismo": { "value": 0, "label": "Atletismo" },
+        "direcao": { "value": 0, "label": "Direção" },
+        "enganacao": { "value": 0, "label": "Enganação" },
+        "feiticaria": { "value": 0, "label": "Feitiçaria" },
+        "furtividade": { "value": 0, "label": "Furtividade" },
+        "historia": { "value": 0, "label": "História" },
+        "intimidacao": { "value": 0, "label": "Intimidação" },
+        "intuicao": { "value": 0, "label": "Intuição" },
+        "investigacao": { "value": 0, "label": "Investigação" },
+        "manobra": { "value": 0, "label": "Manobra" },
+        "medicina": { "value": 0, "label": "Medicina" },
+        "ocultismo": { "value": 0, "label": "Ocultismo" },
+        "percepcao": { "value": 0, "label": "Percepção" },
+        "performance": { "value": 0, "label": "Performance" },
+        "persuasao": { "value": 0, "label": "Persuasão" },
+        "prestidigitacao": { "value": 0, "label": "Prestidigitação" },
+        "sobrevivencia": { "value": 0, "label": "Sobrevivência" },
+        "tecnologia": { "value": 0, "label": "Tecnologia" },
+        "teologia": { "value": 0, "label": "Teologia" }
+      }
+    },
+    "npc": {
+      "templates": ["base"],
+      "detalhes": {
+        "nivel": { "value": 1 }
+      }
+    }
+  },
+  "Item": {
+    "types": ["item", "feature", "spell", "aptidao", "tecnica", "arma", "class"],
+    "templates": {
+      "base": {
+        "descricao": { "value": "" },
+        "fonte": { "value": "" }
+      }
+    },
+    "item": { "templates": ["base"] },
+    "tecnica": { "templates": ["base"] },
+    "arma": {
+      "templates": ["base"],
+        "damage": {
+          "base": { "value": "1d6", "label": "Dano Base" },
+          "bonus": { "value": "@forca", "label": "Bônus" },
+          "levelBoost": { "value": 0, "label": "Aumento de Nível" },
+          "type": { "value": "corte", "label": "Tipo de Dano" },
+          "isSoulDamage": { "value": false, "label": "Dano na Alma" }
+        }
+        ,
+        "ataque": {
+          "acao": { "value": "mwak", "label": "Ação (mwak/rwak)" },
+          "atributo": { "value": "forca", "label": "Atributo (forca/destreza)" },
+          "bonus": { "value": 0, "label": "Bônus de Ataque" },
+          "pericia": { "value": "", "label": "Perícia" },
+          "alcance": { "valor": { "value": 1.5, "label": "Alcance (valor)" }, "unidade": { "value": "m", "label": "Unidade" } },
+          "critico": { "min": { "value": 20, "label": "Ameaça Mínima" }, "mult": { "value": 2, "label": "Multiplicador" } },
+          "detalhes": { "grau": { "value": 0, "label": "Grau" }, "empunhadura": { "value": "uma mão", "label": "Empunhadura" }, "tipo": { "value": "impacto", "label": "Tipo" } }
+        }
+    },
+    "aptidao": {
+      "templates": ["base"],
+      "custo": { "value": 0, "label": "Custo (PE)" },
+      "acao": { "value": "Passiva", "label": "Ação" },
+      "requisito": { "value": "", "label": "Requisito" }
+    }
+  }
+}

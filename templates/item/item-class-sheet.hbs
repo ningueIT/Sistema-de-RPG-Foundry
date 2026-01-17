@@ -1,0 +1,93 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <button type="button" class="jem-sheet-close" title="Fechar" aria-label="Fechar">
+      <i class="fas fa-times"></i>
+    </button>
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}"/>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Nome da Classe"/></h1>
+      <div class="item-meta grid grid-2col">
+        <div>
+          <label>Fonte</label>
+          <input type="text" name="system.fonte.value" value="{{system.fonte.value}}" placeholder="Ex: Livro / Mestre"/>
+        </div>
+        <div>
+          <label>Requisito</label>
+          <input type="text" name="system.requisito.value" value="{{system.requisito.value}}" placeholder="Ex: Nv 2"/>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="sheet-body">
+    <div class="sheet-main grid grid-2col">
+      <div>
+        <h3 class="item-section-title">Descrição</h3>
+        <div class="editor-container">
+          {{editor system.descricao.value target="system.descricao.value" engine="prosemirror" button=true owner=owner editable=editable}}
+        </div>
+      </div>
+
+      <div>
+        <h3 class="item-section-title">Detalhes</h3>
+        <div class="field">
+          <label>Arquétipo</label>
+          <select name="system.identifier">
+            {{selectOptions config.classTypes selected=system.identifier localize=false}}
+          </select>
+        </div>
+        <div class="grid grid-2col">
+          <div class="field">
+            <label>PV inicial</label>
+            <input type="number" name="system.hp.initial" value="{{system.hp.initial}}" min="0" />
+          </div>
+          <div class="field">
+            <label>PV por nível</label>
+            <input type="number" name="system.hp.perLevel" value="{{system.hp.perLevel}}" min="0" />
+          </div>
+          <div class="field">
+            <label>PE inicial</label>
+            <input type="number" name="system.ep.initial" value="{{system.ep.initial}}" min="0" />
+          </div>
+          <div class="field">
+            <label>PE por nível</label>
+            <input type="number" name="system.ep.perLevel" value="{{system.ep.perLevel}}" min="0" />
+          </div>
+        </div>
+
+        <h4 class="item-section-title">Tabela de Progressão</h4>
+        <div class="table-wrap">
+          <table class="table item-table">
+            <thead>
+              <tr>
+                <th>Nível</th>
+                <th>Habilidades (Slots)</th>
+                <th>Aptidões (Slots)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each progressionLevels}}
+                <tr>
+                  <td>{{level}}</td>
+                  <td>
+                    <input type="number" min="0" name="system.progression.{{level}}.features" value="{{features}}" />
+                  </td>
+                  <td>
+                    <input type="number" min="0" name="system.progression.{{level}}.aptitudes" value="{{aptitudes}}" />
+                  </td>
+                </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="sheet-footer">
+      <h3 class="item-section-title">Descrição (completa)</h3>
+      <div class="editor-container">
+        {{editor system.descricao.value target="system.descricao.value" engine="prosemirror" button=true owner=owner editable=editable}}
+      </div>
+    </div>
+  </section>
+</form>

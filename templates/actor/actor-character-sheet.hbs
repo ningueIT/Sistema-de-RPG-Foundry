@@ -1,0 +1,106 @@
+<form class="{{cssClass}}" autocomplete="off">
+    
+    {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-header.hbs"}}
+
+    <nav class="sheet-tabs tabs" data-group="primary">
+        <a class="item" data-tab="atributos">Status</a>
+        <a class="item" data-tab="pericias">Perícias</a>
+        <a class="item" data-tab="aptidoes">Aptidão</a>
+        <a class="item" data-tab="habilidades">Habilidades</a>
+        <a class="item" data-tab="tecnica">Técnica</a>
+        <a class="item" data-tab="itens">Itens</a>
+    </nav>
+
+    <hr>
+
+    <section class="sheet-body">
+        
+        <div class="tab atributos" data-group="primary" data-tab="atributos">
+            
+            {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-status.hbs"}}
+
+            <h3 class="jem-section-title">COMBATE</h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                <div style="grid-column: 1 / -1; text-align: right; margin-bottom: 6px; display:flex; gap:8px; justify-content:flex-end;">
+                    <!-- Botões de Descanso removidos: usar macros -->
+                </div>
+                <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
+                    <label>DEFESA</label>
+                    <input type="number" name="system.combate.defesa.value" value="10">
+                </div>
+                <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
+                    <label>CD</label>
+                    <input type="number" name="system.combate.cd.value" value="10">
+                </div>
+                <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
+                    <label>MOVIMENTO</label>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 2px;">
+                        <input type="number" name="system.combate.movimento.value" value="9">
+                        <span style="font-size: 10px; color: #888;">m</span>
+                    </div>
+                </div>
+                <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
+                    <label class="roll-initiative rollable" style="cursor: pointer; color: #9b4dca;">
+                        <i class="fas fa-dice-d20"></i> INICIATIVA
+                    </label>
+                    <input type="number" name="system.combate.iniciativa.value" value="0" placeholder="+0">
+                </div>
+                <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
+                    <label class="roll-dice rollable" data-formula="1d8" data-flavor="Dados de Vida">
+                        <i class="fas fa-dice"></i> DADOS VIDA
+                    </label>
+                    <input type="text" name="system.combate.dadosVida.lado" value="1d8" style="font-size: 12px; height: 20px; margin-bottom: 3px; text-align:center;" placeholder="Ex: 1d8">
+                    <div class="status-inputs flexrow" style="gap: 2px;">
+                        <input type="number" value="1" style="font-size: 14px; height: 25px;" readonly disabled>
+                        <span style="color:#888;">/</span>
+                        <input type="number" value="1" style="font-size: 14px; height: 25px;" readonly disabled>
+                    </div>
+                </div>
+                <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
+                    <label class="roll-dice rollable" data-formula="1d6" data-flavor="Dados de Energia">
+                        <i class="fas fa-dice"></i> DADOS ENERGIA
+                    </label>
+                    <input type="text" name="system.combate.dadosEnergia.lado" value="1d6" style="font-size: 12px; height: 20px; margin-bottom: 3px; text-align:center;" placeholder="Ex: 1d6">
+                    <div class="status-inputs flexrow" style="gap: 2px;">
+                        <input type="number" value="1" style="font-size: 14px; height: 25px;" readonly disabled>
+                        <span style="color:#888;">/</span>
+                        <input type="number" value="1" style="font-size: 14px; height: 25px;" readonly disabled>
+                    </div>
+                </div>
+            </div>
+
+            {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-attacks.hbs"}}
+            {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-conditions.hbs"}}
+
+            {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-combat.hbs"}}
+        </div>
+
+        <div class="tab pericias" data-group="primary" data-tab="pericias">
+
+            <h3 style="border-bottom: 2px solid #5d1b7e; margin-bottom: 10px;">Atributos</h3>
+
+            {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-attributes.hbs"}}
+            
+            {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-skills.hbs"}}
+            
+        </div>
+
+        <div class="tab aptidoes" data-group="primary" data-tab="aptidoes">
+            {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-aptidoes.hbs"}}
+        </div>
+
+        <div class="tab habilidades" data-group="primary" data-tab="habilidades">
+            {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-habilidades.hbs"}}
+        </div>
+
+        <div class="tab tecnica" data-group="primary" data-tab="tecnica">
+            {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-tecnica.hbs"}}
+        </div>
+
+        <div class="tab itens" data-group="primary" data-tab="itens">
+            {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-itens.hbs"}}
+        </div>
+
+    </section>
+</form>
