@@ -52,3 +52,53 @@ FEITICEIROS.classTypes = {
   suporte: 'Suporte',
   restringido: 'Restringido'
 };
+
+// Configuração completa de classes (fonte da verdade)
+FEITICEIROS.classes = {
+  lutador: {
+    label: 'Lutador',
+    hp: { initial: 10, perLevel: 6 },
+    ep: { initial: 5, perLevel: 3 },
+    progression: {
+      2: { features: 1, aptitudes: 1 },
+      3: { features: 1, aptitudes: 0 },
+      4: { features: 1, aptitudes: 1 },
+      5: { features: 2, aptitudes: 1 }
+    }
+  },
+  controlador: {
+    label: 'Controlador',
+    hp: { initial: 8, perLevel: 5 },
+    ep: { initial: 10, perLevel: 6 },
+    progression: {
+      2: { features: 1, aptitudes: 1 },
+      3: { features: 1, aptitudes: 1 },
+      4: { features: 1, aptitudes: 0 },
+      5: { features: 2, aptitudes: 1 }
+    }
+  },
+  especialistaTecnica: {
+    label: 'Especialista em Técnica',
+    hp: { initial: 8, perLevel: 5 },
+    ep: { initial: 8, perLevel: 5 },
+    progression: {}
+  },
+  especialistaCombate: {
+    label: 'Especialista em Combate',
+    hp: { initial: 9, perLevel: 5 },
+    ep: { initial: 6, perLevel: 4 },
+    progression: {}
+  },
+  suporte: {
+    label: 'Suporte',
+    hp: { initial: 7, perLevel: 4 },
+    ep: { initial: 10, perLevel: 6 },
+    progression: {}
+  },
+  restringido: {
+    label: 'Restringido',
+    hp: { initial: 6, perLevel: 3 },
+    ep: { initial: 4, perLevel: 2 },
+    progression: {}
+  }
+};

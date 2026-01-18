@@ -39,148 +39,144 @@
     border-bottom: 2px solid #5d1b7e; /* Roxo Jujutsu */
     color: #ffffff;
     margin-bottom: 10px;
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
 
-/* ============================================================
-   2. INPUTS (CAMPOS DE TEXTO E NÚMERO)
-   ============================================================ */
-.feiticeiros-e-maldicoes input[type="text"],
-.feiticeiros-e-maldicoes input[type="number"] {
-    background: rgba(255, 255, 255, 0.05);
-    color: #fff;
-    border: 1px solid #444;
-    border-radius: 4px;
-    transition: 0.3s box-shadow, 0.3s border-color;
-}
+    .level-up-form {
+        background: linear-gradient(180deg,#050406 0%,#0b0b12 60%);
+        color: #e6e6e6;
+        font-family: "Signika", "Segoe UI", Roboto, Arial, sans-serif;
+        border-radius: 8px;
+        padding: 14px;
+        box-shadow: 0 10px 30px rgba(10,8,20,0.7), inset 0 1px 0 rgba(255,255,255,0.02);
+    }
 
-/* Efeito de brilho ao clicar */
-.feiticeiros-e-maldicoes input:focus,
-.feiticeiros-e-maldicoes select:focus {
-    box-shadow: 0 0 8px #9b4dca; /* Brilho Roxo */
-    border-color: #9b4dca;
-}
+    .level-up-form .sheet-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(157,78,221,0.06);
+        background: linear-gradient(90deg, rgba(157,78,221,0.04), transparent 55%);
+        padding: 12px 12px 10px 14px;
+        border-left: 4px solid rgba(157,78,221,0.18);
+        border-radius: 6px;
+    }
 
-/* Campos Bloqueados (Automáticos) */
-.feiticeiros-e-maldicoes .bloqueado {
-    background: rgba(0, 0, 0, 0.4);
-    color: #a0a0a0;
-    border: 1px dashed #555;
-    cursor: not-allowed;
-    font-weight: bold;
-}
+    .level-up-form .sheet-header h2 {
+        margin: 0;
+        color: #d8b7ff;
+        text-shadow: 0 0 10px rgba(157,78,221,0.18);
+        font-weight: 600;
+        font-size: 1.05rem;
+        flex: 1;
+    }
 
-/* ============================================================
-   3. HEADER (CABEÇALHO)
-   ============================================================ */
-.sheet-header {
-    background: linear-gradient(to bottom, #1a1a1a, #0d0d0d);
-    padding: 15px;
-    border-bottom: 3px solid #5d1b7e;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
+    .level-up-form .sheet-header .muted {
+        font-size: 0.85em;
+        color: #bdbdbd;
+    }
 
-.profile-img {
-    border: 2px solid #fff;
-    box-shadow: 0 0 10px rgba(93, 27, 126, 0.5); /* Sombra roxa */
-    background: #000;
-    object-fit: cover; /* Garante que a imagem não estique */
-}
+    .level-up-form .form-group h3 {
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        color: #d3a9ff;
+        margin: 8px 0 10px 0;
+        padding-bottom: 6px;
+        font-size: 0.95rem;
+    }
 
-.header-fields {
-    flex: 1;
-}
+    .level-up-form .resource-label { font-weight: 700; color: #fff; }
+    .level-up-form .resource-label strong { color: #66ffd6; }
 
-/* Nome do Personagem Gigante */
-.charname input {
-    height: 50px;
-    font-size: 30px;
-    font-family: "Georgia", serif; /* Fonte mais elegante pro nome */
-    background: transparent !important;
-    border: none !important;
-    border-bottom: 2px solid #555 !important;
-    border-radius: 0 !important;
-    padding-left: 0;
-}
+    /* Drop-list and zones */
+    .level-up-form .drop-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+    }
 
-/* ============================================================
-   4. RESOURCES (XP, NÍVEL, DROPDOWNS)
-   ============================================================ */
-.resources.grid {
-    gap: 30px !important; 
-    margin-top: 15px;
-    padding: 0 5px; 
-    align-items: end; 
-}
+    .level-up-form .drop-zone {
+        background: linear-gradient(180deg,#0e0e12 0%,#0a0a0a 100%);
+        border: 2px dashed rgba(90,24,154,0.12);
+        border-radius: 8px;
+        padding: 8px;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: box-shadow .18s ease, transform .12s ease, border-color .12s ease;
+    }
 
-/* Estilo para os inputs ficarem mais imponentes */
+    .level-up-form .drop-zone.drag-over {
+        transform: translateY(-3px);
+        border-color: #9d4edd;
+        box-shadow: 0 6px 20px rgba(157,78,221,0.14), inset 0 0 18px rgba(157,78,221,0.06);
+    }
 
-/* ------------------------------------------------------------
-     Estilos específicos para modal de Item (Armas)
-     - Labels brancos
-     - Inputs padronizados em altura, largura e espaçamento
-     - Ajuste vertical dos inputs (levantar 8px conforme solicitado)
-     ------------------------------------------------------------ */
-.sheet-main { display: flex; gap: 18px; }
-.grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.weapon-header { padding: 8px 0; }
-.weapon-meta { display:flex; flex-direction:column; gap:4px; color:#ddd; }
-.meta-row { font-size: 13px; color:#cfc7e6; }
-.attack-fieldset, .damage-fieldset { border: 1px solid #2a2a2a; padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.25); }
-.attack-fieldset legend, .damage-fieldset legend { padding: 2px 8px; background: rgba(155,77,202,0.15); border-radius:999px; color:#fff; }
-.weapon-attributes { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-.weapon-attributes .field { display:flex; flex-direction:column; gap:6px; }
-.weapon-attributes .field.full { grid-column: 1 / -1; }
+    .level-up-form .drop-zone .placeholder { color: #8f8f8f; font-style: italic; font-size: 0.92em; }
 
-/* Labels: brancos e consistentes */
-.weapon-attributes label,
-.item-meta label,
-.sheet-body label,
-.sheet-header label { color: #ffffff; font-weight:600; font-size:13px; }
+    /* Item card */
+    .level-up-form .drop-zone .item-card {
+        background: linear-gradient(180deg,#16161a,#0f0f12);
+        border: 1px solid rgba(157,78,221,0.18);
+        border-radius: 6px;
+        padding: 6px 8px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.45);
+    }
 
-/* Inputs/Selects padronizados */
-.weapon-attributes input[type="text"],
-.weapon-attributes input[type="number"],
-.weapon-attributes select,
-.item-meta input[type="text"],
-.item-meta input[type="number"] {
-    width: 100%;
-    height: 36px;
-    line-height: 36px;
-    padding: 4px 8px;
-    box-sizing: border-box;
-    border-radius: 6px;
-    border: 1px solid #444;
-    background: rgba(255,255,255,0.04);
-    color: #fff;
-    margin-top: -8px; /* levanta o input 8px em relação ao label, conforme solicitado */
-}
+    .level-up-form .drop-zone .item-card img { width:36px; height:36px; border-radius:6px; object-fit:cover; }
 
-/* Small inputs (crítico etc) */
-.small { width: 56px; height: 34px; }
+    .level-up-form .drop-zone .item-card .item-name {
+        font-size: 0.96em; font-weight:700; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
 
-.actions-row { display:flex; align-items:center; gap:12px; margin-top:10px; }
-.roll-button { background: linear-gradient(180deg,#9b4dca,#6f2ea8); color:#fff; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; }
-.roll-button:hover { filter:brightness(1.05); }
-.muted { color:#bdb8cf; font-size:13px; }
-.preview-damage, .preview-attack { background:#1a1a1a; padding:3px 6px; border-radius:4px; color:#fff; }
-.checkbox-inline { display:flex; align-items:center; gap:8px; cursor:pointer; }
+    /* Buttons */
+    .level-up-form .form-buttons {
+        display:flex; justify-content:flex-end; gap:10px; margin-top:18px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.03);
+    }
 
-/* Responsive adjustments */
-@media (max-width: 820px) {
-    .grid-2col { grid-template-columns: 1fr; }
-    .sheet-main { flex-direction:column; }
-    .weapon-attributes { grid-template-columns: 1fr; }
-}
+    .level-up-form .form-buttons button {
+        background: linear-gradient(180deg,#16141c,#0f0d14);
+        color:#fff; border:1px solid rgba(157,78,221,0.10); border-radius:6px; padding:8px 14px; cursor:pointer;
+        transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    }
 
-.resource input,
-.resource select {
-    height: 30px;
-    font-size: 14px;
+    .level-up-form .form-buttons button:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+
+    .level-up-form .form-buttons button.primary {
+        background: linear-gradient(180deg,#5a189a,#3c096c); border-color:rgba(0,0,0,0.35);
+        box-shadow: 0 6px 22px rgba(123,44,191,0.12), 0 0 12px rgba(157,78,221,0.06) inset;
+    }
+
+    .level-up-form .form-buttons button.primary:hover { background: linear-gradient(180deg,#7b2cbf,#5a189a); box-shadow: 0 10px 36px rgba(123,44,191,0.18); }
+
+    /* Inputs and small UI polish */
+    .level-up-form input[type="number"], .level-up-form input[type="text"], .level-up-form select, .level-up-form textarea {
+        background: rgba(255,255,255,0.02); border:1px solid rgba(157,78,221,0.08); color:#eaeaea; padding:6px 8px; border-radius:6px;
+    }
+
+    .level-up-form input:focus, .level-up-form select:focus, .level-up-form textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(157,78,221,0.08); }
+
+    /* Tiny badges and progress */
+    .level-up-form .badge { background: rgba(157,78,221,0.12); color:#e9ddff; padding:4px 8px; border-radius:999px; font-weight:700; font-size:0.78rem; }
+    .level-up-form .progress { height:8px; background: rgba(255,255,255,0.04); border-radius:6px; overflow:hidden; }
+    .level-up-form .progress > i { display:block; height:100%; background: linear-gradient(90deg,#66ffd6,#9d4edd); width:40%; }
+
+    /* Scrollbar polish inside the dialog */
+    .level-up-form ::-webkit-scrollbar { height:8px; width:8px; }
+    .level-up-form ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, rgba(157,78,221,0.14), rgba(90,24,154,0.12)); border-radius:8px; }
+
+    /* responsiveness */
+    @media (max-width:720px) {
+        .level-up-form { padding:10px; }
+        .level-up-form .drop-list { grid-template-columns: 1fr; }
+        .level-up-form .sheet-header h2 { font-size:1rem; }
+    }
+
 }
 
 /* Labels (títulos pequenos acima dos campos) */
@@ -3234,3 +3230,128 @@ body .ultima-acao select.ultima-acao-select option {
 .feiticeiros-e-maldicoes.sheet.actor .jem-items-table .jem-item-col--remove { width: 72px; text-align: center; }
 .feiticeiros-e-maldicoes.sheet.actor .jem-items-table .jem-item-col--remove .item-delete { background: transparent; border: 1px solid rgba(255,255,255,0.06); padding:6px 8px; border-radius:6px; color:#fff }
 .feiticeiros-e-maldicoes.sheet.actor .jem-items-table .jem-item-col--remove .item-delete:hover { background: rgba(155,77,202,0.12); }
+
+.app.window-app.feiticeiros-e-maldicoes.level-up .window-content {
+    background: linear-gradient(180deg,#050406 0%,#0b0b12 60%);
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(10,8,20,0.65), inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+.app.window-app.feiticeiros-e-maldicoes.level-up form.level-up-form {
+    background: transparent;
+    padding: 0; margin: 0; box-shadow: none;
+}
+
+.level-up-form {
+    color: #e6e6e6;
+    font-family: "Signika", "Segoe UI", Roboto, Arial, sans-serif;
+    border-radius: 8px;
+    padding: 14px;
+    box-shadow: 0 10px 30px rgba(10,8,20,0.7), inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+.level-up-form .sheet-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(157,78,221,0.06);
+    background: linear-gradient(90deg, rgba(157,78,221,0.04), transparent 55%);
+    padding: 12px 12px 10px 14px;
+    border-left: 4px solid rgba(157,78,221,0.18);
+    border-radius: 6px;
+}
+
+.level-up-form .sheet-header h2 {
+    margin: 0;
+    color: #d8b7ff;
+    text-shadow: 0 0 10px rgba(157,78,221,0.18);
+    font-weight: 600;
+    font-size: 1.05rem;
+    flex: 1;
+}
+
+.level-up-form .sheet-header .muted {
+    font-size: 0.85em;
+    color: #bdbdbd;
+}
+
+.level-up-form .form-group h3 {
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: #d3a9ff;
+    margin: 8px 0 10px 0;
+    padding-bottom: 6px;
+    font-size: 0.95rem;
+}
+
+.level-up-form .resource-label { font-weight: 700; color: #fff; }
+.level-up-form .resource-label strong { color: #66ffd6; }
+
+/* Drop-list and zones */
+.level-up-form .drop-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.level-up-form .drop-zone {
+    background: linear-gradient(180deg,#0e0e12 0%,#0a0a0a 100%);
+    border: 2px dashed rgba(90,24,154,0.12);
+    border-radius: 8px;
+    padding: 8px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: box-shadow .18s ease, transform .12s ease, border-color .12s ease;
+}
+
+.level-up-form .drop-zone.drag-over {
+    transform: translateY(-3px);
+    border-color: #9d4edd;
+    box-shadow: 0 6px 20px rgba(157,78,221,0.14), inset 0 0 18px rgba(157,78,221,0.06);
+}
+
+.level-up-form .drop-zone .placeholder { color: #8f8f8f; font-style: italic; font-size: 0.92em; }
+
+/* Item card */
+.level-up-form .drop-zone .item-card {
+    background: linear-gradient(180deg,#16161a,#0f0f12);
+    border: 1px solid rgba(157,78,221,0.18);
+    border-radius: 6px;
+    padding: 6px 8px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.45);
+}
+
+.level-up-form .drop-zone .item-card img { width:36px; height:36px; border-radius:6px; object-fit:cover; }
+
+.level-up-form .drop-zone .item-card .item-name {
+    font-size: 0.96em; font-weight:700; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+
+/* Buttons */
+.level-up-form .form-buttons {
+    display:flex; justify-content:flex-end; gap:10px; margin-top:18px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.03);
+}
+
+.level-up-form .form-buttons button {
+    background: linear-gradient(180deg,#16141c,#0f0d14);
+    color:#fff; border:1px solid rgba(157,78,221,0.10); border-radius:6px; padding:8px 14px; cursor:pointer;
+    transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+.level-up-form .form-buttons button:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+
+.level-up-form .form-buttons button.primary {
+    background: linear-gradient(180deg,#5a189a,#3c096c); border-color:rgba(0,0,0,0.35);
+    box-shadow: 0 6px 22px rgba(123,44,191,0.12), 0 0 12px rgba(157,78,221,0.06) inset;
+}
+
+.level-up-form .form-buttons button.primary:hover { background: linear-gradient(180deg,#7b2cbf,#5a189a); box-shadow: 0 10px 36px rgba(123,44,191,0.18); }

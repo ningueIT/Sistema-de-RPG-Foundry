@@ -1,59 +1,98 @@
 <form class="{{cssClass}} level-up-form" autocomplete="off">
+  {{!-- HEADER (Fixo): Nome do Ator/Classe e Nível de Destino --}}
   <header class="sheet-header header-fields">
     <div>
-      <h2>{{classItem.name}}</h2>
-      <div class="muted">Destino: Nível {{nextLevel}}</div>
+      <h2>Ascensão: Passo {{step}}/3</h2>
+      <div class="muted">{{classId}} &bull; Nível {{currentLevel}} &rarr; {{nextLevel}}</div>
     </div>
   </header>
 
-  <section class="form-group">
-    <h3>Ganhos Automáticos</h3>
-    <div class="grid grid-2col">
-      <div class="resource-label">PV: <strong>+{{hpGain}}</strong></div>
-      <div class="resource-label">PE: <strong>+{{epGain}}</strong></div>
+  {{!-- PASSO 1: VISUALIZAÇÃO DE GANHOS --}}
+  {{#if isStep1}}
+    <div class="step-content">
+      <section class="form-group">
+        <h3>Ganhos de Atributos</h3>
+        <div class="grid grid-2col">
+          <div class="resource-label">PV Máximo: <strong>+{{hpGain}}</strong></div>
+          <div class="resource-label">PE Máximo: <strong>+{{epGain}}</strong></div>
+        </div>
+      </section>
+      
+      <div class="form-buttons">
+        <button type="button" class="button" data-action="cancel">Cancelar</button>
+        <button type="button" class="button primary" data-action="next">
+          Escolher Aptidão <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
     </div>
-  </section>
+  {{/if}}
 
-  <section class="form-group">
-    <h3>Habilidades</h3>
-    <div class="drop-list grid">
-      {{#each featureSlots}}
-        <div class="drop-zone" data-type="feature" data-index="{{@index}}">
-          {{#if this}}
-            <div class="item-card" style="display:flex;align-items:center;gap:8px;">
-              <img src="{{this.img}}" alt="{{this.name}}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;"/>
-              <div class="item-name">{{this.name}}</div>
+  {{!-- PASSO 2: ESCOLHA DE APTIDÃO --}}
+  {{#if isStep2}}
+    <div class="step-content">
+      <section class="form-group">
+        <h3>Nova Aptidão</h3>
+        <p class="muted">Arraste uma <strong>Aptidão</strong> (Compêndio) para o slot abaixo.</p>
+        
+        <div class="drop-list grid">
+          {{#each aptitudeSlots}}
+            <div class="drop-zone" data-type="aptitude" data-index="{{@index}}">
+              {{#if this}}
+                <div class="item-card">
+                  <img src="{{this.img}}" alt="{{this.name}}"/>
+                  <div class="item-name">{{this.name}}</div>
+                </div>
+              {{else}}
+                <div class="placeholder">Arraste Aptidão</div>
+              {{/if}}
             </div>
           {{else}}
-            <div class="placeholder muted">Arraste uma Habilidade</div>
-          {{/if}}
+            <p class="muted">Nenhuma aptidão ganha neste nível.</p>
+          {{/each}}
         </div>
-      {{/each}}
-    </div>
-  </section>
+      </section>
 
-  <section class="form-group">
-    <h3>Aptidões</h3>
-    <div class="drop-list grid">
-      {{#each aptitudeSlots}}
-        <div class="drop-zone" data-type="aptitude" data-index="{{@index}}">
-          {{#if this}}
-            <div class="item-card" style="display:flex;align-items:center;gap:8px;">
-              <img src="{{this.img}}" alt="{{this.name}}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;"/>
-              <div class="item-name">{{this.name}}</div>
+      <div class="form-buttons">
+        <button type="button" class="button" data-action="back"><i class="fas fa-arrow-left"></i> Voltar</button>
+        <button type="button" class="button primary" data-action="next">
+          Próximo <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  {{/if}}
+
+  {{!-- PASSO 3: ESCOLHA DE HABILIDADE DE CLASSE --}}
+  {{#if isStep3}}
+    <div class="step-content">
+      <section class="form-group">
+        <h3>Habilidade de Classe</h3>
+        <p class="muted">Arraste a <strong>Habilidade de Classe</strong> (Compêndio) para o slot abaixo.</p>
+        
+        <div class="drop-list grid">
+          {{#each featureSlots}}
+            <div class="drop-zone" data-type="feature" data-index="{{@index}}">
+              {{#if this}}
+                <div class="item-card">
+                  <img src="{{this.img}}" alt="{{this.name}}"/>
+                  <div class="item-name">{{this.name}}</div>
+                </div>
+              {{else}}
+                <div class="placeholder">Arraste Habilidade</div>
+              {{/if}}
             </div>
           {{else}}
-            <div class="placeholder muted">Arraste uma Aptidão</div>
-          {{/if}}
+            <p class="muted">Nenhuma habilidade de classe ganha neste nível.</p>
+          {{/each}}
         </div>
-      {{/each}}
-    </div>
-  </section>
+      </section>
 
-  <footer class="form-group">
-    <div class="form-buttons">
-      <button type="submit" class="button primary">Confirmar Ascensão</button>
-      <button type="button" class="button" data-action="cancel">Cancelar</button>
+      <div class="form-buttons">
+        <button type="button" class="button" data-action="back"><i class="fas fa-arrow-left"></i> Voltar</button>
+        <button type="submit" class="button primary">
+          <i class="fas fa-check"></i> Concluir Ascensão
+        </button>
+      </div>
     </div>
-  </footer>
+  {{/if}}
+
 </form>

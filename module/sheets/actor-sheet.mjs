@@ -250,7 +250,7 @@ export class BoilerplateActorSheet extends ActorSheet {
     const actorData = this.document.toObject(false);
     context.system = actorData.system;
     context.flags = actorData.flags;
-    context.config = CONFIG.BOILERPLATE;
+    context.config = CONFIG.FEITICEIROS ?? CONFIG.BOILERPLATE;
 
     // Disponibiliza catálogo de aptidões para o template.
     // Clonamos o catálogo para poder ocultar entradas dependentes (ex.: paredesResistentes)
@@ -714,8 +714,8 @@ export class BoilerplateActorSheet extends ActorSheet {
         itemData.system.acao.value = (this._dropAptidaoTipo === 'passiva') ? 'Passiva' : 'Ativa';
       }
 
-      // Validação: extrai pré-requisitos do texto (descrição + requisito) e bloqueia criação se não atendidos
-      try {
+      // Validação: (desativada) - pré-requisitos IGNORADOS para permitir adição livre
+      if (false) {
         const descricao = String(itemData?.system?.descricao?.value ?? itemData?.system?.requisito?.value ?? '');
         const prereq = extrairPrereqsDaDescricao(descricao, null);
         // nível do ator
@@ -785,8 +785,6 @@ export class BoilerplateActorSheet extends ActorSheet {
             }
           }
         }
-      } catch (e) {
-        console.warn('Erro ao validar pré-requisitos no drop:', e);
       }
 
       const created = await super._onDropItemCreate(itemData, event);
@@ -1812,8 +1810,8 @@ export class BoilerplateActorSheet extends ActorSheet {
             const update = {};
             const next = !current;
 
-            // Validação de pré-requisitos (cadeia) ao ATIVAR
-            if (next) {
+            // Validação de pré-requisitos (cadeia) ao ATIVAR (DESATIVADA)
+            if (next && false) {
               const nivelTotalDerivado = this.actor.system.detalhes?.nivel?.value ??
                 ((this.actor.system.detalhes?.niveis?.principal?.value || 0) + (this.actor.system.detalhes?.niveis?.secundario?.value || 0));
 
@@ -2417,15 +2415,9 @@ export class BoilerplateActorSheet extends ActorSheet {
         return;
     }
 
-    // Abrir o diálogo de Level Up para todos os personagens
+    // Abrir o diálogo de Level Up usando a nova API: apenas actor
     try {
-      const classItems = this.actor.itemTypes?.class ?? (this.actor.items?.contents ?? []).filter(i => i.type === 'class');
-      const classItem = Array.isArray(classItems) ? classItems[0] : classItems;
-      if (!classItem) {
-        ui.notifications.warn('Nenhuma classe encontrada para este personagem.');
-        return;
-      }
-      new LevelUpDialog(this.actor, classItem).render(true);
+      new LevelUpDialog(this.actor).render(true);
     } catch (err) {
       console.error('Falha ao abrir LevelUpDialog:', err);
       ui.notifications.error('Erro ao abrir diálogo de subida de nível. Veja o console.');
