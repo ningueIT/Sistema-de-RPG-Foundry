@@ -649,6 +649,7 @@ export class BoilerplateActorSheet extends ActorSheet {
     const equipamentos = [];
     const tecnicas = [];
     const aptidoes = [];
+    const habilidades = [];
     const aptidoesAtivas = [];
     const aptidoesPassivas = [];
 
@@ -674,15 +675,20 @@ export class BoilerplateActorSheet extends ActorSheet {
       else if (i.type === 'tecnica') {
           tecnicas.push(i);
       }
+      // Habilidades (novo tipo para habilidades de classe)
+      else if (i.type === 'habilidade') {
+        habilidades.push(i);
+      }
       // Aptidões (Aqui entra a Aura Anuladora)
       else if (i.type === 'aptidao') {
-          aptidoes.push(i);
+        aptidoes.push(i);
       }
     }
 
     context.equipamentos = equipamentos;
     context.tecnicas = tecnicas;
     context.aptidoes = aptidoes;
+    context.habilidades = habilidades;
 
     // Separa aptidões em ativas vs passivas para UI
     for (const it of aptidoes) {

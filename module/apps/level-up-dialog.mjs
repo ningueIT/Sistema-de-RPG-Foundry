@@ -210,14 +210,14 @@ export default class LevelUpDialog extends FormApplication {
       }
     }
 
-    // Step 3: only features (accepta sinônimos como 'habilidade' usado no sistema)
+    // Step 3: only features (aceita sinônimos como 'habilidade' usado no sistema)
     if (this.currentStep === 3) {
       const resolvedTypeNorm = _normalizarNomeClasse(resolvedType || '');
       const allowedFeatureTypes = ['feature', 'habilidade', 'habilidades', 'aptidao'];
       const allowedNorm = allowedFeatureTypes.map(t => _normalizarNomeClasse(t));
       if (!allowedNorm.includes(resolvedTypeNorm)) {
         console.debug('LevelUpDialog | _onDrop | rejected feature by type', { resolvedType, resolvedTypeNorm, allowedNorm, item });
-        return ui.notifications?.warn?.('Este slot aceita somente Habilidades (feature / habilidade / aptidao).');
+        return ui.notifications?.warn?.('Este slot aceita somente Habilidades (habilidade / feature / aptidao).');
       }
     }
 

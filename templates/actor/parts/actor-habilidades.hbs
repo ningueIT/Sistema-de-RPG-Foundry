@@ -1,6 +1,6 @@
-<h3 class="jem-section-title">Habilidades (Passivas)</h3>
+<h3 class="jem-section-title">Habilidades de Classe</h3>
 
-<table class="aptidoes-table jem-items-table" data-aptidao-tipo="passiva">
+<table class="aptidoes-table jem-items-table" data-aptidao-tipo="habilidade">
   <thead>
     <tr class="items-header jem-item-row" aria-hidden="true">
       <th class="jem-item-col jem-item-col--photo">Foto</th>
@@ -12,8 +12,8 @@
     </tr>
   </thead>
   <tbody>
-    {{#if aptidoesPassivas.length}}
-      {{#each aptidoesPassivas as |item|}}
+    {{#if habilidades.length}}
+      {{#each habilidades as |item|}}
         <tr class="item-row" data-item-id="{{item._id}}">
           <td class="jem-item-col jem-item-col--photo"><img class="item-image" src="{{item.img}}" title="{{item.name}}" width="36" height="36"/></td>
           <td class="jem-item-col jem-item-col--name"><button type="button" class="jem-item-name item-use" data-action="use-aptidao">{{item.name}}</button></td>
@@ -26,7 +26,7 @@
         </tr>
       {{/each}}
     {{else}}
-      <tr class="jem-empty"><td colspan="5">Arraste uma Habilidade passiva do Compendium para cá.</td></tr>
+      <tr class="jem-empty"><td colspan="6">Arraste uma Habilidade de Classe do Compendium para cá.</td></tr>
     {{/if}}
   </tbody>
 </table>

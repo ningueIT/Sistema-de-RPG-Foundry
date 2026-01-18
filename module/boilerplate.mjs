@@ -8,6 +8,7 @@ import { BoilerplateItemSheet } from './sheets/item-sheet.mjs';
 import { preloadHandlebarsTemplates } from './helpers/templates.mjs';
 import { BOILERPLATE } from './helpers/config.mjs';
 import { seedAptidoesCompendium } from './helpers/seed-aptidoes.mjs';
+import { seedHabilidades } from './helpers/seed-habilidades.mjs';
 import * as ImportWeapons from './scripts/import-weapons.mjs';
 
 // Caso o ciclo de hooks não exponha por timing, tenta anexar imediatamente ao `window`.
@@ -99,7 +100,8 @@ Hooks.once('ready', function () {
   // game.feiticeirosEAMaldicoes.seedAptidoesCompendium()
   game.feiticeirosEAMaldicoes = {
     ...(game.feiticeirosEAMaldicoes ?? {}),
-    seedAptidoesCompendium
+    seedAptidoesCompendium,
+    seedHabilidades
   };
 
   // Expor importador de armas via namespace global para uso em console/macros

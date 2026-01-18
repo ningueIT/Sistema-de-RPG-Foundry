@@ -236,7 +236,7 @@
 
     const itemData = {
       name: entry.name,
-      type: "aptidao", 
+      type: "habilidade", 
       img: icon,
       folder: folderId,
       system: {
@@ -247,7 +247,7 @@
         acao: { value: entry.system?.ativacao || "Passiva", label: "Ação" },
         requisito: { value: (entry.nivel && entry.nivel > 0) ? `Nível ${entry.nivel}` : (entry.system?.requisitos || ""), label: "Requisito" },
         
-        tipo: { value: "aptidao" }, 
+        tipo: { value: "habilidade" }, 
         categoria: { value: catName },
         ativacao: { value: entry.system?.ativacao || "" },
         duracao: { value: entry.system?.duracao || "" }

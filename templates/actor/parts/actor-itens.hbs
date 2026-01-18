@@ -1,21 +1,30 @@
-<h3 class="jem-section-title">Equipamentos</h3>
+<h3 class="jem-section-title">Aptidões (Ativas)</h3>
 
-{{#if equipamentos.length}}
+<div style="margin-bottom:8px;">
+  <button type="button" class="aptidao-open-map-btn" data-action="sync-aptidoes">Sincronizar Aptidões (criar Items faltantes)</button>
+</div>
+
+{{#if aptidoesAtivas.length}}
   <ol class="items-list jem-items-list">
-    {{#each equipamentos as |item|}}
+    {{#each aptidoesAtivas as |item|}}
       <li class="item flexrow jem-item-row" data-item-id="{{item._id}}">
-        <div class="item-name flexrow">
-          <img class="item-image" src="{{item.img}}" title="{{item.name}}" width="24" height="24"/>
-          <h4 class="jem-item-name">{{item.name}}</h4>
+          <div class="item-name flexrow">
+            <img class="item-image" src="{{item.img}}" title="{{item.name}}" width="24" height="24"/>
+            <button type="button" class="jem-item-name item-use" data-action="use-aptidao">{{item.name}}</button>
+          {{#if item.system.custo.value}}
+            <span class="item-action">{{item.system.custo.value}} PE</span>
+          {{/if}}
+          {{#if item.system.acao.value}}
+            <span class="item-action">{{item.system.acao.value}}</span>
+          {{/if}}
         </div>
         <div class="item-controls flexrow jem-item-controls">
-          <button type="button" class="item-control item-edit" title="Editar"><i class="fas fa-edit"></i></button>
-          <button type="button" class="item-control item-delete" title="Remover"><i class="fas fa-trash"></i></button>
+          <a class="item-control item-edit" title="Editar"><i class="fas fa-edit"></i></a>
+          <a class="item-control item-delete" title="Remover"><i class="fas fa-trash"></i></a>
         </div>
       </li>
     {{/each}}
   </ol>
 {{else}}
-  <p class="jem-empty">Nenhum equipamento ainda.</p>
+  <p class="jem-empty">Nenhuma aptidão ativa como Item ainda. Ative uma aptidão na aba Aptidão.</p>
 {{/if}}
- 

@@ -27,6 +27,6 @@
   ],
   "documentTypes": {
     "Actor": ["character", "npc", "maldicao"],
-    "Item": ["item", "tecnica", "arma", "aptidao"]
+    "Item": ["item", "tecnica", "arma", "aptidao", "habilidade"]
   }
 }

@@ -1,4 +1,4 @@
-<h3 class="aptidoes-title">Aptidões</h3>
+<h3 class="aptidoes-title">Aptidões Gerais</h3>
 
 <div class="condition-group aptidao-niveis-card">
   <div class="condition-header mental">Níveis de Aptidão</div>
@@ -62,9 +62,9 @@
   </div>
 </div>
 
-<h3 class="jem-section-title">Aptidões (Ativas)</h3>
+<h3 class="jem-section-title">Aptidões (Ativas/Passivas)</h3>
 
-<table class="aptidoes-table jem-items-table" data-aptidao-tipo="ativa">
+<table class="aptidoes-table jem-items-table" data-aptidao-tipo="aptidao">
   <thead>
     <tr class="items-header jem-item-row" aria-hidden="true">
       <th class="jem-item-col jem-item-col--photo">Foto</th>
@@ -76,8 +76,8 @@
     </tr>
   </thead>
   <tbody>
-    {{#if aptidoesAtivas.length}}
-      {{#each aptidoesAtivas as |item|}}
+    {{#if aptidoes.length}}
+      {{#each aptidoes as |item|}}
         <tr class="item-row" data-item-id="{{item._id}}">
           <td class="jem-item-col jem-item-col--photo"><img class="item-image" src="{{item.img}}" title="{{item.name}}" width="36" height="36"/></td>
           <td class="jem-item-col jem-item-col--name"><button type="button" class="jem-item-name item-use" data-action="use-aptidao">{{item.name}}</button></td>
@@ -90,7 +90,7 @@
         </tr>
       {{/each}}
     {{else}}
-      <tr class="jem-empty"><td colspan="6">Arraste uma Aptidão ativa do Compendium para cá.</td></tr>
+      <tr class="jem-empty"><td colspan="6">Arraste uma Aptidão do Compendium para cá.</td></tr>
     {{/if}}
   </tbody>
 </table>

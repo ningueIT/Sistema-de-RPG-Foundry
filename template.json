@@ -230,7 +230,7 @@
     }
   },
   "Item": {
-    "types": ["item", "feature", "spell", "aptidao", "tecnica", "arma", "class"],
+    "types": ["item", "feature", "spell", "aptidao", "tecnica", "arma", "class", "habilidade"],
     "templates": {
       "base": {
         "descricao": { "value": "" },
@@ -260,6 +260,12 @@
         }
     },
     "aptidao": {
+      "templates": ["base"],
+      "custo": { "value": 0, "label": "Custo (PE)" },
+      "acao": { "value": "Passiva", "label": "Ação" },
+      "requisito": { "value": "", "label": "Requisito" }
+    },
+    "habilidade": {
       "templates": ["base"],
       "custo": { "value": 0, "label": "Custo (PE)" },
       "acao": { "value": "Passiva", "label": "Ação" },
