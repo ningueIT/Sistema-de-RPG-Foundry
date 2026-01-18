@@ -18,24 +18,16 @@ function _buildRequisitoText(prereq) {
   return parts.join(' | ');
 }
 
-/**
- * Popula o Compendium `feiticeiros-e-maldicoes.aptidoes` com base no catálogo do sistema.
- * - Só cria o que estiver faltando
- * - Marca cada item com flag `flags.<systemId>.aptidaoKey = "cat.key"`
- */
-export async function seedAptidoesCompendium({ notify = true } = {}) {
+export async function seedAptidoesCompendium({ notify = true, forceUpdate = true } = {}) {
   const systemId = game.system.id;
 
   if (!game.user.isGM) {
     if (notify) ui.notifications.warn('Apenas o GM pode popular o Compendium de Aptidões.');
-    return { created: 0, skipped: 0, reason: 'not-gm' };
+    return { created: 0, updated: 0, reason: 'not-gm' };
   }
 
-  // Resolver o compendium alvo.
-  // 1) Tenta pack do sistema (<systemId>.aptidoes)
-  // 2) Cai para um compendium existente no world com label "Aptidão/Aptidões" (comum em dev local)
+  // 1. Encontrar o Compendium
   const preferred = game.packs.get(`${systemId}.aptidoes`);
-
   const labelCandidates = game.packs
     .filter((p) => p.metadata?.type === 'Item')
     .filter((p) => {
@@ -48,21 +40,18 @@ export async function seedAptidoesCompendium({ notify = true } = {}) {
     labelCandidates.find((p) => p.metadata?.package === systemId) ||
     labelCandidates.find((p) => p.metadata?.package === 'world') ||
     labelCandidates[0];
+
   if (!pack) {
-    if (notify) {
-      ui.notifications.error(
-        `Compendium não encontrado. Procurei por "${systemId}.aptidoes" e por um pack Item com label Aptidão/Aptidões.`
-      );
-    }
-    return { created: 0, skipped: 0, reason: 'pack-missing' };
+    if (notify) ui.notifications.error(`Compendium não encontrado.`);
+    return { created: 0, updated: 0, reason: 'pack-missing' };
   }
 
   if (pack.locked) {
-    if (notify) ui.notifications.warn(`Destrave o Compendium "${pack.metadata?.label ?? 'Aptidões'}" (cadeado) e recarregue.`);
-    return { created: 0, skipped: 0, reason: 'pack-locked' };
+    if (notify) ui.notifications.warn(`Destrave o Compendium "${pack.metadata?.label}" para atualizar.`);
+    return { created: 0, updated: 0, reason: 'pack-locked' };
   }
 
-  // Pastas (folders) dentro do compendium para organizar por categoria.
+  // 2. Gerenciar Pastas
   const folderByName = new Map();
   for (const f of pack.folders?.contents ?? []) {
     if (f?.name) folderByName.set(f.name, f);
@@ -73,33 +62,17 @@ export async function seedAptidoesCompendium({ notify = true } = {}) {
     const existing = folderByName.get(folderName);
     if (existing) return existing;
 
-    const [created] = await Folder.createDocuments(
-      [
-        {
-          name: folderName,
-          type: 'Item',
-          sorting: 'a'
-        }
-      ],
-      { pack: pack.collection }
-    );
+    const [created] = await Folder.createDocuments([{ name: folderName, type: 'Item', sorting: 'a' }], { pack: pack.collection });
     if (created) folderByName.set(folderName, created);
     return created ?? null;
   }
 
-  // Carrega docs existentes para evitar duplicar por chave estável.
+  // 3. Carregar documentos existentes
   const existingDocs = await pack.getDocuments();
-  const existingKeys = new Set(
-    existingDocs
-      .map((d) => d.getFlag(systemId, 'aptidaoKey'))
-      .filter(Boolean)
-  );
-
-  // Fallback: se houver itens antigos sem flag, evita duplicar por nome.
-  const existingNames = new Set(existingDocs.map((d) => d.name));
-
+  
   const docsToCreate = [];
-  let skipped = 0;
+  const updates = [];
+  let processedCount = 0;
 
   for (const [cat, bloco] of Object.entries(APTIDOES_CATALOGO ?? {})) {
     const folderName = bloco?.titulo ?? cat;
@@ -108,50 +81,65 @@ export async function seedAptidoesCompendium({ notify = true } = {}) {
     for (const entry of bloco?.entradas ?? []) {
       const keyFull = `${cat}.${entry.key}`;
       const name = entry.label;
-      if (!name) {
-        skipped++;
-        continue;
-      }
+      if (!name) continue;
 
-      if (existingKeys.has(keyFull) || existingNames.has(name)) {
-        skipped++;
-        continue;
-      }
-
+      // Dados atualizados do código
       const descr = APTIDOES_DESCRICOES?.[keyFull] ?? entry.description ?? '';
       const acao = inferirTipoAcao(descr) ?? 'Passiva';
       const custo = inferirCustoPE(descr);
       const prereq = extrairPrereqsDaDescricao(descr, cat);
 
-      docsToCreate.push({
-        name,
-        type: 'aptidao',
-        img: 'icons/svg/aura.svg',
-        folder: folder?.id,
-        system: {
-          // Você pediu pra não “forçar” fonte: deixa em branco.
-          fonte: { value: '' },
-          descricao: { value: descr },
-          custo: { value: Number.isFinite(custo) ? custo : 0, label: 'Custo (PE)' },
-          acao: { value: acao, label: 'Ação' },
-          requisito: { value: _buildRequisitoText(prereq), label: 'Requisito' }
-        },
-        flags: {
-          [systemId]: {
-            aptidaoKey: keyFull
-          }
+      const systemData = {
+        fonte: { value: '' },
+        descricao: { value: descr }, // Aqui está a atualização do texto
+        custo: { value: Number.isFinite(custo) ? custo : 0, label: 'Custo (PE)' },
+        acao: { value: acao, label: 'Ação' },
+        requisito: { value: _buildRequisitoText(prereq), label: 'Requisito' }
+      };
+
+      // Tenta encontrar item existente por Key ou Nome
+      const existingItem = existingDocs.find(d => 
+        d.getFlag(systemId, 'aptidaoKey') === keyFull || d.name === name
+      );
+
+      if (existingItem) {
+        // Se forçar update, empurra os dados novos para o item antigo
+        if (forceUpdate) {
+          updates.push({
+            _id: existingItem.id,
+            system: systemData,
+            [`flags.${systemId}.aptidaoKey`]: keyFull // Garante que a flag esteja lá
+          });
         }
-      });
+      } else {
+        // Cria novo
+        docsToCreate.push({
+          name,
+          type: 'aptidao',
+          img: 'icons/svg/aura.svg', // Pode mudar para um ícone genérico se quiser
+          folder: folder?.id,
+          system: systemData,
+          flags: { [systemId]: { aptidaoKey: keyFull } }
+        });
+      }
+      processedCount++;
     }
   }
 
-  if (!docsToCreate.length) {
-    if (notify) ui.notifications.info('Compendium de Aptidões já está populado (nenhuma nova entrada).');
-    return { created: 0, skipped, reason: 'nothing-to-do' };
+  // 4. Executar operações no Banco de Dados
+  if (updates.length > 0) {
+    console.log(`Atualizando ${updates.length} aptidões existentes...`);
+    await Item.updateDocuments(updates, { pack: pack.collection });
   }
 
-  await Item.createDocuments(docsToCreate, { pack: pack.collection });
+  if (docsToCreate.length > 0) {
+    console.log(`Criando ${docsToCreate.length} novas aptidões...`);
+    await Item.createDocuments(docsToCreate, { pack: pack.collection });
+  }
 
-  if (notify) ui.notifications.info(`Criadas ${docsToCreate.length} Aptidões no Compendium.`);
-  return { created: docsToCreate.length, skipped, reason: 'ok' };
+  if (notify) {
+    ui.notifications.info(`Sincronização concluída: ${docsToCreate.length} criados, ${updates.length} atualizados.`);
+  }
+
+  return { created: docsToCreate.length, updated: updates.length, reason: 'ok' };
 }

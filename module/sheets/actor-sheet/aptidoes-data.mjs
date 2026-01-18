@@ -31,7 +31,11 @@ export const APTIDOES_CATALOGO = {
       { key: "auraMacabra", label: "Aura Macabra" },
       { key: "auraMacica", label: "Aura Maciça" },
       { key: "auraMovedica", label: "Aura Movediça" },
-      { key: "auraRedirecionada", label: "Aura Redirecionada" }
+      { key: "auraRedirecionada", label: "Aura Redirecionada" },
+      { key: "pavorInstintivo", label: "Pavor Instintivo" },
+      { key: "mimetismoDeResiduos", label: "Mimetismo de Resíduos" },
+      { key: "auraCorrosiva", label: "Aura Corrosiva" },
+      { key: "presencaEsmagadora", label: "Presença Esmagadora" }
     ]
   },
   controleELeitura: {
@@ -53,7 +57,12 @@ export const APTIDOES_CATALOGO = {
       { key: "projecaoDividida", label: "Projeção Dividida" },
       { key: "punhoDivergente", label: "Punho Divergente" },
       { key: "emocaoDaPetalaDecadente", label: "Emoção da Pétala Decadente" },
-      { key: "rastreioAvancado", label: "Rastreio Avançado" }
+      { key: "rastreioAvancado", label: "Rastreio Avançado" },
+      { key: "regeneracaoEspontanea", label: "Regeneração Espontânea" },
+      { key: "morfologiaGrotesca", label: "Morfologia Grotesca" },
+      { key: "disparoDeNucleo", label: "Disparo de Núcleo" },
+      { key: "sentidoDePredador", label: "Sentido de Predador" },
+      { key: "divisaoCelular", label: "Divisão Celular" }
     ]
   },
   energiaReversa: {
@@ -76,7 +85,10 @@ export const APTIDOES_CATALOGO = {
       { key: "expansaoDeDominioIncompleta", label: "Expansão de Domínio Incompleta" },
       { key: "expansaoDeDominioCompleta", label: "Expansão de Domínio Completa" },
       { key: "acertoGarantido", label: "Acerto Garantido" },
-      { key: "expansaoDeDominioSemBarreiras", label: "Expansão de Domínio sem Barreiras" }
+      { key: "expansaoDeDominioSemBarreiras", label: "Expansão de Domínio sem Barreiras" },
+      { key: "ecoDoMedo", label: "Eco do Medo" },
+      { key: "consumoDeEssencia", label: "Consumo de Essência" },
+      { key: "ambienteMutavel", label: "Ambiente Mutável" }
     ]
   },
   barreiras: {
@@ -86,7 +98,10 @@ export const APTIDOES_CATALOGO = {
       { key: "paredesResistentes", label: "Paredes Resistentes" },
       { key: "barreiraRapida", label: "Barreira Rápida" },
       { key: "cestaOcaDeVime", label: "Cesta Oca de Vime" },
-      { key: "cortina", label: "Cortina" }
+      { key: "cortina", label: "Cortina" },
+      { key: "barreiraOrganica", label: "Barreira Orgânica" },
+      { key: "veloDeSombras", label: "Véu de Sombras" },
+      { key: "dominioDeCaca", label: "Domínio de Caca" }
     ]
   },
   especiais: {
@@ -96,42 +111,42 @@ export const APTIDOES_CATALOGO = {
       { key: "abencoadoPelasFaiscasNegras", label: "Abençoado pelas Faíscas Negras" },
       { key: "dominioSimples", label: "Domínio Simples" },
       { key: "reversaoDeTecnica", label: "Reversão de Técnica" },
-      { key: "tecnicaMaxima", label: "Técnica Máxima" }
+      { key: "tecnicaMaxima", label: "Técnica Máxima" },
+      { key: "fisiologiaGrauEspecial", label: "Fisiologia de Grau Especial" },
+      { key: "nucleoEnergiaErrante", label: "Núcleo de Energia Errante" },
+      { key: "instintoPredadorAmaldicoado", label: "Instinto de Predador Amaldiçoado" },
+      { key: "consumoDeEssenciaCanibalismo", label: "Consumo de Essência (Canibalismo)" },
+      { key: "manifestacaoDeDesastre", label: "Manifestação de Desastre" },
+      { key: "votoRestricaoFormaVerdadeira", label: "Voto de Restrição: Forma Verdadeira" },
+      { key: "ressonanciaMedoColetivo", label: "Ressonância de Medo Coletivo" },
+      { key: "regeneracaoCelularViolenta", label: "Regeneração Celular Violenta" },
+      { key: "dominioDeIntrusao", label: "Domínio de Intrusão" },
+      { key: "transcendenciaAmaldicoada", label: "Transcendência Amaldiçoada" }
     ]
   },
-  maldicaoAnatomia: {
-    titulo: "Maldição - Anatomia",
+  // categoria nova para fisiologia específica de maldições
+  fisiologiaAmaldicoada: {
+    titulo: "Fisiologia Amaldiçoada",
     entradas: [
-      { key: "absorcaoElemental", label: "Absorção Elemental" },
-      { key: "armasNaturais", label: "Armas Naturais" },
-      { key: "armasNaturaisAprimoradas", label: "Armas Naturais Aprimoradas" },
-      { key: "composicaoElemental", label: "Composição Elemental" },
-      { key: "crescimentoCorporal", label: "Crescimento Corporal" },
-      { key: "desenvolvimentoFisico", label: "Desenvolvimento Físico" },
-      { key: "olhosAdicionais", label: "Olhos Adicionais" },
-      { key: "revestimento", label: "Revestimento" },
-      { key: "revestimentoEvoluido", label: "Revestimento Evoluído" },
-      { key: "superioridadeFisica", label: "Superioridade Física" }
-    ]
-  },
-  maldicaoControleELeitura: {
-    titulo: "Maldição - Controle e Leitura",
-    entradas: [
-      { key: "absorcaoAmaldicoada", label: "Absorção Amaldiçoada" },
-      { key: "estoqueAmpliado", label: "Estoque Ampliado" },
-      { key: "extracaoDePotencial", label: "Extração de Potencial" },
-      { key: "protecaoConstante", label: "Proteção Constante" }
-    ]
-  },
-  maldicaoEspeciais: {
-    titulo: "Maldição - Especiais",
-    entradas: [
-      { key: "regeneracaoCorporal", label: "Regeneração Corporal" },
-      { key: "regeneracaoAmpliada", label: "Regeneração Ampliada" },
-      { key: "regeneracaoMaxima", label: "Regeneração Máxima" },
-      { key: "regeneracaoDeMembros", label: "Regeneração de Membros" },
-      { key: "fluxoImparavel", label: "Fluxo Imparável" },
-      { key: "areaDeDominio", label: "Área de Domínio" }
+      { key: "nucleoMovel", label: "Núcleo Móvel" },
+      { key: "parasitismoEnergetico", label: "Parasitismo Energético" },
+      { key: "vozDasSombras", label: "Voz das Sombras" },
+      { key: "adaptacaoReativa", label: "Adaptação Reativa" },
+      { key: "almaMaldita", label: "Alma Maldita" },
+      { key: "anatomiaIncompreensivel", label: "Anatomia Incompreensível" },
+      { key: "armaNatural", label: "Arma Natural" },
+      { key: "articulacoesExtensas", label: "Articulações Extensas" },
+      { key: "bracosExtras", label: "Braços Extras" },
+      { key: "capacidadeVoo", label: "Capacidade de Voo" },
+      { key: "carapacaMutante", label: "Carapaça Mutante" },
+      { key: "corpoEspecializado", label: "Corpo Especializado" },
+      { key: "desenvolvimentoExagerado", label: "Desenvolvimento Exagerado" },
+      { key: "devoradorDeEnergia", label: "Devorador de Energia" },
+      { key: "instintoSanguinario", label: "Instinto Sanguinário" },
+      { key: "olhosSombrios", label: "Olhos Sombrios" },
+      { key: "pernasExtras", label: "Pernas Extras" },
+      { key: "presencaNefasta", label: "Presença Nefasta" },
+      { key: "sangueToxico", label: "Sangue Tóxico" }
     ]
   }
 };
@@ -166,6 +181,12 @@ export const APTIDOES_DESCRICOES = {
   'aura.casuloDeEnergia': `Evoluindo ao limite o fluxo da aura, você consegue a deixar tão densa e maciça que se torna um casulo protetivo. Ao obter essa habilidade você pode, como uma Ação Comum, formar um casulo de energia por 1 rodada, gastando 6 pontos de energia amaldiçoada. Enquanto o casulo estiver ativo, você recebe imunidade a dano cortante, perfurante e de impacto provindo de fontes mundanas (como armas ou quedas). Caso seja originário de técnica, você apenas recebe RD adicional igual ao dobro do seu Nível de Aptidão em Aura. [Pré-Requisito: Aura Impenetrável, Nível de Aptidão em Aura 5 e Nível 16]`,
   'aura.auraImpenetravel': 'Melhorando ainda mais o fluxo, você se torna capaz de transformar a sua aura em uma fortaleza impenetrável contra simples golpes físicos. Ao obter essa habilidade, você pode, como uma Ação Bônus, transformar a sua aura em impenetrável por 1 rodada, gastando 3 pontos de energia amaldiçoada. Enquanto sua aura estiver impenetrável, você recebe resistência a dano cortante, perfurante e de impacto. [Pré-Requisito: Aura Reforçada, Nível de Aptidão em Aura 3 e Nível 10]',
 
+  /* NOVAS APTIDÕES DE AURA */
+  'aura.pavorInstintivo': `Sua presença emana um terror que paralisa os seres vivos. Efeito: Criaturas que não sejam maldições e comecem o turno a 3 metros de você devem fazer um TR de Vontade. Em uma falha, ficam Lentas por 1 rodada. Se você tiver AU 3, elas ficam Imobilizadas em vez de Lentas. Custo: Passivo (ou 2 PE para dobrar o alcance por 1 rodada).`,
+  'aura.mimetismoDeResiduos': `Você consegue camuflar sua aura para parecer um objeto inanimado ou um resíduo inofensivo. Efeito: Você recebe um bônus em testes de Furtividade igual ao seu Nível de Aptidão em Aura. Se gastar 3 PE, você pode se tornar invisível para sentidos baseados em energia amaldiçoada por uma cena, desde que não realize ações agressivas.`,
+  'aura.auraCorrosiva': `Sua energia amaldiçoada é ácida e consome o que toca. Efeito: Sempre que uma criatura te acertar com um ataque corpo a corpo, ela recebe dano de ácido igual ao seu Nível de Aptidão em Aura. Objetos mundanos que toquem sua aura por mais de 1 rodada começam a se degradar.`,
+  'aura.presencaEsmagadora': `A densidade da sua aura é tão grande que dificulta a respiração e o movimento ao seu redor. Efeito: A área a 4,5 metros de você é considerada Terreno Difícil para humanos. Além disso, projéteis mundanos disparados contra você através desta área têm desvantagem no acerto.`,
+
   /* CONTROLE E LEITURA */
   'controleELeitura.canalizarEmGolpe': 'Você se torna capaz de concentrar sua energia amaldiçoada em suas armas e golpes, assim potencializando ainda mais a capacidade destrutiva em troca de um gasto de energia. Como uma Ação de Movimento, você pode gastar uma quantidade de pontos de energia amaldiçoada igual a seu nível de aptidão em Controle e Leitura para adicionar dano: para cada ponto gasto, seu próximo ataque causa 1d6 de dano adicional. Essa habilidade funciona apenas por um ataque e não pode ser utilizada em Feitiços. Errar um ataque não consome esse uso.',
   'controleELeitura.canalizacaoAvancada': 'Você aperfeiçoa a prática de canalizar energia em golpes, conseguindo a realizar mais rapidamente e com mais poder. Canalizar energia em um golpe também pode ser feito como uma reação ao realizar um ataque, e o bônus passa de 1d6 para 1d8. A habilidade continua funcionando apenas por um ataque e não é consumida em um erro. [Pré-Requisito: Canalizar em Golpe, Nível de Aptidão em Controle e Leitura 2 e Nível 8]',
@@ -188,12 +209,24 @@ export const APTIDOES_DESCRICOES = {
   'controleELeitura.fluxoConstante': 'Tendo uma maior dominância sobre a energia reversa, você estabelece um fluxo contínuo dela no seu corpo, preservando-o e restaurando-o assim que sua integridade é reduzida. Assim sendo, você pode manter uma cura contínua: no começo do seu turno, você pode se curar com energia reversa seguindo as mesmas regras da cura básica, porém como uma ação livre. Caso não o faça, você pode se curar como reação ao ter sua vida reduzida. [Pré-Requisito: Energia Reversa, Nível de Aptidão em Energia Reversa 3 e Nível 12]',
   'controleELeitura.fluxoImparavel': 'Reduz a eficácia de tentativas de anular ou dispersar sua energia, tornando suas aptidões mais estáveis em combate.',
 
+  /* NOVAS APTIDÕES DE CONTROLE E LEITURA */
+  'controleELeitura.regeneracaoEspontanea': `Diferente dos humanos, seu corpo é feito de energia, permitindo curar feridas instantaneamente. Efeito: Como uma Ação Bônus, você pode gastar X PE para curar Xd8 + CL pontos de vida. Você pode usar esta aptidão mesmo se estiver com 0 PV, desde que não tenha sido exorcizado por energia amaldiçoada.`,
+  'controleELeitura.morfologiaGrotesca': `Você pode alterar a forma do seu corpo para criar membros extras ou armas biológicas. Efeito: Gastando 2 PE, você pode aumentar seu alcance natural em 1,5 metros ou criar um ataque natural adicional (Dano 1d8 + Força) por uma cena. Com CL 3, você pode criar dois membros extras.`,
+  'controleELeitura.disparoDeNucleo': `Você concentra sua essência em um disparo concentrado de energia pura. Efeito: Semelhante ao Projetar Energia, mas se você gastar o máximo de PE permitido pelo seu CL, o dado de dano aumenta para d12 e o ataque ignora RD mundana.`,
+  'controleELeitura.sentidoDePredador': `Você lê o medo nas pessoas para prever seus movimentos. Efeito: Você recebe um bônus em Iniciativa e Percepção igual ao seu CL. Se o alvo estiver sob qualquer condição de medo (Abalado, Amedrontado), você tem vantagem em ataques contra ele.`,
+  'controleELeitura.divisaoCelular': `Você pode desprender uma parte de si para criar uma pequena distração. Efeito: Gastando 5 PE, você cria uma "Mini-Maldição" com 1 PV e Defesa igual à sua. Ela age no seu turno e pode realizar a ação de Ajudar ou Flanquear. Ela dura até o final da cena ou até ser destruída.`,
+
   /* BARREIRAS */
   'barreiras.tecnicasDeBarreiras': `Você se torna capaz de erguer e manipular barreiras, as quais podem ser usadas para defender o usuário ou prender oponentes. Você pode criar, como uma Ação Comum, até 6 paredes ao seu redor, com cada parede custando 1 ponto de energia amaldiçoada. Cada parede erguida tem 1,5 metros de tamanho, e vida igual a 5 + seu nível de aptidão em Barreiras multiplicado por metade do seu nível de personagem. Podem servir tanto como obstáculo como uma maneira de prender seus inimigos. Você pode as manipular e mover usando outra ação comum. [Pré-Requisito: Nível de Aptidão em Barreira 1]`,
   'barreiras.paredesResistentes': `As paredes que você confecciona se tornam mais resistentes. Os pontos de vida de cada parede passam a ser 10 + seu nível de aptidão em Barreiras multiplicado pelo seu nível de personagem. [Pré-Requisito: Técnicas de Barreira, Nível de Aptidão em Barreira 2 e Nível 4]`,
   'barreiras.barreiraRapida': `Com treino e repetição, você se torna capaz de erguer barreiras de maneira ainda mais ágil. Erguer ou manipular barreiras se torna uma ação bônus. [Pré-Requisito: Técnicas de Barreira, Nível de Aptidão em Barreira 3 e Nível 6]`,
   'barreiras.cestaOcaDeVime': `Uma antiga e esotérica técnica amaldiçoada utilizada contra domínios, antes mesmo do Domínio Simples ser criado. Como ação bônus ou reação a uma expansão de domínio, você pode gastar 3 PE para criar um trançado de vime ao seu redor e receber os efeitos desta aptidão. Enquanto estiver com a Cesta Oca de Vime ativa, você não é afetado pelo efeito de acerto garantido de uma expansão de domínio. Esta aptidão usa de Concentração e possui Durabilidade igual ao seu Nível de BAR + 1. Sempre que falhar em um teste de concentração, a Durabilidade da sua Cesta Oca de Vime desce em 1. No inicio do seu turno, caso você deveria ter sido atingido por um Acerto Garantido, sua Cesta Oca de Vime perde 1 de durabilidade. No inicio do seu turno, você pode manter o selo desta aptidão, ocupando as suas duas mãos, ao fazer isso, a Cesta Oca de Vime não pode perder durabilidade por qualquer efeito que não seja a falha de concentração. Caso a Cesta Oca de Vime quebre, você recebe o efeito do Acerto Garantido instantaneamente. [Pré-Requisito: Ser de uma época onde ela era utilizada ou Mestre em História, Nível de Aptidão em Barreira 1 e Nível 5]`,
   'barreiras.cortina': `A cortina é uma técnica de barreira comum, sendo um grande campo de força negro que isola uma área específica, impossibilitando pessoas de fora de ver seu interior. Seu funcionamento básico é de ocultamento, mas podem ser postas condições que expandem sua utilidade. Ao criar uma cortina, você gasta 1 ponto de energia para cada 9 metros que a área dela irá cobrir, e não há um custo para mantêla. Você também pode colocar condições em uma cortina, ao criá-la, de acordo com as regras sobre cortinas. [Pré-Requisito: Técnicas de Barreira]`,
+
+  /* NOVAS DESCRIÇÕES DE BARREIRA */
+  'barreiras.barreiraOrganica': `Suas barreiras são feitas de carne e sangue amaldiçoado, sendo mais difíceis de transpassar. Efeito: Suas paredes de barreira recebem RD a danos físicos igual ao seu Nível de Aptidão em Barreira. Criaturas que toquem a barreira devem fazer um TR de Fortitude ou ficarão Envenenadas.`,
+  'barreiras.veloDeSombras': `Uma barreira sutil que obscurece a visão de quem está fora. Efeito: Você cria uma barreira que não impede o movimento, mas concede Camuflagem Total para quem está dentro contra quem está fora. Custo: 4 PE.`,
+  'barreiras.dominioDeCaca': `Você molda a barreira para permitir a entrada, mas impedir a saída. Efeito: Ao criar uma barreira, você pode definir que certas criaturas podem entrar livremente, mas para sair devem vencer um teste oposto de Atletismo ou Acrobacia contra sua CD Amaldiçoada.`,
 
   /* ENERGIA REVERSA */
   'energiaReversa.energiaReversa': `Você desenvolve a capacidade de produzir energia reversa, multiplicando a energia amaldiçoada com ela mesma, convertendo negativo em positivo. Você libera acesso às aptidões desta categoria, as quais usam pontos de energia reversa (PER), com um PER sendo equivalente a dois pontos de energia amaldiçoada. Sua capacidade básica é se curar: para cada ponto de energia reversa gasto, você se cura em 2d6, somando seu modificador de presença ou sabedoria ao total de cura. Nos níveis 10, 15 e 20, a cura aumenta em 1d6. Você pode gastar um máximo de pontos de energia reversa por vez igual a 1 + metade do seu nível de aptidão. Curarse dentro de combate é uma ação comum e você não pode usar essa habilidade para curar outras criaturas. [Pré-Requisito: Treinado em Feitiçaria, Nível de Aptidão em Controle e Leitura 3 e Nível 8]`,
@@ -211,6 +244,17 @@ export const APTIDOES_DESCRICOES = {
   'especiais.reversaoDeTecnica': `Em um processo complexo, você passa a ser capaz de utilizar energia reversa para abastecer a sua técnica, possibilitando assim um efeito contrário ao padrão e com maior potência. Quando obtiver um novo Feitiço, você pode escolher criar uma Reversão de Técnica no lugar: uma Reversão tem o seu custo aumentado em um valor igual ao nível do Feitiço e deve, também, ser criada como algo que reverte o conceito da sua técnica (o Vermelho, Reversão de Técnica do Ilimitado, empurra ao invés de puxar). Ao obter esta aptidão, você recebe um Feitiço adicional, a qual obrigatoriamente deve ser uma reversão. [Pré-Requisito: Energia Reversa e Nível 12]`,
   'especiais.tecnicaMaxima': `Dentre os feiticeiros jujutsu, existe a possibilidade de levar o potencial da sua técnica ao máximo, criando uma habilidade definitiva a partir dela. É uma arte suprema, com grande complexidade e necessidade de conhecimento sobre a própria técnica. Ao obter esta habilidade, você se torna capaz de criar uma Técnica Máxima: você recebe um novo Feitiço o qual, caso você possua acesso apenas aos de Nível 4, utiliza os valores de Nível 5 para sua criação e, quando receber acesso ao Nível 5, sua Técnica Máxima passa a seguir os valores próprios de uma. Uma Técnica Máxima custa 25 PE e, após ser usada, você deve esperar uma quantidade de rodadas igual a 6 – metade do seu Bônus de Treinamento para poder utilizá-la novamente. [Pré-Requisito: Mestre em Feitiçaria, Capacidade de Conjurar Feitiços Nível 4]`,
 
+  /* APTIDÕES ESPECIAIS ADICIONADAS */
+  'especiais.fisiologiaGrauEspecial': `Seu corpo de energia atingiu um estado de refinamento tão alto que você é considerado um desastre natural ambulante. Efeito: Você recebe imunidade a dano de fontes mundanas (não amaldiçoadas) e Resistência a Danos (RD) passiva contra danos físicos igual ao seu Bônus de Treinamento. Além disso, seu máximo de Energia Amaldiçoada aumenta em um valor igual ao dobro do seu nível de personagem. Como uma Reação ao receber dano de uma técnica, você pode gastar 2 PE para somar seu modificador de Constituição à sua RD até o início do seu próximo turno. [Pré-Requisito: Constituição 20 e Nível 12].`,
+  'especiais.nucleoEnergiaErrante': `Diferente dos humanos, sua consciência e "ponto vital" não estão fixos. Você pode mover seu núcleo pelo corpo para evitar golpes fatais. Efeito: Você se torna imune a acertos críticos. Sempre que um ataque fosse te deixar com 0 PV, você pode realizar um TR de Fortitude (CD igual a 10 ou metade do dano sofrido, o que for maior). Em um sucesso, você fica com 1 PV em vez disso. Alternativamente, você pode gastar uma quantidade de PE igual a 1/4 do dano recebido para sobreviver com 1 PV sem realizar o teste. [Pré-Requisito: Nível 14].`,
+  'especiais.instintoPredadorAmaldicoado': `Você desenvolveu um sentido que detecta o medo e a hesitação, permitindo reagir antes mesmo do oponente agir. Efeito: Você recebe um bônus de +5 em Iniciativa. Além disso, você pode realizar uma Reação adicional por rodada, desde que essa reação seja usada para realizar um ataque de oportunidade ou usar uma aptidão contra uma criatura que esteja sob uma condição de medo (Abalado, Amedrontado, etc.). [Pré-Requisito: Percepção Treinada, Presença 18 e Nível 10].`,
+  'especiais.consumoDeEssenciaCanibalismo': `Você pode devorar os resquícios de outras maldições ou a energia de feiticeiros para se fortalecer. Efeito: Como uma Ação Comum, você pode tentar consumir uma criatura adjacente que esteja com 0 PV ou Incapacitada. Se for uma maldição, você recupera PE igual ao nível dela x 2. Se for um humano, você recupera PV igual ao modificador de Constituição dele + seu Nível de Personagem. Você pode usar esta habilidade um número de vezes igual ao seu Bônus de Treinamento por descanso longo. [Pré-Requisito: Força 18 e Nível 10].`,
+  'especiais.manifestacaoDeDesastre': `Sua técnica inata é tão poderosa que ela começa a vazar para o mundo real, alterando o ambiente ao seu redor. Efeito: Como uma Ação Bônus, você pode ativar sua aura de desastre gastando 5 PE. Ela dura por 1 minuto (Concentração). Enquanto ativa, criaturas inimigas em um raio de 15 metros recebem 2d6 de dano de um tipo elemental ligado à sua técnica no início de seus turnos (TR de Fortitude reduz à metade) e têm desvantagem em testes de resistência contra seus feitiços desse elemento. [Pré-Requisito: Mestre em Feitiçaria e Nível 15].`,
+  'especiais.votoRestricaoFormaVerdadeira': `Você libera uma forma grotesca e devastadora, ignorando as limitações da forma humana. Efeito: Como uma Ação Bônus, você entra em sua Forma Verdadeira por uma quantidade de rodadas igual ao seu Bônus de Treinamento. Nesta forma, você recebe Vantagem em todos os ataques, seus ataques causam um dado de dano extra do mesmo tipo da arma/golpe e sua Defesa aumenta em 4. Ao final do efeito, você perde 10 PE e fica Lento e Enfraquecido por 1 minuto. [Pré-Requisito: Nível 12].`,
+  'especiais.ressonanciaMedoColetivo': `Você se alimenta do medo das massas, tornando-se mais forte quanto mais pessoas estiverem apavoradas ao seu redor. Efeito: Para cada criatura em um raio de 18 metros que esteja sob a condição Amedrontado ou Abalado, você recebe +1d6 de dano em seus feitiços (máximo de bônus igual ao seu Bônus de Treinamento). Se houver pelo menos 3 criaturas amedrontadas na área, a CD de seus feitiços aumenta em +2. [Pré-Requisito: Presença 20 e Nível 14].`,
+  'especiais.regeneracaoCelularViolenta': `Sua capacidade de cura é tão agressiva que seu corpo reconstrói membros em segundos. Efeito: Enquanto você estiver com menos da metade dos seus PV máximos, você regenera PV igual ao seu modificador de Constituição + Bônus de Treinamento no início de cada um de seus turnos. Regenerar um membro decepado custa 5 PE e pode ser feito como uma ação livre no seu turno. [Pré-Requisito: Constituição 22 e Nível 16].`,
+  'especiais.dominioDeIntrusao': `Você aprendeu a "vazar" seu domínio para dentro de outras barreiras, interferindo em territórios alheios. Efeito: Quando você estiver dentro de uma Expansão de Domínio ou Domínio Simples de outra criatura, você pode gastar 10 PE para forçar um teste oposto de Feitiçaria. Se vencer, você anula o Acerto Garantido do oponente contra você e anula quaisquer bônus de atributo que o domínio conceda a ele por 1 rodada. Além disso, você ignora a barreira do domínio para fins de mirar seus próprios feitiços. [Pré-Requisito: Nível de Personagem 15 e possuir uma Expansão de Domínio].`,
+  'especiais.transcendenciaAmaldicoada': `Você atingiu o ápice do que significa ser uma maldição, transcendendo os limites da morte e da forma. Efeito: Se você for morto (exorcizado), sua essência não desaparece imediatamente. Você permanece como um "Resíduo Consciente" por 1d4 dias. Durante esse tempo, você pode tentar possuir um objeto ou um cadáver humano (TR de Vontade do alvo contra sua CD Amaldiçoada). Se tiver sucesso, você renasce com metade do seu nível original, mantendo suas memórias e técnica inata. [Pré-Requisito: Nível 20].`,
   /* DOMÍNIO */
   'dominio.revestimentoDeDominio': `Você se cobre com um domínio fino, o qual não possui nenhum Feitiço imbuído, assim conseguindo neutralizar técnicas ao derramá-las no espaço do revestimento. Você pode gastar 5 PE e uma Ação Bônus, ou reação ao ser alvo dos efeitos de um Feitiço, para a ativar o Revestimento: Enquanto ele estiver ativo você pode gastar 5 PE para sustentar o efeito no início dos seus turnos. Com o Revestimento de Domínio ativo, você reduz o dano de efeitos de técnicas ofensivas que te afetarem em um valor igual ao seu nível de personagem. Essa redução não pode ser ignorada. Caso a Técnica seja de um nível menor ou igual a metade do Nível de DOM, arredondado para cima, ela é completamente anulada. Este efeito apenas se aplica para Feitiços que não afetem diretamente a sua energia amaldiçoada, como Boogie Woogie ou Nulificação. Ademais, seus golpes também anulam completamente qualquer efeito passivo, ativo, sustentado ou duradouro proveniente de Feitiço, desde que tal efeito seja de um nível do qual você consiga anular, com o funcionamento básico sendo considerado como um Feitiço de primeiro nível. Enquanto estiver com o Revestimento de Domínio ativo você não pode utilizar ou estar sob o efeito de qualquer Feitiço. [Pré-Requisito: Nível de Aptidão em Controle e Leitura 3, Nível de Aptidão em Domínio 1 e Nível 10]`,
   'dominio.anularTecnica': `Você aprimora o seu domínio simples para ser efetivo não só contra expansões de domínio, mas contra técnicas amaldiçoadas no geral, conseguindo anulálas se usado rapidamente. Quando você for alvo ou submetido a um Feitiço, você pode usar sua reação para tentar anulála; você só pode tentar anular um Feitiço que seja de um nível que você tem ou teria acesso a. Você gasta uma quantidade de energia amaldiçoada igual à que foi usada para conjurar a habilidade, e realiza um teste Feitiçaria contra a Feitiçaria de quem usou o Feitiço. Caso a habilidade que você deseja anular seja em área, nenhuma das criaturas submetidas sofrem o efeito, desde que você a anule. Por ser algo cansativo e complexo, você pode usar essa habilidade uma quantidade de vezes igual ao Nível de Aptidão em Domínio, por descanso longo. [Pré-Requisito: Domínio Simples, Nível de Aptidão em Domínio 3 e Nível 8]`,
@@ -218,7 +262,43 @@ export const APTIDOES_DESCRICOES = {
   'dominio.expansaoDeDominioCompleta': `Aperfeiçoando na técnica da expansão, alcança-se um patamar superior, conseguindo fechar uma barreira e prender seus alvos dentro dela. Como uma ação comum, desde que tenhas as duas mãos livres, você pode pagar 20PE para expandir seu domínio completo, o qual cria uma área esférica de 9 metros. Enquanto estiver com a expansão ativa, certos efeitos são aplicados, os quais devem ser montados de acordo com o Guia de Criação de Expansões de Domínio. Uma expansão de domínio completa dura, por padrão, uma quantidade de rodadas igual a 3 + seu nível de aptidão em domínio. [Pré-Requisito: Técnicas de Barreira, Expansão de Domínio Incompleta, Nível de Aptidão em Barreira e Domínio 3 e Nível 10]`,
   'dominio.acertoGarantido': `Você alcança o ápice das técnicas de domínio, conseguindo usar o acerto garantido, que define uma expansão de domínio letal. Ao obter esta aptidão, você pode adicionar o efeito Acerto Garantido em sua expansão de domínio, o qual não conta para o máximo, imbuindo sua técnica nas barreiras criadas. O funcionamento do Acerto Garantido deve ser elaborado de acordo com o guia de criação de domínios. Adicionar acerto garantido em uma expansão completa aumenta o seu custo em 5 pontos de energia amaldiçoada. [Pré-Requisito: Expansão de Domínio Completa, Treinamento em Feitiçaria, Nível de Aptidão em Barreira e Domínio 4 e Nível 14]`,
   'dominio.expansaoDeDominioSemBarreiras': `Assim como conter água sem um recipiente ou desenhar no céu sem uma tela, existe uma forma de expandir um domínio que exige um controle sobre a energia amaldiçoada extremo, sendo possível apenas para os mais talentosos e habilidosos. A expansão sem barreiras possui os mesmos efeitos e custo de uma expansão completa com acerto garantido, mas não levanta barreiras, tendo um alcance superior para o acerto garantido em troca, o qual pode até mesmo superar as barreiras de outras expansões de domínio, atacando-os por fora. [PréRequisito: Acerto Garantido, Mestre em Feitiçaria, Nível de Aptidão em Barreira e Domínio 5, e Nível 20]`,
+
+  /* NOVAS APTIDÕES DE DOMÍNIO */
+  'dominio.ecoDoMedo': `Seu domínio amplifica os traumas dos oponentes. Efeito: Dentro do seu Domínio (Incompleto ou Completo), a CD para resistir a condições de medo aumenta em um valor igual ao seu Nível de Aptidão em Domínio.`,
+  'dominio.consumoDeEssencia': `Você se alimenta da energia gasta pelos seus inimigos dentro do seu domínio. Efeito: Sempre que um inimigo gastar PE dentro do seu domínio, você recupera 1 PV para cada 2 PE gastos por ele.`,
+  'dominio.ambienteMutavel': `O terreno do seu domínio obedece à sua vontade. Efeito: Como uma Ação Livre no seu turno, você pode alterar o terreno dentro do domínio para criar cobertura, terreno difícil ou elevações de até 3 metros.`,
 };
 
 // Texto completo de fallback (usado se não houver descrição específica)
 export const APTIDOES_DESC_COMPLETA = `Descrição completa das Aptidões disponível no manual do sistema.`;
+
+/* DESCRIÇÕES - FISIOLOGIA AMALDIÇOADA */
+export const APTIDOES_FISIOLOGIA_DESCR = {
+  'fisiologiaAmaldicoada.nucleoMovel': `Sua consciência não está presa ao cérebro, mas sim a um núcleo de energia que se move pelo corpo. Efeito: Você se torna imune a acertos críticos de armas mundanas. Se sofrer um acerto crítico de uma arma amaldiçoada, você pode gastar 4 PE para transformar o crítico em um acerto normal.`,
+  'fisiologiaAmaldicoada.parasitismoEnergetico': `Você pode se prender a um hospedeiro para drenar sua vida. Efeito: Ao realizar uma manobra de Agarrar com sucesso, você pode gastar 2 PE por turno para causar 1d6 de dano de energia e recuperar a mesma quantidade em PV.`,
+  'fisiologiaAmaldicoada.vozDasSombras': `Sua voz ressoa diretamente na mente das vítimas, causando confusão. Efeito: Como uma Ação Comum, você força um alvo a 9 metros a fazer um TR de Vontade. Em uma falha, o alvo fica Confuso por 1 rodada. Custo: 3 PE.`,
+  'fisiologiaAmaldicoada.adaptacaoReativa': `Seu corpo de energia se molda para resistir ao que o fere. Efeito: Sempre que receber dano de um tipo específico (Fogo, Frio, etc.), você pode usar sua Reação e 3 PE para ganhar RD 5 contra esse tipo de dano até o final da cena.`
+,
+  'fisiologiaAmaldicoada.almaMaldita': `Sua alma é impregnada com energia amaldiçoada, assumindo um aspecto maldito e difícil de se alterar. Efeito: Quando uma criatura for causar dano na sua alma, esse dano é reduzido à metade antes do teste de Integridade; a partir do Nível 15, ele é anulado. Esta habilidade funciona 2 vezes por dia, 3 vezes no Nível 6, 4 vezes no Nível 12 e 5 vezes no Nível 18.`,
+  'fisiologiaAmaldicoada.anatomiaIncompreensivel': `O seu corpo tem uma forma que é difícil de compreender. Efeito: Você tem 25% de chance (resultado "1" em 1d4) de ignorar o dano adicional de um ataque crítico ou um ataque furtivo. No Nível 15, essa chance torna-se 50% (resultado "1 ou 2" em 1d4).`,
+  'fisiologiaAmaldicoada.armaNatural': `Com uma fisionomia estranha, você possui garras, dentes afiados, cauda ou outro apêndice corporal próprio para ataques. Efeito: Você recebe um ataque natural que causa 1d8 de dano Cortante, Perfurante ou de Impacto com os traços Fineza e Enérgica. Esta arma natural conta como um ataque desarmado e se beneficia de efeitos que afetariam ataques desarmados. Caso seu dano desarmado seja superior ao da arma natural, ao invés disso aumente o seu dano desarmado em 1 nível.`,
+  'fisiologiaAmaldicoada.articulacoesExtensas': `Suas juntas são mais longas, ou suas garras são estendidas, aumentando a distância com que pode atacar. Efeito: O alcance dos seus ataques corpo a corpo aumenta em 1,5 metros.`,
+  'fisiologiaAmaldicoada.bracosExtras': `Seu corpo possui um par de braços adicionais. Efeito: Você recebe +2 em testes de Prestidigitação e, se tiver pelo menos duas mãos livres, aplica esse bônus em testes de Atletismo. Recebe um par adicional de mãos, permitindo equipar dois equipamentos de uma mão ou um equipamento de duas mãos adicional, assim como agarrar duas criaturas e outros benefícios à discrição do Narrador.`,
+  'fisiologiaAmaldicoada.capacidadeVoo': `No seu corpo repousa uma capacidade de voo, que com um estímulo de energia se torna ativa. Efeito: Como uma ação livre, você pode gastar 1 ponto de energia para transformar seu Deslocamento de Caminhada em Deslocamento de Voo por uma rodada.`,
+  'fisiologiaAmaldicoada.carapacaMutante': `Uma carapaça cobre o seu corpo, sendo uma mutação bizarra, mas resistente. Efeito: Você recebe Redução de Dano contra danos físicos igual ao seu Bônus de Treinamento; no Nível 10, você recebe resistência a um tipo de dano físico à sua escolha (após escolhida não pode ser mudada).`,
+  'fisiologiaAmaldicoada.corpoEspecializado': `Seu corpo se desenvolve de maneira a possuir um foco. Efeito: Escolha uma perícia: você recebe um bônus de 1d4 nessa perícia.`,
+  'fisiologiaAmaldicoada.desenvolvimentoExagerado': `Seu corpo se desenvolve de maneira exagerada, ultrapassando o formato e o porte padrão. Efeito: Você aumenta sua categoria de tamanho em 1 e recebe 1 ponto de vida adicional por nível.`,
+  'fisiologiaAmaldicoada.devoradorDeEnergia': `Sendo envolvido com a própria energia, você pode a devorar quando resiste a uma habilidade originada dela. Efeito: Quando passar em um teste de resistência para resistir a um Feitiço, você recebe 1 ponto de energia temporário cumulativo.`,
+  'fisiologiaAmaldicoada.instintoSanguinario': `Em sua essência há um instinto por sangue e violência. Efeito: Você adiciona o seu Bônus de Treinamento na sua Iniciativa; enquanto em uma cena de combate, você também adiciona seu Bônus de Treinamento na sua Atenção.`,
+  'fisiologiaAmaldicoada.olhosSombrios': `Seus olhos guardam escuridão, sendo sombrios por natureza e aguçados. Efeito: Você recebe Visão no Escuro. Além disso, você se torna treinado em Percepção e recebe um bônus de +2 em rolagens com a perícia. No Nível 12 você passa a ignorar completamente efeitos de escuridão leve e total.`,
+  'fisiologiaAmaldicoada.pernasExtras': `No seu corpo cresce um par de pernas extras. Efeito: Seu deslocamento aumenta em 4,5 metros e você passa a ignorar terreno difícil que esteja no solo.`,
+  'fisiologiaAmaldicoada.presencaNefasta': `Com um semblante vil, a sua própria presença é nefasta. Efeito: Toda criatura hostil, ao vê-lo pela primeira vez, deve realizar um teste de resistência de Vontade contra sua CD Amaldiçoada. Em uma falha, ela fica Amedrontada por uma rodada. Em um sucesso, ela fica Abalada por uma rodada.`,
+  'fisiologiaAmaldicoada.sangueToxico': `O seu sangue é tóxico, capaz de corroer o que entra em contato com ele. Efeito: Sempre que sofrer dano de um ataque corpo a corpo, o atacante perde PV igual ao seu modificador de Constituição.`
+};
+
+// Insere as descrições da fisiologia no objeto principal de descrições para compatibilidade
+if (typeof APTIDOES_DESCRICOES === 'object') {
+  for (const k of Object.keys(APTIDOES_FISIOLOGIA_DESCR)) {
+    APTIDOES_DESCRICOES[k] = APTIDOES_FISIOLOGIA_DESCR[k];
+  }
+}
