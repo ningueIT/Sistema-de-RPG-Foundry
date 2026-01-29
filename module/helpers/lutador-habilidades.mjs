@@ -1,4 +1,5 @@
 import { MAPA_ATRIBUTOS } from '../sheets/actor-sheet/atributos.mjs';
+import { rollFormula } from './rolls.mjs';
 
 function _systemId() {
   return game?.system?.id ?? 'feiticeiros-e-maldicoes';
@@ -200,8 +201,14 @@ async function _rollCheck(actor, { group, key, labelOverride } = {}) {
   if (bonusExtra) parts.push(`+ ${bonusExtra}[Bônus]`);
 
   const formula = parts.join(' ');
-  const roll = new Roll(formula);
-  await roll.evaluate();
+  let roll;
+  try {
+    roll = await rollFormula(formula, { actor }, { asyncEval: true, toMessage: false });
+  } catch (err) {
+    console.warn('Erro ao rolar teste via rollFormula em lutador-habilidades:', err);
+    ui?.notifications?.error?.('Fórmula inválida para teste.');
+    return null;
+  }
 
   const title = labelOverride || pericia.label || key;
   await ChatMessage.create({

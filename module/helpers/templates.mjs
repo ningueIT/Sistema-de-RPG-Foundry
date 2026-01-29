@@ -20,5 +20,6 @@ export const preloadHandlebarsTemplates = async function () {
     
     // Item partials
     "systems/feiticeiros-e-maldicoes/templates/item/parts/item-effects.hbs",
+    "systems/feiticeiros-e-maldicoes/templates/item/item-uniform-sheet.hbs",
       ]);
 };

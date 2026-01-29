@@ -6,7 +6,7 @@ import { BoilerplateActorSheet } from './sheets/actor-sheet.mjs';
 import { BoilerplateItemSheet } from './sheets/item-sheet.mjs';
 // Import helper/utility classes and constants.
 import { preloadHandlebarsTemplates } from './helpers/templates.mjs';
-import { BOILERPLATE } from './helpers/config.mjs';
+import { BOILERPLATE, FEITICEIROS } from './helpers/config.mjs';
 import { seedAptidoesCompendium } from './helpers/seed-aptidoes.mjs';
 import { seedHabilidades } from './helpers/seed-habilidades.mjs';
 import * as ImportWeapons from './scripts/import-weapons.mjs';
@@ -39,6 +39,8 @@ Hooks.once('init', function () {
 
   // Add custom constants for configuration.
   CONFIG.BOILERPLATE = BOILERPLATE;
+  // Expor configurações do sistema (origens, classes, labels)
+  CONFIG.FEITICEIROS = FEITICEIROS;
 
   /**
    * Set an initiative formula for the system
@@ -79,6 +81,26 @@ Hooks.once('init', function () {
   });
 
   // Preload Handlebars templates.
+  // Verifica se 'uniforme' existe em runtime (dropdown do Item). Não tenta
+  // escrever em `game.system.documentTypes` pois a propriedade pode ser
+  // somente-leitura em algumas versões/ambientes do Foundry.
+  try {
+    const cur = game?.system?.documentTypes?.Item;
+    const hasUniform = (Array.isArray(cur) && cur.includes('uniforme'))
+      || (cur instanceof Set && typeof cur.has === 'function' && cur.has('uniforme'))
+      || (cur && typeof cur === 'object' && Object.prototype.hasOwnProperty.call(cur, 'uniforme'));
+    if (!hasUniform) {
+      console.warn('[Sistema] Tipo de Item "uniforme" não encontrado em runtime. Certifique-se de declará-lo em system.json; seguindo sem forçar atribuição.');
+    }
+
+    // Garantir rótulo visível no dropdown (padrão simples, pode ser substituído por localização)
+    CONFIG.Item = CONFIG.Item || {};
+    CONFIG.Item.typeLabels = CONFIG.Item.typeLabels || {};
+    if (!CONFIG.Item.typeLabels.uniforme) CONFIG.Item.typeLabels.uniforme = 'Uniforme';
+  } catch (e) {
+    console.warn('Falha ao verificar/registrar tipo uniforme em runtime:', e);
+  }
+
   return preloadHandlebarsTemplates();
 });
 
@@ -103,6 +125,11 @@ Hooks.once('ready', function () {
     seedAptidoesCompendium,
     seedHabilidades
   };
+
+  // Também expor a configuração principal globalmente para conveniência em macros/console
+  try {
+    if (typeof window !== 'undefined') window.FEITICEIROS = CONFIG.FEITICEIROS;
+  } catch (e) { /* ignore */ }
 
   // Expor importador de armas via namespace global para uso em console/macros
   try {

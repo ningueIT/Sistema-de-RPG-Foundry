@@ -22,6 +22,7 @@ import {
 import { extrairPrereqsDaDescricao, inferirTipoAcao, inferirCustoPE } from './actor-sheet/aptidoes-utils.mjs';
 import { handleLutadorUse } from '../helpers/lutador-habilidades.mjs';
 import LevelUpDialog from '../apps/level-up-dialog.mjs';
+import { rollFormula } from '../helpers/rolls.mjs';
 
 function _normalizarTextoAptidaoLocal(str = '') {
   return String(str)
@@ -350,13 +351,13 @@ export class BoilerplateActorSheet extends ActorSheet {
         }
 
         // Sincroniza `integridade` inicialmente apenas se o ator NÃO tiver o campo configurado
+        // Não espelha integridade em HP: são recursos distintos. Inicializa apenas se ausente.
         try {
-          const hp = context.system?.recursos?.hp;
           const actorHasIntegridade = typeof actorData.system?.recursos?.integridade?.value !== 'undefined' || typeof actorData.system?.recursos?.integridade?.max !== 'undefined';
-          if (hp && !actorHasIntegridade) {
+          if (!actorHasIntegridade) {
             context.system.recursos.integridade = context.system.recursos.integridade || {};
-            context.system.recursos.integridade.value = Number(hp.value ?? 0) || 0;
-            context.system.recursos.integridade.max = Number(hp.max ?? hp.value ?? 0) || 0;
+            context.system.recursos.integridade.value = Number(context.system.recursos.integridade.value ?? 0) || 0;
+            context.system.recursos.integridade.max = Number(context.system.recursos.integridade.max ?? 0) || 0;
             context.system.recursos.integridade.percent = (context.system.recursos.integridade.max > 0)
               ? Math.max(0, Math.min(100, Math.round((context.system.recursos.integridade.value / context.system.recursos.integridade.max) * 100)))
               : 0;
@@ -699,6 +700,13 @@ export class BoilerplateActorSheet extends ActorSheet {
 
     context.aptidoesAtivas = aptidoesAtivas;
     context.aptidoesPassivas = aptidoesPassivas;
+
+    // Expor item tipo `uniforme` para o template (se existir, pega o primeiro)
+    try {
+      context.uniformItem = (Array.isArray(context.items) ? context.items.find(i => i.type === 'uniforme') : null) || null;
+    } catch (e) {
+      context.uniformItem = null;
+    }
   }
 
   /* -------------------------------------------- */
@@ -885,14 +893,13 @@ export class BoilerplateActorSheet extends ActorSheet {
                 // monta fórmula substituindo o fator de quantidade (ex: '1d8' -> '3d8')
                 const dIndex = lado.indexOf('d');
                 const diePart = (dIndex >= 0) ? lado.slice(dIndex) : lado;
-                const rollFormula = `${n}${diePart}`;
+                const rollFormulaStr = `${n}${diePart}`;
 
                 let roll;
                 try {
-                  roll = new Roll(rollFormula);
-                  await roll.evaluate({async: false});
+                  roll = await rollFormula(rollFormulaStr, { actor: this.actor }, { asyncEval: true, toMessage: false, flavor: `Gasto de ${isVida ? 'DV' : 'DE'}` });
                 } catch (err) {
-                  console.warn('Erro ao rolar dados:', err);
+                  console.warn('Erro ao rolar dados via rollFormula:', err);
                   return ui.notifications.error('Fórmula inválida.');
                 }
 
@@ -935,11 +942,10 @@ export class BoilerplateActorSheet extends ActorSheet {
           }, { id: 'dice-spend-dialog' }).render(true);
         }
         else {
-          // Rolagem padrão (não DV/DE)
+          // Rolagem padrão (não DV/DE) usando helper central
           let roll;
           try {
-            roll = new Roll(formula);
-            await roll.evaluate();
+            roll = await rollFormula(formula, { actor: this.actor }, { asyncEval: true, toMessage: false, flavor: `Rolou <b>${flavor}</b>` });
           } catch (err) {
             console.warn('Erro ao rolar dado:', { formula, err });
             ui?.notifications?.error?.('Fórmula inválida para rolagem.');
@@ -1007,6 +1013,51 @@ export class BoilerplateActorSheet extends ActorSheet {
       console.warn('Falha ao registrar dragstart para itens:', e);
     }
 
+    // Uniform slot: allow dragover and drop specifically on the uniform slot
+    try {
+      html.find('.uniform-slot').on('dragover', (ev) => {
+        ev.preventDefault();
+        ev.currentTarget.classList.add('drag-over');
+      });
+      html.find('.uniform-slot').on('dragleave', (ev) => {
+        ev.currentTarget.classList.remove('drag-over');
+      });
+      html.find('.uniform-slot').on('drop', async (ev) => {
+        ev.preventDefault();
+        ev.currentTarget.classList.remove('drag-over');
+        const dt = ev.originalEvent?.dataTransfer;
+        if (!dt) return;
+        let payload = dt.getData('application/json') || dt.getData('text/plain');
+        try {
+          if (payload) payload = JSON.parse(payload);
+        } catch (e) { /* keep raw */ }
+
+        // Accept either {type:'Item', data: <item>} or raw UUID
+        try {
+          if (payload && payload.type === 'Item' && payload.data) {
+            await this.actor.createEmbeddedDocuments('Item', [payload.data]);
+            this.render(false);
+            return;
+          }
+          const uri = dt.getData('text/uri-list') || dt.getData('text/uri');
+          if (uri) {
+            // try fromUuid fallback
+            try {
+              const doc = await fromUuid(uri);
+              if (doc && doc.toObject) {
+                const data = doc.toObject(false);
+                await this.actor.createEmbeddedDocuments('Item', [data]);
+                this.render(false);
+                return;
+              }
+            } catch (err) { /* ignore */ }
+          }
+        } catch (err) {
+          console.warn('Falha ao processar drop no slot de uniforme:', err);
+        }
+      });
+    } catch (e) { console.warn('Falha ao registrar drop para uniform-slot', e); }
+
     // Listeners Padrões
     if (!this.isEditable) return;
     html.on('click', '.item-edit', (ev) => {
@@ -1023,6 +1074,34 @@ export class BoilerplateActorSheet extends ActorSheet {
         item.delete();
         row.slideUp(200, () => this.render(false));
       }
+    });
+    // Remover uniforme do slot (botão pequeno no card)
+    html.on('click', '.uniform-remove', async (ev) => {
+      ev.stopPropagation();
+      const $card = $(ev.currentTarget).closest('.uniform-card');
+      const itemId = $card.data('itemId');
+      if (!itemId) return;
+      if (!this.actor.isOwner) return ui.notifications.warn('Sem permissão para remover este uniforme.');
+      const item = this.actor.items.get(itemId);
+      if (!item) return ui.notifications.warn('Item não encontrado.');
+
+      new Dialog({
+        title: 'Remover Uniforme',
+        content: `<p>Remover <strong>${item.name}</strong> deste ator?</p>`,
+        buttons: {
+          yes: { label: 'Remover', callback: async () => {
+            try {
+              await this.actor.deleteEmbeddedDocuments('Item', [itemId]);
+              this.render(false);
+            } catch (err) {
+              console.error('Falha ao remover uniforme:', err);
+              ui.notifications.error('Falha ao remover uniforme. Veja o console.');
+            }
+          } },
+          no: { label: 'Cancelar' }
+        },
+        default: 'no'
+      }).render(true);
     });
     html.on('click', '.item-create', this._onItemCreate.bind(this));
     // Death-saves visual UI handlers
@@ -1612,9 +1691,15 @@ export class BoilerplateActorSheet extends ActorSheet {
       formulaString += ` + ${bonusExtra}[Bônus]`;
     }
 
-    // 6. Rola o dado!
-    let roll = new Roll(formulaString);
-    await roll.evaluate();
+    // 6. Rola o dado usando helper central
+    let roll;
+    try {
+      roll = await rollFormula(formulaString, { actor: this.actor }, { asyncEval: true, toMessage: false });
+    } catch (err) {
+      console.warn('Erro ao rolar teste de perícia via rollFormula:', err);
+      ui?.notifications?.error?.('Fórmula inválida para perícia.');
+      return null;
+    }
 
     // 7. Manda pro Chat: exibe a face do d20 e a fórmula compacta `1d20 + <bônus>`
     const sign = (totalBonus >= 0) ? `+${totalBonus}` : `${totalBonus}`;
@@ -1689,8 +1774,7 @@ export class BoilerplateActorSheet extends ActorSheet {
 
           // Roda 1d6 para decidir a recuperação
           try {
-            const rollD6 = new Roll('1d6');
-            rollD6.evaluateSync();
+            const rollD6 = await rollFormula('1d6', { actor: this.actor }, { asyncEval: true, toMessage: false });
             const face = Number(rollD6.total || 0);
 
             let recoveredHP = 0;
@@ -1699,8 +1783,7 @@ export class BoilerplateActorSheet extends ActorSheet {
             // Função auxiliar para rolar o dado de vida/energia
             const rollDie = async (lado) => {
               try {
-                const r = new Roll(String(lado || '1d8'));
-                r.evaluateSync();
+                const r = await rollFormula(String(lado || '1d8'), { actor: this.actor }, { asyncEval: true, toMessage: false });
                 return Number(r.total || 0);
               } catch (e) { return 0; }
             };
@@ -2245,8 +2328,14 @@ export class BoilerplateActorSheet extends ActorSheet {
     if (hp > 0) return ui.notifications.warn('Testes de morte só podem ser feitos com 0 de HP.');
     const conMod = Number(this.actor.system?.atributos?.constituicao?.mod ?? 0) || 0;
     const formula = `1d20 + ${conMod}`;
-    let roll = new Roll(formula);
-    await roll.evaluate();
+    let roll;
+    try {
+      roll = await rollFormula(formula, { actor: this.actor }, { asyncEval: true, toMessage: false, flavor: `<b>Teste de Morte</b>` });
+    } catch (err) {
+      console.warn('Erro ao rolar teste de morte via rollFormula:', err);
+      ui?.notifications?.error?.('Fórmula inválida para Teste de Morte.');
+      return;
+    }
     // Post result to chat
     await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: this.actor }), flavor: `<b>Teste de Morte</b>` });
 

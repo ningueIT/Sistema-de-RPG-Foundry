@@ -1,0 +1,124 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}" draggable="true" data-uuid="{{item.uuid}}" />
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Nome do Uniforme"/></h1>
+      <div class="item-meta grid grid-2col">
+        <div>
+          <label>Fonte</label>
+          <input type="text" name="system.fonte.value" value="{{system.fonte.value}}" placeholder="Ex: Livro / Mestre"/>
+        </div>
+        <div>
+          <label>Requisito</label>
+          <input type="text" name="system.requisito.value" value="{{system.requisito.value}}" placeholder="Ex: Rank / Permissão"/>
+        </div>
+      </div>
+    </div>
+    <a class="header-button control close" role="button" title="Fechar">
+      <i class="fas fa-times"></i>&nbsp;Close
+    </a>
+  </header>
+
+    {{! Sheet Tab Navigation }}
+    <nav class='sheet-tabs tabs' data-group='primary'>
+      <a class='item' data-tab='descricao'>Descrição</a>
+      <a class='item' data-tab='opcoes'>Opções</a>
+    </nav>
+
+    <section class='sheet-body'>
+      <div class='tab' data-group='primary' data-tab='descricao'>
+        <div class="editor-container">
+          {{editor system.descricao.value target="system.descricao.value" engine="prosemirror" button=true owner=owner editable=editable}}
+        </div>
+      </div>
+
+      <div class='tab attributes' data-group='primary' data-tab='opcoes'>
+        <h3 class="item-section-title">Personalização e Mecânicas</h3>
+
+        <div class="field">
+          <label>Revestimento</label>
+          <select name="system.uniforme.revestimento">
+            <option value="leve" {{#if (eq system.uniforme.revestimento "leve")}}selected{{/if}}>Revestimento Leve</option>
+            <option value="medio" {{#if (eq system.uniforme.revestimento "medio")}}selected{{/if}}>Revestimento Médio</option>
+            <option value="robusto" {{#if (eq system.uniforme.revestimento "robusto")}}selected{{/if}}>Revestimento Robusto</option>
+            <option value="sob_medida" {{#if (eq system.uniforme.revestimento "sob_medida")}}selected{{/if}}>Sob Medida</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Equipável</label>
+          <select name="system.equipado">
+            <option value="">— Nenhum —</option>
+            <option value="torso" {{#if (eq system.equipado "torso")}}selected{{/if}}>Torso</option>
+            <option value="full" {{#if (eq system.equipado "full")}}selected{{/if}}>Corpo Inteiro</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Bônus (texto)</label>
+          <input type="text" name="system.uniforme.bonusText" value="{{system.uniforme.bonusText}}" placeholder="ex: cerimonial; resistente" />
+        </div>
+
+        <div class="field">
+          <label>Bônus de CA (numérico, opcional)</label>
+          <input type="number" name="system.uniforme.bonusCa" value="{{system.uniforme.bonusCa}}" placeholder="ex: 2" step="1" />
+        </div>
+
+        <div class="field">
+          <label>Total de CA (calculado)</label>
+          <input type="number" name="system.uniforme.total" value="{{system.uniforme.total}}" readonly />
+        </div>
+
+        <p class="note">Como funciona: Escolha o tipo de revestimento que descreve o nível de proteção/materiais do uniforme. Marque como equipado para aplicar quaisquer efeitos mecânicos descritos no campo 'Efeito / Bônus'. 'Sob Medida' indica personalização avançada (use descrição para detalhes).</p>
+
+        <h4 style="margin-top:12px;">Tabela de Revestimentos (valores padrão)</h4>
+        <table class="uniform-table" style="width:100%; border-collapse:collapse; margin-top:8px;">
+          <thead>
+            <tr>
+              <th>Revestimento</th>
+              <th>Bônus</th>
+              <th>Penalidade</th>
+              <th>CA Extra</th>
+              <th>Observação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Revestimento Leve</td>
+              <td>+2</td>
+              <td>0</td>
+              <td>1</td>
+              <td>N/A</td>
+            </tr>
+            <tr>
+              <td>Revestimento Médio</td>
+              <td>+4</td>
+              <td>-2</td>
+              <td>2</td>
+              <td>Penalidade em perícias que usam Destreza</td>
+            </tr>
+            <tr>
+              <td>Revestimento Robusto</td>
+              <td>+6</td>
+              <td>-4</td>
+              <td>3</td>
+              <td>Penalidade em perícias que usam Destreza</td>
+            </tr>
+            <tr>
+              <td>Sob Medida</td>
+              <td>+1</td>
+              <td>0</td>
+              <td>2</td>
+              <td>Concede +2 em Acrobacia e Furtividade</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  <footer class="sheet-footer">
+    <div class="footer-controls" style="display:flex; align-items:center; gap:12px;">
+      <button type="submit" class="jem-btn jem-btn--primary">Salvar</button>
+    </div>
+  </footer>
+</form>

@@ -77,16 +77,16 @@ export class BoilerplateItem extends Item {
       // Retrieve roll data.
       const rollData = this.getRollData();
 
-      // Invoke the roll and submit it to chat.
-      const roll = new Roll(rollData.formula, rollData.actor);
-      // If you need to store the value first, uncomment the next line.
-      // const result = await roll.evaluate();
-      roll.toMessage({
-        speaker: speaker,
-        rollMode: rollMode,
-        flavor: label,
-      });
-      return roll;
+      // Invoke the roll via helper central and submit it to chat.
+      try {
+        const roll = await import('../../../../module/helpers/rolls.mjs').then(m => m.rollFormula(rollData.formula, rollData, { asyncEval: true, toMessage: false }));
+        await roll.toMessage({ speaker: speaker, rollMode: rollMode, flavor: label });
+        return roll;
+      } catch (err) {
+        console.warn('Erro ao rolar item via rollFormula:', err);
+        ui?.notifications?.error?.('Fórmula inválida.');
+        return null;
+      }
     }
   }
 }

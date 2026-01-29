@@ -1,3 +1,6 @@
+import LevelUpDialog from "../apps/level-up-dialog.mjs";
+import { FEITICEIROS } from "../helpers/config.mjs";
+
 /**
  * Extend the base Actor document by defining a custom roll data structure which is ideal for the Simple system.
  * @extends {Actor}
@@ -197,6 +200,103 @@ export class BoilerplateActor extends Actor {
             }
         }
     }
+
+    // ----------------------------------------------------
+    // 6. CÁLCULO DA CA (Classe de Armadura)
+    // Fórmula: CA = BASE_VALUE + MODIFIER_DEX + BONUS_EQUIPMENT + BONUS_AD_HOC
+    // ----------------------------------------------------
+    try {
+      const BASE_VALUE = Number(system.combate?.baseValue ?? 10) || 10;
+
+      // MODIFIER_DEX: usa mod calculado ou tenta derivar do valor
+      const dexAttr = system.atributos?.destreza ?? {};
+      const MODIFIER_DEX = Number(dexAttr.mod ?? Math.floor((Number(dexAttr.value ?? 10) - 10) / 2)) || 0;
+
+      // BONUS_EQUIPMENT: soma mitigação de armaduras/escudos entre os ITENS EQUIPADOS do ator
+      // Além disso, computa separadamente o bônus de `uniforme` para mostrar no breakdown.
+      let BONUS_EQUIPMENT_OTHERS = 0;
+      let BONUS_UNIFORM = 0;
+      try {
+        for (const it of actorData.items ?? []) {
+          const s = it?.system ?? {};
+          // Considere apenas itens marcados como equipados
+          const isEquipped = !!(s?.equipado || s?.equipped || s?.active);
+          if (!isEquipped) continue;
+
+          if (String(it.type) === 'uniforme') {
+            BONUS_UNIFORM += Number(s?.uniforme?.total ?? s?.uniforme?.bonusCa ?? 0) || 0;
+            continue;
+          }
+
+          BONUS_EQUIPMENT_OTHERS += Number(s?.bonus?.ca ?? s?.bonusCa ?? s?.mitigacao ?? 0) || 0;
+          BONUS_EQUIPMENT_OTHERS += Number(s?.armor?.mitigacao ?? s?.armor?.value ?? 0) || 0;
+          BONUS_EQUIPMENT_OTHERS += Number(s?.shield?.mitigacao ?? s?.shield?.value ?? 0) || 0;
+        }
+      } catch (e) {
+        BONUS_EQUIPMENT_OTHERS = BONUS_EQUIPMENT_OTHERS || 0;
+        BONUS_UNIFORM = BONUS_UNIFORM || 0;
+      }
+
+      const BONUS_EQUIPMENT = Number(BONUS_EQUIPMENT_OTHERS + BONUS_UNIFORM) || 0;
+
+      // BONUS_AD_HOC: campos ad-hoc no sistema ou flags do sistema
+      const sysId = game?.system?.id ?? 'feiticeiros-e-maldicoes';
+      const flagBonuses = (actorData.flags ?? {})[sysId] ?? {};
+      const fromFlags = Number(flagBonuses?.bonuses?.ca ?? flagBonuses?.ca ?? 0) || 0;
+      const fromSystem = Number(system?.combate?.bonusAdHoc ?? system?.bonusAdHoc ?? system?.bonusCa ?? 0) || 0;
+      const BONUS_AD_HOC = fromFlags + fromSystem;
+
+      const caValue = BASE_VALUE + MODIFIER_DEX + BONUS_EQUIPMENT + BONUS_AD_HOC;
+
+      system.combate = system.combate || {};
+      system.combate.ca = {
+        value: Number(caValue),
+        breakdown: {
+          base: Number(BASE_VALUE),
+          dex: Number(MODIFIER_DEX),
+          equipment: Number(BONUS_EQUIPMENT),
+          uniform: Number(BONUS_UNIFORM),
+          adHoc: Number(BONUS_AD_HOC)
+        }
+      };
+
+      // Também aplica o valor calculado no campo de defesa existente na ficha
+      system.combate.defesa = {
+        value: Number(caValue),
+        breakdown: {
+          base: Number(BASE_VALUE),
+          dex: Number(MODIFIER_DEX),
+          equipment: Number(BONUS_EQUIPMENT),
+          uniform: Number(BONUS_UNIFORM),
+          adHoc: Number(BONUS_AD_HOC)
+        }
+      };
+
+      // (debug log removed to avoid noisy output during UI interactions)
+    } catch (e) {
+      console.warn('Erro ao calcular CA:', e);
+    }
+
+    // ----------------------------------------------------
+    // 7. ARMAS EQUIPADAS (expor até 2 armas para a UI)
+    // ----------------------------------------------------
+    try {
+      const equippedWeapons = [];
+      for (const it of actorData.items ?? []) {
+        try {
+          const s = it?.system ?? {};
+          const isEquipped = !!(s?.equipado || s?.equipped || s?.active);
+          if (!isEquipped) continue;
+          if (String(it.type) !== 'arma') continue;
+          equippedWeapons.push({ _id: it.id ?? it._id, name: it.name, img: it.img, system: s });
+          if (equippedWeapons.length >= 2) break;
+        } catch (e) { /* ignore single item parse errors */ }
+      }
+      system.combate = system.combate || {};
+      system.combate.equippedWeapons = equippedWeapons;
+    } catch (e) {
+      console.warn('Erro ao compilar lista de armas equipadas:', e);
+    }
   }
 
   /**
@@ -246,6 +346,206 @@ export class BoilerplateActor extends Actor {
     if (this.type !== 'npc') return;
 
     // Process additional NPC data here.
+  }
+
+  /* -------------------------------------------- */
+  /* Level change automation                         */
+
+  /**
+   * Capture previous level values before an update so we can detect gains.
+   */
+  _preUpdate(changed, options, userId) {
+    try {
+      const detalhes = this.system?.detalhes ?? {};
+      const nivelPrincipal = Number(detalhes?.niveis?.principal?.value ?? 0) || 0;
+      const nivelSecundario = Number(detalhes?.niveis?.secundario?.value ?? 0) || 0;
+      this._preUpdateLevelSnapshot = { principal: nivelPrincipal, secundario: nivelSecundario, total: nivelPrincipal + nivelSecundario };
+    } catch (e) {
+      this._preUpdateLevelSnapshot = { principal: 0, secundario: 0, total: 0 };
+    }
+    return super._preUpdate?.(changed, options, userId);
+  }
+
+  /**
+   * After update: if the actor gained level(s), apply HP/EP/training/fixed items and open LevelUpDialog when choices remain.
+   */
+  async _onUpdate(changed, options, userId) {
+    await super._onUpdate?.(changed, options, userId);
+
+    // Detect whether level fields were changed.
+    const prev = this._preUpdateLevelSnapshot ?? { total: 0 };
+    const detalhes = this.system?.detalhes ?? {};
+    const nivelPrincipal = Number(detalhes?.niveis?.principal?.value ?? 0) || 0;
+    const nivelSecundario = Number(detalhes?.niveis?.secundario?.value ?? 0) || 0;
+    const totalNow = nivelPrincipal + nivelSecundario;
+
+    if (totalNow <= prev.total) return; // no level gain
+
+    const gained = totalNow - prev.total;
+
+    // Resolve class configuration (robust lookup: try raw key, then normalized matching)
+    const classData = detalhes?.classe;
+    const classIdRaw = (typeof classData === 'object') ? classData?.value : classData;
+    const normalizeKey = (s) => String(s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+    const classesCfg = FEITICEIROS?.classes ?? {};
+    let classCfg = null;
+    if (classIdRaw && classesCfg && classesCfg[classIdRaw]) classCfg = classesCfg[classIdRaw];
+    if (!classCfg && classIdRaw) {
+      const target = normalizeKey(classIdRaw);
+      for (const k of Object.keys(classesCfg)) {
+        if (normalizeKey(k) === target) { classCfg = classesCfg[k]; break; }
+      }
+    }
+    if (!classCfg) return;
+
+    // Aggregate resource gains
+    let totalHpGain = 0;
+    let totalEpGain = 0;
+    const toCreate = [];
+    for (let i = 1; i <= gained; i++) {
+      const levelReached = prev.total + i;
+      totalHpGain += Number(classCfg?.hp?.perLevel ?? 0);
+      totalEpGain += Number(classCfg?.ep?.perLevel ?? 0);
+
+      const progression = classCfg?.progression?.[String(levelReached)] ?? {};
+      // Apply training bonus if provided in progression for this level
+      if (progression?.bTreinamento != null) {
+        try {
+          await this.update({ 'system.detalhes.treinamento.value': Number(progression.bTreinamento) });
+        } catch (e) { /* non-fatal */ }
+      }
+
+      // Collect fixed items (if present) to create after resource updates
+      const fixed = Array.isArray(progression?.fixed) ? progression.fixed : [];
+      for (const entry of fixed) {
+        // entry may be a UUID string (compendium) or an item-like object
+        if (!entry) continue;
+        toCreate.push(entry);
+      }
+
+      // -- Origem: Maldição (variante) --
+      try {
+        const origemVal = this.system?.detalhes?.origem?.value ?? this.system?.detalhes?.origem;
+        const maldRace = this.system?.detalhes?.racaMaldicao?.value ?? this.system?.detalhes?.racaMaldicao;
+        if (String(origemVal) === 'Maldição' && maldRace) {
+          const originCfg = FEITICEIROS?.origins?.maldicao ?? {};
+          const variantCfg = originCfg[String(maldRace)] || originCfg[maldRace] || originCfg[String(maldRace)?.toString?.()] || null;
+          const originProg = variantCfg?.progression?.[String(levelReached)] ?? {};
+          const originFixed = Array.isArray(originProg?.fixed) ? originProg.fixed : [];
+          for (const entry of originFixed) {
+            if (!entry) continue;
+            toCreate.push(entry);
+          }
+        }
+      } catch (e) { /* non-fatal */ }
+    }
+
+    // Apply HP/EP increases to current values (not to max; max is derived elsewhere)
+    try {
+      const sys = this.system ?? {};
+      const curHpVal = Number(sys.recursos?.hp?.value ?? 0) || 0;
+      const curHpMax = Number(sys.recursos?.hp?.max ?? 0) || 0;
+      const curEpVal = Number(sys.recursos?.energia?.value ?? 0) || 0;
+      const curEpMax = Number(sys.recursos?.energia?.max ?? 0) || 0;
+
+      const updates = {};
+      if (totalHpGain) {
+        // If a max exists (>0) cap to it, otherwise apply raw gain
+        let newHp;
+        if (curHpMax > 0) newHp = Math.min(curHpVal + totalHpGain, curHpMax);
+        else newHp = curHpVal + totalHpGain;
+        updates['system.recursos.hp.value'] = newHp;
+      }
+      if (totalEpGain) {
+        let newEp;
+        if (curEpMax > 0) newEp = Math.min(curEpVal + totalEpGain, curEpMax);
+        else newEp = curEpVal + totalEpGain;
+        updates['system.recursos.energia.value'] = newEp;
+      }
+
+      if (Object.keys(updates).length) await this.update(updates);
+    } catch (e) {
+      console.warn('Failed to apply per-level resource increases:', e);
+    }
+
+    // Create fixed progression items, avoiding duplicates by name+type
+    if (toCreate.length) {
+      const created = [];
+      for (const entry of toCreate) {
+        try {
+          // If entry is a string, attempt to resolve UUID (compendium)
+          if (typeof entry === 'string') {
+            // Try to resolve a UUID to an Item
+            const resolved = await fromUuid(entry).catch(() => null);
+            const itemObj = resolved?.toObject ? resolved.toObject() : (resolved?.object?.toObject ? resolved.object.toObject() : null);
+            if (itemObj) {
+              // Skip if already has same name+type
+              const exists = this.items.find(i => i.name === itemObj.name && i.type === itemObj.type);
+              if (!exists) {
+                const copy = duplicate(itemObj);
+                delete copy._id; delete copy.id;
+                created.push(copy);
+              }
+            }
+          }
+          // If entry is an object that references a compendium pack by name, try to resolve it
+          else if (typeof entry === 'object') {
+            // If the entry points to a pack, try to fetch the item from the compendium by name
+            if (entry.pack && entry.name) {
+              try {
+                const pack = game.packs.get(entry.pack) || game.packs.get(`world.${entry.pack}`) || game.packs.get(entry.pack.replace(/^world\./, ''));
+                if (pack) {
+                  const idx = await pack.getIndex();
+                  const found = idx.find(i => i.name === entry.name);
+                  if (found) {
+                    const doc = await pack.getDocument(found._id).catch(() => null);
+                    const itemObj = doc?.toObject ? doc.toObject() : (doc?.object?.toObject ? doc.object.toObject() : null);
+                    if (itemObj) {
+                      const exists = this.items.find(i => i.name === itemObj.name && i.type === itemObj.type);
+                      if (!exists) {
+                        const copy = duplicate(itemObj);
+                        delete copy._id; delete copy.id;
+                        created.push(copy);
+                        continue;
+                      }
+                    }
+                  }
+                }
+              } catch (e) { /* ignore and fall back to raw object */ }
+            }
+
+            // Fallback: treat entry as an item-like object
+            const name = entry.name ?? entry?.system?.name ?? '';
+            const type = entry.type ?? entry?.system?.type ?? '';
+            const exists = this.items.find(i => i.name === name && i.type === type);
+            if (!exists) {
+              const copy = duplicate(entry);
+              delete copy._id; delete copy.id;
+              created.push(copy);
+            }
+          }
+        } catch (e) {
+          console.warn('Skipping fixed progression entry due to error', e);
+        }
+      }
+      if (created.length) {
+        try { await this.createEmbeddedDocuments('Item', created); } catch (e) { console.warn('Failed to create fixed progression items', e); }
+      }
+    }
+
+    // If there are selectable progression slots (features/aptitudes) for the next level, open the LevelUpDialog for the owner
+    try {
+      const nextLevel = prev.total + 1;
+      const progressionNext = classCfg?.progression?.[String(nextLevel)] ?? {};
+      const featureCount = Number(progressionNext?.features ?? 0);
+      const aptitudeCount = Number(progressionNext?.aptitudes ?? 0);
+      if ((featureCount > 0 || aptitudeCount > 0) && this.isOwner) {
+        // Open dialog so the player can choose remaining options.
+        // Pass start level and number of levels gained so dialog can handle multiple levels sequentially.
+        const dlg = new LevelUpDialog(this, { startLevel: prev.total, gained, classId });
+        dlg.render(true);
+      }
+    } catch (e) { /* non-fatal */ }
   }
 
   /**

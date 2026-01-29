@@ -24,6 +24,61 @@ BOILERPLATE.abilityAbbreviations = {
 
 export const FEITICEIROS = {};
 
+// Configurações de origens (ex: Maldição) e progressão fixa por variante
+FEITICEIROS.origins = {
+  maldicao: {
+    // Mapear nome da raça (valor salvo em `system.detalhes.racaMaldicao.value`) -> progressão
+    "Aberração Etérea": {
+      progression: {
+        // nível: { fixed: [ { pack: 'world.habilidades-amaldicoadas', name: 'Nome da Habilidade' }, ... ] }
+        1: { fixed: [ { pack: 'world.habilidades-amaldicoadas', name: 'Instinto de Predador Amaldiçoado' } ] },
+        4: { fixed: [ { pack: 'world.habilidades-amaldicoadas', name: 'Transcendência Amaldiçoada' } ] },
+        10: { fixed: [ { pack: 'world.habilidades-amaldicoadas', name: 'Fisiologia Amaldiçoada: Núcleo Móvel' } ] }
+      }
+    }
+    ,
+    "Colosso Carniçal": {
+      progression: {
+        1: { fixed: [ { pack: 'world.habilidades-origem', name: 'Mandíbula Ancestral' } ] },
+        5: { fixed: [ { pack: 'world.habilidades-origem', name: 'Predador Alfa' } ] },
+        10: { fixed: [ { pack: 'world.habilidades-origem', name: 'Rugido Primitivo' } ] },
+        15: { fixed: [ { pack: 'world.habilidades-origem', name: 'Pele de Escamas' } ] },
+        20: { fixed: [ { pack: 'world.habilidades-origem', name: 'Ápice da Cadeia' } ] }
+      }
+    }
+    ,
+    "Soberano Carmesim": {
+      progression: {
+        1: { fixed: [ { pack: 'world.habilidades-origem', name: 'Aura do Imperador' } ] },
+        5: { fixed: [ { pack: 'world.habilidades-origem', name: 'Armamento Régio' } ] },
+        10: { fixed: [ { pack: 'world.habilidades-origem', name: 'Decreto Absoluto' } ] },
+        15: { fixed: [ { pack: 'world.habilidades-origem', name: 'Esquife de Sangue' } ] },
+        20: { fixed: [ { pack: 'world.habilidades-origem', name: 'Trono de Gelo' } ] }
+      }
+    }
+    ,
+    "Parasita do Vazio": {
+      progression: {
+        1: { fixed: [ { pack: 'world.habilidades-origem', name: 'Toque da Irrealidade' } ] },
+        5: { fixed: [ { pack: 'world.habilidades-origem', name: 'Dobra Espacial' } ] },
+        10: { fixed: [ { pack: 'world.habilidades-origem', name: 'Fratura Mental' } ] },
+        15: { fixed: [ { pack: 'world.habilidades-origem', name: 'Anatomia Não-Euclidiana' } ] },
+        20: { fixed: [ { pack: 'world.habilidades-origem', name: 'Horizonte de Eventos' } ] }
+      }
+    }
+    ,
+    "Vetor da Calamidade": {
+      progression: {
+        1: { fixed: [ { pack: 'world.habilidades-origem', name: 'Campo de Entropia' } ] },
+        5: { fixed: [ { pack: 'world.habilidades-origem', name: 'Lei de Murphy' } ] },
+        10: { fixed: [ { pack: 'world.habilidades-origem', name: 'Gato Preto' } ] },
+        15: { fixed: [ { pack: 'world.habilidades-origem', name: 'Contágio do Infortúnio' } ] },
+        20: { fixed: [ { pack: 'world.habilidades-origem', name: 'Colapso Probabilístico' } ] }
+      }
+    }
+  }
+};
+
 // Escolas de feitiço / tipos
 FEITICEIROS.spellSchools = {
   extensao: 'Extensão',

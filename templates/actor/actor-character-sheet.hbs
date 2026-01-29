@@ -25,10 +25,32 @@
                 <div style="grid-column: 1 / -1; text-align: right; margin-bottom: 6px; display:flex; gap:8px; justify-content:flex-end;">
                     <!-- Botões de Descanso removidos: usar macros -->
                 </div>
-                <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
-                    <label>DEFESA</label>
-                    <input type="number" name="system.combate.defesa.value" value="10">
-                </div>
+                                <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
+                                        <label>DEFESA</label>
+                                        <input type="number" name="system.combate.defesa.value" value="{{system.combate.defesa.value}}">
+                                        {{#if system.combate.defesa.breakdown}}
+                                            <div style="margin-top:8px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+                                                {{#with system.combate.defesa.breakdown}}
+                                                    <span style="background:rgba(155,77,202,0.12); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                                        <span style="opacity:0.85; font-size:10px;">base</span>
+                                                        <strong style="color:#f5e8ff">{{base}}</strong>
+                                                    </span>
+                                                    <span style="background:rgba(0,0,0,0.26); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                                        <span style="opacity:0.85; font-size:10px;">dex</span>
+                                                        <strong style="color:#ffd580">{{dex}}</strong>
+                                                    </span>
+                                                    <span style="background:rgba(0,0,0,0.18); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                                        <span style="opacity:0.85; font-size:10px;">equip</span>
+                                                        <strong style="color:#bfe6c6">{{equipment}}</strong>
+                                                    </span>
+                                                    <span style="background:rgba(0,0,0,0.18); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                                        <span style="opacity:0.85; font-size:10px;">adhoc</span>
+                                                        <strong style="color:#a9d0ff">{{adHoc}}</strong>
+                                                    </span>
+                                                {{/with}}
+                                            </div>
+                                        {{/if}}
+                                </div>
                 <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
                     <label>CD</label>
                     <input type="number" name="system.combate.cd.value" value="10">

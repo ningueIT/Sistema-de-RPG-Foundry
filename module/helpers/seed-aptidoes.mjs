@@ -28,7 +28,7 @@ export async function seedAptidoesCompendium({ notify = true, forceUpdate = true
 
   // 1. Encontrar o Compendium
   const preferred = game.packs.get(`${systemId}.aptidoes`);
-  const labelCandidates = game.packs
+  const labelCandidates = game.pack
     .filter((p) => p.metadata?.type === 'Item')
     .filter((p) => {
       const label = String(p.metadata?.label ?? '');

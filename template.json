@@ -8,7 +8,7 @@
           "hp": { "value": 10, "max": 10, "label": "Vida" },
           "energia": { "value": 5, "max": 5, "label": "Energia" },
           "integridade": { "value": 10, "max": 10, "label": "Integridade" },
-          "sanidade": { "value": 10, "max": 10, "label": "Sanidade" }
+          "humanidade": { "value": 10, "max": 10, "label": "Humanidade" }
         }
       }
     },
@@ -230,7 +230,7 @@
     }
   },
   "Item": {
-    "types": ["item", "feature", "spell", "aptidao", "tecnica", "arma", "class", "habilidade"],
+    "types": ["item", "feature", "spell", "aptidao", "tecnica", "arma", "class", "habilidade", "uniforme"],
     "templates": {
       "base": {
         "descricao": { "value": "" },
@@ -239,6 +239,7 @@
     },
     "item": { "templates": ["base"] },
     "tecnica": { "templates": ["base"] },
+    "uniforme": { "templates": ["base"] },
     "arma": {
       "templates": ["base"],
         "damage": {

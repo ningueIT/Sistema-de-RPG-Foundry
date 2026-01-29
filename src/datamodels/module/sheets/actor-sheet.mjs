@@ -227,7 +227,7 @@ export class BoilerplateActorSheet extends ActorSheet {
    * @param {Event} event   The originating click event
    * @private
    */
-  _onRoll(event) {
+  async _onRoll(event) {
     event.preventDefault();
     const element = event.currentTarget;
     const dataset = element.dataset;
@@ -244,13 +244,15 @@ export class BoilerplateActorSheet extends ActorSheet {
     // Handle rolls that supply the formula directly.
     if (dataset.roll) {
       let label = dataset.label ? `[ability] ${dataset.label}` : '';
-      let roll = new Roll(dataset.roll, this.actor.getRollData());
-      roll.toMessage({
-        speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-        flavor: label,
-        rollMode: game.settings.get('core', 'rollMode'),
-      });
-      return roll;
+      try {
+        // usa helper central para avaliar e enviar a mensagem
+        const roll = await import('../../../../module/helpers/rolls.mjs').then(m => m.rollFormula(dataset.roll, this.actor.getRollData(), { asyncEval: true, toMessage: true, flavor: label }));
+        return roll;
+      } catch (err) {
+        console.warn('Erro ao rolar dataset.roll via rollFormula:', err);
+        ui?.notifications?.error?.('Fórmula inválida.');
+        return null;
+      }
     }
   }
 }

@@ -13,13 +13,15 @@ export class BoilerplateItemSheet extends ItemSheet {
     return foundry.utils.mergeObject(super.defaultOptions, {
       // IMPORTANT: keep the system id as a class so our CSS applies.
       classes: ['feiticeiros-e-maldicoes', 'sheet', 'item', 'item-sheet'],
-      width: 520,
-      height: 480,
+      width: 700,
+      // Let the window be resizable and default to a comfortable height
+      height: 800,
+      resizable: true,
       tabs: [
         {
           navSelector: '.sheet-tabs',
           contentSelector: '.sheet-body',
-          initial: 'description',
+          initial: 'descricao',
         },
       ],
     });
@@ -30,6 +32,7 @@ export class BoilerplateItemSheet extends ItemSheet {
     const path = 'systems/feiticeiros-e-maldicoes/templates/item';
     // Return a specialized sheet for class items.
     if (this.item?.type === 'class') return `${path}/item-class-sheet.hbs`;
+    if (this.item?.type === 'uniforme') return `${path}/item-uniform-sheet.hbs`;
 
     // Fallback to the generic sheet for other item types.
     return `${path}/item-sheet.hbs`;
@@ -102,13 +105,124 @@ export class BoilerplateItemSheet extends ItemSheet {
     // Everything below here is only needed if the sheet is editable
     if (!this.isEditable) return;
 
+    const img = html.find('.profile-img')[0];
+    if (img) {
+        img.addEventListener('dragstart', (event) => {
+          try {
+            const itemData = this.item?.toObject(false) ?? { name: this.item?.name ?? 'Item' };
+            const payload = JSON.stringify({ type: 'Item', data: itemData });
+            event.dataTransfer.setData('text/plain', payload);
+            event.dataTransfer.setData('application/json', payload);
+            const uuid = img.dataset?.uuid || this.item?.uuid;
+            if (uuid) event.dataTransfer.setData('text/uri-list', uuid);
+            img.classList.add('dragging');
+            window.__FE_UNIFORM_DRAG = itemData;
+
+            const dropHandler = async (ev) => {
+              try {
+                const target = ev.target;
+                const apps = Object.values(ui.windows || {});
+                let targetApp = null;
+                for (const app of apps) {
+                  try {
+                    if (app?.element && app.element[0] && app.element[0].contains(target)) {
+                      targetApp = app;
+                      break;
+                    }
+                  } catch (e) {}
+                }
+                if (targetApp && targetApp.document && (targetApp.document.documentName === 'Actor' || targetApp.document.constructor.name === 'Actor')) {
+                  ev.preventDefault();
+                  ev.stopPropagation();
+                  const actor = targetApp.document;
+                  const itemPayload = window.__FE_UNIFORM_DRAG;
+                  if (actor && itemPayload) {
+                    await actor.createEmbeddedDocuments('Item', [itemPayload]);
+                  }
+                }
+              } catch (err) {
+                console.warn('Uniform drop handler failed', err);
+              } finally {
+                try { document.removeEventListener('drop', dropHandler); } catch(e){}
+                try { delete window.__FE_UNIFORM_DRAG; } catch(e){}
+              }
+            };
+            document.addEventListener('drop', dropHandler, { once: true });
+            if (event.dataTransfer.setDragImage) {
+              const crt = img.cloneNode(true);
+              crt.style.width = '96px';
+              crt.style.height = '96px';
+              crt.style.boxShadow = '0 10px 30px rgba(0,0,0,0.6)';
+              document.body.appendChild(crt);
+              event.dataTransfer.setDragImage(crt, 48, 48);
+              setTimeout(() => document.body.removeChild(crt), 0);
+            }
+          } catch (e) {
+            console.warn('Drag start failed for item image', e);
+          }
+        });
+        img.addEventListener('dragend', () => {
+          img.classList.remove('dragging');
+          try { delete window.__FE_UNIFORM_DRAG; } catch(e){}
+        });
+    }
+
+    html.on('submit', 'form', async (ev) => {
+      ev.preventDefault();
+      console.log('[ItemSheet] form submit detected for', this.item?.name);
+      const form = html.find('form')[0];
+      const fd = form ? new FormData(form) : null;
+      const entries = {};
+      if (fd) for (const [k, v] of fd.entries()) entries[k] = v;
+
+      try {
+        const descEl = html.find('[name="system.descricao.value"]')[0];
+        if (descEl) {
+          const val = descEl.value ?? descEl.innerHTML ?? descEl.textContent ?? '';
+          if (val && !entries['system.descricao.value']) entries['system.descricao.value'] = val;
+        }
+      } catch (e) {
+      }
+
+      const updateData = foundry.utils.expandObject(entries);
+      console.log('[ItemSheet] flattened entries:', entries);
+      console.log('[ItemSheet] expanded updateData:', updateData);
+
+      try {
+        await this.item.update(updateData);
+        console.log('[ItemSheet] update successful');
+        try {
+          this.close();
+          console.log('[ItemSheet] sheet closed after successful save');
+        } catch (err) {
+          console.warn('[ItemSheet] failed to close sheet after save:', err);
+        }
+      } catch (err) {
+        console.warn('[ItemSheet] submit/update failed:', err);
+      }
+    });
+
+    html.on('click', '.jem-btn--primary', (ev) => {
+      try {
+        const btn = ev.currentTarget;
+        const form = btn?.form || html.find('form')[0];
+        const fd = form ? new FormData(form) : null;
+        const entries = {};
+        if (fd) for (const [k,v] of fd.entries()) entries[k] = v;
+        console.log('[ItemSheet] Save button clicked - form entries:', entries);
+      } catch (e) { console.warn('Save click log failed', e); }
+    });
+
     html.on('click', '.jem-sheet-close', (ev) => {
       ev.preventDefault();
       this.close();
     });
 
-    // Roll handlers, click handlers, etc. would go here.
-    // Testar Ataque: usa `system.ataque.pericia` (grupo 'ataques') quando disponível
+    html.on('click', '.header-button.control.close', (ev) => {
+      ev.preventDefault();
+      this.close();
+    });
+
     html.on('click', '.test-attack', async (ev) => {
       ev.preventDefault();
       const item = this.item;
@@ -128,7 +242,6 @@ export class BoilerplateItemSheet extends ItemSheet {
       if (typeof item.rollAttack === 'function') await item.rollAttack();
     });
 
-    // Testar Dano: rola dano do item diretamente
     html.on('click', '.test-damage', async (ev) => {
       ev.preventDefault();
       const item = this.item;
@@ -136,7 +249,6 @@ export class BoilerplateItemSheet extends ItemSheet {
       if (typeof item.rollDamage === 'function') await item.rollDamage(false, critMult);
     });
 
-    // Active Effect management
     html.on('click', '.effect-control', (ev) =>
       onManageActiveEffect(ev, this.item)
     );

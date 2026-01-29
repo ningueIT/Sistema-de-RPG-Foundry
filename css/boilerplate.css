@@ -398,9 +398,62 @@ input[type=number]::-webkit-inner-spin-button {
     background: rgba(255, 255, 255, 0.03);
     padding: 5px 10px;
     border-radius: 4px;
-    border: 1px solid #333;
-    display: flex;
-    align-items: center;
+
+/* Uniform sheet specific styles */
+.uniform-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    margin-top: 8px;
+}
+.uniform-table th, .uniform-table td {
+    padding: 8px 10px;
+    border: 1px solid rgba(255,255,255,0.04);
+    text-align: left;
+}
+.uniform-table thead th {
+    background: linear-gradient(90deg, rgba(157,78,221,0.08), transparent);
+    color: #eae6ff;
+    font-weight: 700;
+}
+.uniform-table tbody tr:nth-child(odd) td { background: rgba(255,255,255,0.01); }
+.uniform-table tbody tr:hover td { background: rgba(157,78,221,0.04); }
+
+.sheet.item .tab.attributes .field label { display:block; margin-bottom:6px; color:#cfc9e6; font-weight:700; }
+.sheet.item .tab.attributes .field input[type=number],
+.sheet.item .tab.attributes .field select {
+    width: 100%;
+    padding:6px 8px;
+    background: linear-gradient(180deg,#121212,#0b0b0b);
+    border:1px solid rgba(157,78,221,0.08);
+    color:#fff;
+    border-radius:6px;
+}
+
+.sheet.item .note { color:#bfb8df; font-size:0.9rem; margin-top:8px; }
+        border: 1px solid #333;
+        display: flex;
+        align-items: center;
+
+/* Ensure inputs in item sheets are white text */
+.feiticeiros-e-maldicoes.sheet.item input,
+.feiticeiros-e-maldicoes.sheet.item select,
+.feiticeiros-e-maldicoes.sheet.item textarea {
+    color: #ffffff !important;
+}
+
+/* Title color in dialogs and item sheet header */
+.dialog .window-header .window-title,
+.sheet.item .window-header .window-title {
+    color: #ffffff !important;
+}
+
+/* Ensure charname input is white */
+.feiticeiros-e-maldicoes .item-sheet .charname input { color: #ffffff !important; }
+
+/* Make the resizable handle visible and usable */
+.window-resizable-handle { display: block !important; opacity: 0.95; }
+.window-resizable-handle i { color: #ffffff; cursor: nwse-resize; }
     justify-content: flex-start; /* Alinha tudo à esquerda */
 }
 
@@ -516,17 +569,30 @@ input[type=number]::-webkit-inner-spin-button {
     color: #ffffff;
 }
 
-/* Forçar tamanho da janela do ItemSheet para 600x600 */
+/* Ajustes da janela do ItemSheet: garantir altura mínima e fonte branca */
 .feiticeiros-e-maldicoes.sheet.item.item-sheet.window-app {
-    width: 600px !important;
-    height: 600px !important;
-    max-width: 600px !important;
-    max-height: 600px !important;
+    width: 700px !important;
+    min-height: 800px !important;
+    height: auto !important;
+    max-width: 92vw !important;
+    max-height: 90vh !important;
 }
 .feiticeiros-e-maldicoes.sheet.item.item-sheet.window-app .window-content {
-    height: 100% !important;
+    min-height: 800px !important;
+    height: auto !important;
+    max-height: calc(90vh - 120px) !important;
+    overflow: auto !important;
+    color: #ffffff !important;
+}
+
+/* Ensure the content area and sheet-body can scroll when content overflows */
+.feiticeiros-e-maldicoes.sheet.item.item-sheet.window-app .sheet-body {
+    max-height: calc(90vh - 260px);
     overflow: auto;
 }
+
+/* Forçar fonte branca em todo o ItemSheet (fallback) */
+.feiticeiros-e-maldicoes.sheet.item { color: #ffffff !important; }
 
 /* Forçar o estilo da janela de diálogo (conteúdo + botões) para tons escuros */
 .dialog .window-content {
@@ -1260,9 +1326,9 @@ input[type=number]::-webkit-inner-spin-button {
 .status-card.alma { border-top: 3px solid #e0e0e0; }
 .status-card.alma label { color: #e0e0e0; }
 
-/* Sanidade - Amarelo */
-.status-card.sanidade { border-top: 3px solid #ffbb33; }
-.status-card.sanidade label { color: #ffbb33; }
+/* Humanidade - Amarelo */
+.status-card.humanidade { border-top: 3px solid #ffbb33; }
+.status-card.humanidade label { color: #ffbb33; }
 
 /* Cartas de Combate (Defesa e CD) */
 .combat-card {
@@ -1580,8 +1646,8 @@ input[type=number]::-webkit-inner-spin-button {
     background: linear-gradient(to right, #666, #e0e0e0); 
 }
 
-/* Sanidade: Amarelo Queimado */
-.sanidade .bar-fill { 
+/* Humanidade: Amarelo Queimado */
+.humanidade .bar-fill { 
     background: linear-gradient(to right, #cc8800, #ffbb33); 
 }
 
@@ -2961,14 +3027,14 @@ body .ultima-acao button.dialog-button {
     background: linear-gradient(to right, #4a0d67, #9b4dca) !important;
 }
 
-/* Sanidade - Sempre Amarelo */
-.status-card.sanidade { 
+/* Humanidade - Sempre Amarelo */
+.status-card.humanidade { 
     border-top-color: #ffbb33 !important; 
 }
-.status-card.sanidade label { 
+.status-card.humanidade label { 
     color: #ffbb33 !important; 
 }
-.status-card.sanidade .bar-fill {
+.status-card.humanidade .bar-fill {
     background: linear-gradient(to right, #cc8800, #ffbb33) !important;
 }
 
@@ -3093,7 +3159,7 @@ body .ultima-acao select.ultima-acao-select option {
 /* Proteção para manter cores semânticas (HP/PE/Sanidade/Alma) */
 .feiticeiros-e-maldicoes.sheet.actor .status-card.hp { border-top-color: #ff4444 !important; }
 .feiticeiros-e-maldicoes.sheet.actor .status-card.pe { border-top-color: #5d1b7e !important; }
-.feiticeiros-e-maldicoes.sheet.actor .status-card.sanidade { border-top-color: #ffbb33 !important; }
+.feiticeiros-e-maldicoes.sheet.actor .status-card.humanidade { border-top-color: #ffbb33 !important; }
 .feiticeiros-e-maldicoes.sheet.actor .status-card.alma { border-top-color: #e0e0e0 !important; }
 
 /* Pequenas proteções finais para text-shadow/border-color */
@@ -3355,3 +3421,84 @@ body .ultima-acao select.ultima-acao-select option {
 }
 
 .level-up-form .form-buttons button.primary:hover { background: linear-gradient(180deg,#7b2cbf,#5a189a); box-shadow: 0 10px 36px rgba(123,44,191,0.18); }
+
+/* Header close control styling for item sheets */
+.item-sheet .window-header .header-button.control.close,
+.item-sheet .sheet-header .header-button.control.close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    right: 12px;
+    top: 8px;
+    color: #ffffff;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 4px 6px;
+    border-radius: 6px;
+    text-decoration: none;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    white-space: nowrap;
+    box-sizing: border-box;
+    gap: 6px;
+    font-size: 0.92rem;
+    line-height: 1;
+}
+.item-sheet .window-header .header-button.control.close:hover,
+.item-sheet .sheet-header .header-button.control.close:hover {
+    background: rgba(255,255,255,0.12);
+}
+.item-sheet .window-header .header-button.control.close i,
+.item-sheet .sheet-header .header-button.control.close i {
+    color: #ffffff;
+}
+
+/* Draggable profile image styling for items (special visual) */
+.profile-img {
+    width: 88px;
+    height: 88px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 2px solid rgba(157,78,221,0.14);
+    box-shadow: 0 8px 30px rgba(20,12,40,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    transition: transform .16s ease, box-shadow .18s ease, filter .12s ease;
+    cursor: grab;
+}
+.profile-img:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 18px 48px rgba(20,12,40,0.7), 0 0 22px rgba(157,78,221,0.06);
+    filter: saturate(1.05) brightness(1.02);
+}
+.profile-img.dragging {
+    opacity: 0.9;
+    transform: scale(1.04) rotate(-4deg);
+    box-shadow: 0 30px 80px rgba(10,8,20,0.85);
+    cursor: grabbing;
+}
+
+/* A subtle accessory label overlay on the image */
+.header-fields { position: relative; }
+.profile-img::after { content: '' }
+
+/* Make the header area visually distinct for drag targets */
+.sheet-header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 16px;
+    background: linear-gradient(180deg, rgba(20,20,25,0.6), rgba(10,10,12,0.65));
+    border-radius: 8px 8px 0 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+/* Actor itens tab: uniform slot (1/3 column) */
+.itens-grid { margin-top: 6px; }
+.itens-list-column { min-width: 0; }
+.uniform-column { min-width: 160px; }
+.uniform-slot { transition: background .12s ease, border-color .12s ease; }
+.uniform-slot.drag-over { background: linear-gradient(180deg, rgba(157,78,221,0.06), rgba(157,78,221,0.02)); border-color: rgba(157,78,221,0.28); }
+.uniform-card { color: #fff; }
+.uniform-card small { color: #cfcfcf; }
+.uniform-empty { color: #bfbfbf; }

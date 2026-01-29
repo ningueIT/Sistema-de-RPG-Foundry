@@ -2,13 +2,13 @@
   {{!-- HEADER (Fixo): Nome do Ator/Classe e Nível de Destino --}}
   <header class="sheet-header header-fields">
     <div>
-      <h2>Ascensão: Passo {{step}}/3</h2>
+      <h2>Ascensão: Nível {{levelToShow}} ({{levelStep}}/{{totalLevelSteps}}) — Passo {{step}}/{{totalSteps}}</h2>
       <div class="muted">{{classId}} &bull; Nível {{currentLevel}} &rarr; {{nextLevel}}</div>
     </div>
   </header>
 
   {{!-- PASSO 1: VISUALIZAÇÃO DE GANHOS --}}
-  {{#if isStep1}}
+  {{#if isStepPreview}}
     <div class="step-content">
       <section class="form-group">
         <h3>Ganhos de Atributos</h3>
@@ -16,23 +16,50 @@
           <div class="resource-label">PV Máximo: <strong>+{{hpGain}}</strong></div>
           <div class="resource-label">PE Máximo: <strong>+{{epGain}}</strong></div>
         </div>
+        <div class="muted">Habilidades disponíveis: <strong>{{progressionHabilidades}}</strong> · Aptidões disponíveis: <strong>{{progressionAptidoes}}</strong></div>
       </section>
       
       <div class="form-buttons">
         <button type="button" class="button" data-action="cancel">Cancelar</button>
         <button type="button" class="button primary" data-action="next">
-          Escolher Aptidão <i class="fas fa-arrow-right"></i>
+          Próximo <i class="fas fa-arrow-right"></i>
         </button>
+      </div>
+    </div>
+  {{/if}}
+  
+  {{!-- PASSO ORIGEM (apenas se houver itens fixos de origem para este nível) --}}
+  {{#if isStepOrigin}}
+    <div class="step-content">
+      <section class="form-group">
+        <h3>Habilidades da Origem</h3>
+        <p class="muted">As seguintes habilidades são concedidas pela sua Origem neste nível.</p>
+        <div class="drop-list grid">
+          {{#each originItems}}
+            <div class="item-card origin-card">
+              <img src="{{this.img}}" alt="{{this.name}}"/>
+              <div class="item-name">{{this.name}}</div>
+              <div class="muted">Tipo: {{this.type}}</div>
+            </div>
+          {{else}}
+            <p class="muted">Nenhuma habilidade de origem para este nível.</p>
+          {{/each}}
+        </div>
+      </section>
+
+      <div class="form-buttons">
+        <button type="button" class="button" data-action="back"><i class="fas fa-arrow-left"></i> Voltar</button>
+        <button type="button" class="button primary" data-action="next">Próximo <i class="fas fa-arrow-right"></i></button>
       </div>
     </div>
   {{/if}}
 
   {{!-- PASSO 2: ESCOLHA DE APTIDÃO --}}
-  {{#if isStep2}}
+  {{#if isStepAptitude}}
     <div class="step-content">
       <section class="form-group">
         <h3>Nova Aptidão</h3>
-        <p class="muted">Arraste uma <strong>Aptidão</strong> (Compêndio) para o slot abaixo.</p>
+        <p class="muted">Arraste uma <strong>Aptidão</strong> (Compêndio) para o slot abaixo. Total de slots: <strong>{{aptitudeCount}}</strong></p>
         
         <div class="drop-list grid">
           {{#each aptitudeSlots}}
@@ -62,11 +89,11 @@
   {{/if}}
 
   {{!-- PASSO 3: ESCOLHA DE HABILIDADE DE CLASSE --}}
-  {{#if isStep3}}
+  {{#if isStepFeature}}
     <div class="step-content">
       <section class="form-group">
         <h3>Habilidade de Classe</h3>
-        <p class="muted">Arraste a <strong>Habilidade de Classe</strong> (Compêndio) para o slot abaixo.</p>
+        <p class="muted">Arraste a <strong>Habilidade de Classe</strong> (Compêndio) para o slot abaixo. Total de slots: <strong>{{featureCount}}</strong></p>
         
         <div class="drop-list grid">
           {{#each featureSlots}}

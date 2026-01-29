@@ -3,6 +3,7 @@
  * @extends {Item}
  */
 import { convertDamageLevel } from "../helpers/damage-scale.mjs";
+import { rollFormula } from '../helpers/rolls.mjs';
 export class BoilerplateItem extends Item {
   /**
    * Augment the basic Item data model with additional dynamic data.
@@ -11,6 +12,158 @@ export class BoilerplateItem extends Item {
     // As with the actor class, items are documents that can have their data
     // preparation methods overridden (such as prepareBaseData()).
     super.prepareData();
+  }
+
+  /** @override */
+  prepareBaseData() {
+    super.prepareBaseData?.();
+    try {
+      // Compute derived total CA for uniform based on revestimento + optional numeric bonus
+      if (String(this.type) === 'uniforme') {
+        const revest = String(this.system?.uniforme?.revestimento ?? '').toLowerCase();
+        const bonusCa = Number(this.system?.uniforme?.bonusCa ?? NaN);
+        const MAP = {
+          'leve': { bonus: 2, penalty: 0, caExtra: 1 },
+          'medio': { bonus: 4, penalty: -2, caExtra: 2 },
+          'robusto': { bonus: 6, penalty: -4, caExtra: 3 },
+          'sob_medida': { bonus: 1, penalty: 0, caExtra: 2 }
+        };
+        const def = MAP[revest] || { bonus: 0, penalty: 0, caExtra: 0 };
+        const baseBonus = def.bonus || 0;
+        const numericBonus = Number.isFinite(bonusCa) ? Number(bonusCa) : 0;
+        const total = baseBonus + numericBonus;
+        this.system = this.system || {};
+        this.system.uniforme = this.system.uniforme || {};
+        this.system.uniforme.total = Number(total);
+      }
+    } catch (e) {
+      // non-fatal
+    }
+  }
+
+  /**
+   * Snapshot before update to detect equip changes
+   */
+  _preUpdate(changed, options, userId) {
+    try {
+      const equipped = this.system?.equipado ?? null;
+      this._preUpdateEquipSnapshot = { equipado: equipped };
+    } catch (e) {
+      this._preUpdateEquipSnapshot = { equipado: null };
+    }
+    return super._preUpdate?.(changed, options, userId);
+  }
+
+  /**
+   * After update: if this is a `uniforme` and the `system.equipado` flag changed,
+   * apply or remove an ActiveEffect on the owning actor.
+   */
+  async _onUpdate(changed, options, userId) {
+    await super._onUpdate(changed, options, userId);
+
+    try {
+      if (String(this.type) !== 'uniforme') return;
+      const actor = this.actor;
+      if (!actor) return;
+
+      const newEquip = (changed?.system && Object.prototype.hasOwnProperty.call(changed.system, 'equipado'))
+        ? changed.system.equipado
+        : undefined;
+
+      const prev = this._preUpdateEquipSnapshot?.equipado;
+
+      // If nothing relevant changed, skip
+      if (typeof newEquip === 'undefined' && prev === (this.system?.equipado ?? null)) return;
+
+      const nowEquipped = (typeof newEquip !== 'undefined') ? newEquip : (this.system?.equipado ?? null);
+
+      if (nowEquipped) {
+        // Create ActiveEffect on actor representing the uniform's mechanical effect (if parseable)
+        const effectData = this._buildUniformEffectData();
+        if (effectData) {
+          // Avoid duplicates: remove any existing effects from this origin first
+          const existing = actor.effects.filter(e => String(e.origin || '') === String(this.uuid));
+          for (const e of existing) {
+            try { await e.delete(); } catch (err) { /* non-fatal */ }
+          }
+          await actor.createEmbeddedDocuments('ActiveEffect', [effectData]);
+        }
+      } else {
+        // Remove effects created by this uniform (origin match)
+        const toRemove = actor.effects.filter(e => String(e.origin || '') === String(this.uuid));
+        for (const eff of toRemove) {
+          try { await eff.delete(); } catch (err) { /* non-fatal */ }
+        }
+      }
+    } catch (e) {
+      console.warn('Erro ao aplicar/remover ActiveEffect de uniforme:', e);
+    }
+  }
+
+  /**
+   * Constrói um ActiveEffect a partir do campo livre `system.uniforme.efeito`.
+   * Suporta sintaxe simples como "+1 Defesa" (case-insensitive). Retorna null
+   * se não for possível interpretar a string como mudança mecânica.
+   */
+  _buildUniformEffectData() {
+    try {
+      // Prefer explicit numeric fields if provided
+      const revest = String(this.system?.uniforme?.revestimento ?? '').toLowerCase();
+      const explicitBonus = Number(this.system?.uniforme?.bonus ?? NaN);
+      const explicitCAExtra = Number(this.system?.uniforme?.caExtra ?? NaN);
+
+      // Defaults per revestimento
+      const MAP = {
+        'leve': { bonus: 2, penalty: 0, caExtra: 1 },
+        'medio': { bonus: 4, penalty: -2, caExtra: 2 },
+        'robusto': { bonus: 6, penalty: -4, caExtra: 3 },
+        'sob_medida': { bonus: 1, penalty: 0, caExtra: 2 }
+      };
+
+      const def = MAP[revest] || { bonus: 0, penalty: 0, caExtra: 0 };
+      const bonus = Number.isFinite(explicitBonus) ? explicitBonus : def.bonus;
+      const caExtra = Number.isFinite(explicitCAExtra) ? explicitCAExtra : def.caExtra;
+      const penalty = def.penalty || 0;
+
+      // Also parse free-text +N Defesa for compatibility
+      const txt = String(this.system?.uniforme?.efeito ?? '').trim();
+      let parsedBonus = 0;
+      if (txt) {
+        const m = txt.match(/^([+-]?\d+)\s*(defesa)\b/i);
+        if (m) parsedBonus = Number(m[1]) || 0;
+      }
+
+      const totalAdd = (bonus || 0) + (caExtra || 0) + (parsedBonus || 0);
+
+      const changes = [];
+      if (totalAdd) {
+        changes.push({ key: 'system.combate.defesa.value', mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(totalAdd), priority: 20 });
+      }
+
+      // Apply penalties/bonuses to Destreza-based skills (Acrobacia, Furtividade)
+      const dexSkills = ['system.pericias.acrobacia.value', 'system.pericias.furtividade.value'];
+      if (penalty) {
+        for (const k of dexSkills) changes.push({ key: k, mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(penalty), priority: 20 });
+      }
+
+      // Sob Medida grants +2 to Acrobacia and Furtividade in addition to the generic bonus
+      if (revest === 'sob_medida') {
+        for (const k of dexSkills) changes.push({ key: k, mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: '2', priority: 20 });
+      }
+
+      if (!changes.length) return null;
+
+      return {
+        label: `${this.name} (Uniforme)`,
+        icon: this.img || 'icons/svg/shield.svg',
+        origin: this.uuid,
+        disabled: false,
+        changes
+      };
+    } catch (e) {
+      console.warn('Falha ao construir ActiveEffect para uniforme:', e);
+      return null;
+    }
   }
 
   /**
@@ -138,8 +291,14 @@ export class BoilerplateItem extends Item {
       console.warn('Erro ao converter níveis de dano:', e);
     }
 
-    const roll = new Roll(formula, rollData);
-    await roll.evaluate();
+    let roll;
+    try {
+      roll = await rollFormula(formula, rollData, { asyncEval: true, toMessage: false });
+    } catch (err) {
+      console.warn('Erro ao avaliar roll via rollFormula:', err);
+      ui?.notifications?.error?.('Fórmula inválida para rolagem de dano.');
+      return null;
+    }
     // Construir cartão estilizado para o dano
     try {
       const damageTotal = Number(roll.total) || 0;
@@ -205,7 +364,7 @@ export class BoilerplateItem extends Item {
       if (mode === 'adv') formula = '2d20kh1';
       if (mode === 'dis') formula = '2d20kl1';
 
-      const roll = await (new Roll(formula, rollData)).evaluate();
+      const roll = await rollFormula(formula, rollData, { asyncEval: true, toMessage: false });
 
       // Detect the d20 face that was actually used (supports normal/adv/dis)
       let usedD20 = null;
@@ -368,8 +527,14 @@ export class BoilerplateItem extends Item {
       }
     } catch (e) { console.warn('Erro ao aplicar bônus de dano (flags):', e); }
 
-    const roll = new Roll(formula, rollData);
-    await roll.evaluate();
+    let roll;
+    try {
+      roll = await rollFormula(formula, rollData, { asyncEval: true, toMessage: false });
+    } catch (err) {
+      console.warn('Erro ao avaliar rollDamage via rollFormula:', err);
+      ui?.notifications?.error?.('Fórmula inválida para dano.');
+      return null;
+    }
     const message = await roll.toMessage({ speaker, rollMode, flavor: `[${item.type}] ${item.name} — Dano` });
 
     try {
