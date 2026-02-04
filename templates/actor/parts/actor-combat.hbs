@@ -1,155 +1,128 @@
-{{!-- Painel de combate (compacto): 3 colunas no topo; death saves ocupam 2 colunas na linha de baixo --}}
-<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; align-items:start;">
-    <div style="grid-column: 1 / -1; text-align: right; margin-bottom: 6px; display:flex; gap:8px; justify-content:flex-end;">
-        <!-- Botões de Descanso removidos: usar macros -->
-    </div>
+            <h3 class="jem-section-title">COMBATE</h3>
 
-    <div class="combat-card flexcol flex-group-center" style="grid-column: span 1; padding:8px;">
-        <label style="font-size:0.9rem;">DEFESA</label>
-                <input type="number" name="system.combate.defesa.value" value="{{system.combate.defesa.value}}" style="width:72px; height:30px; font-size:14px; text-align:center;"/>
-                {{#if system.combate.defesa.breakdown}}
-                    <div style="margin-top:6px; display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
-                        {{#with system.combate.defesa.breakdown}}
-                            <span style="background:rgba(155,77,202,0.12); color:#fff; padding:3px 6px; border-radius:8px; font-size:10px; display:flex; gap:6px; align-items:center;">
-                                <span style="opacity:0.85; font-size:9px;">base</span>
-                                <strong style="color:#f5e8ff">{{base}}</strong>
-                            </span>
-                            <span style="background:rgba(0,0,0,0.22); color:#fff; padding:3px 6px; border-radius:8px; font-size:10px; display:flex; gap:6px; align-items:center;">
-                                <span style="opacity:0.85; font-size:9px;">dex</span>
-                                <strong style="color:#ffd580">{{dex}}</strong>
-                            </span>
-                            <span style="background:rgba(0,0,0,0.18); color:#fff; padding:3px 6px; border-radius:8px; font-size:10px; display:flex; gap:6px; align-items:center;">
-                                <span style="opacity:0.85; font-size:9px;">equip</span>
-                                <strong style="color:#bfe6c6">{{equipment}}</strong>
-                            </span>
-                            {{#if uniform}}
-                            <span style="background:rgba(0,0,0,0.12); color:#fff; padding:3px 6px; border-radius:8px; font-size:10px; display:flex; gap:6px; align-items:center;">
-                                <span style="opacity:0.85; font-size:9px;">uniforme</span>
-                                <strong style="color:#bfe6c6">{{uniform}}</strong>
-                            </span>
-                            {{/if}}
-                            <span style="background:rgba(0,0,0,0.18); color:#fff; padding:3px 6px; border-radius:8px; font-size:10px; display:flex; gap:6px; align-items:center;">
-                                <span style="opacity:0.85; font-size:9px;">adhoc</span>
-                                <strong style="color:#a9d0ff">{{adHoc}}</strong>
-                            </span>
-                        {{/with}}
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                <div style="grid-column: 1 / -1; text-align: right; margin-bottom: 6px; display:flex; gap:8px; justify-content:flex-end;">
+                    <!-- Botões de Descanso removidos: usar macros -->
+                </div>
+                                <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
+                                        <label>DEFESA</label>
+                                        <input type="number" name="system.combate.defesa.value" value="{{system.combate.defesa.value}}">
+                                        {{#if system.combate.defesa.breakdown}}
+                                            <div style="margin-top:8px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+                                                {{#with system.combate.defesa.breakdown}}
+                                                    <span style="background:rgba(155,77,202,0.12); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                                        <span style="opacity:0.85; font-size:10px;">base</span>
+                                                        <strong style="color:#f5e8ff">{{base}}</strong>
+                                                    </span>
+                                                    <span style="background:rgba(0,0,0,0.26); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                                        <span style="opacity:0.85; font-size:10px;">dex</span>
+                                                        <strong style="color:#ffd580">{{dex}}</strong>
+                                                    </span>
+                                                    <span style="background:rgba(0,0,0,0.18); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                                        <span style="opacity:0.85; font-size:10px;">equip</span>
+                                                        <strong style="color:#bfe6c6">{{equipment}}</strong>
+                                                    </span>
+                                                    <span style="background:rgba(0,0,0,0.18); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                                        <span style="opacity:0.85; font-size:10px;">adhoc</span>
+                                                        <strong style="color:#a9d0ff">{{adHoc}}</strong>
+                                                    </span>
+                                                {{/with}}
+                                            </div>
+                                        {{/if}}
+                                </div>
+                            <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
+                                <label>CD</label>
+                                <input type="number" name="system.combate.cd.value" value="{{system.combate.cd.value}}">
+                                <div style="margin-top:8px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+                                    {{#with system.combate.cd.breakdown}}
+                                        <span style="background:rgba(155,77,202,0.12); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                            <span style="opacity:0.85; font-size:10px;">base</span>
+                                            <strong style="color:#f5e8ff">{{base}}</strong>
+                                        </span>
+                                        <span style="background:rgba(0,0,0,0.22); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                            <span style="opacity:0.85; font-size:10px;">nv/2</span>
+                                            <strong style="color:#d9c7ff">{{metadeNivel}}</strong>
+                                        </span>
+                                        <span style="background:rgba(0,0,0,0.26); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                            <span style="opacity:0.85; font-size:10px;">attr</span>
+                                            <strong style="color:#ffd580">{{atributo}}</strong>
+                                        </span>
+                                        <span style="background:rgba(0,0,0,0.18); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                            <span style="opacity:0.85; font-size:10px;">treino</span>
+                                            <strong style="color:#bfe6c6">{{treinamento}}</strong>
+                                        </span>
+                                        <span style="background:rgba(0,0,0,0.18); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                            <span style="opacity:0.85; font-size:10px;">outros</span>
+                                            <strong style="color:#a9d0ff">{{outros}}</strong>
+                                        </span>
+                                    {{/with}}
+                                </div>
+                            </div>
+                <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
+                    <label>MOVIMENTO</label>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 2px;">
+                        <input type="number" value="{{system.combate.movimento.value}}" readonly disabled>
+                        <span style="font-size: 10px; color: #888;">m</span>
                     </div>
-                {{/if}}
-    </div>
-
-    <div class="combat-card flexcol flex-group-center" style="grid-column: span 1; padding:8px;">
-        <label style="font-size:0.9rem;">CD</label>
-        <input type="number" name="system.combate.cd.value" value="{{system.combate.cd.value}}" style="width:64px; height:28px; text-align:center;"/>
-                {{#if system.combate.defesa.breakdown}}
-                    {{! use defesa.breakdown when available }}
-                    <div style="margin-top:6px; display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
-                        {{#with system.combate.defesa.breakdown}}
-                            <span style="background:rgba(155,77,202,0.12); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
-                                <span style="opacity:0.85; font-size:10px;">base</span>
-                                <strong style="color:#f5e8ff">{{base}}</strong>
-                            </span>
-                            <span style="background:rgba(0,0,0,0.26); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
-                                <span style="opacity:0.85; font-size:10px;">dex</span>
-                                <strong style="color:#ffd580">{{dex}}</strong>
-                            </span>
-                            <span style="background:rgba(0,0,0,0.18); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
-                                <span style="opacity:0.85; font-size:10px;">equip</span>
-                                <strong style="color:#bfe6c6">{{equipment}}</strong>
-                            </span>
-                            <span style="background:rgba(0,0,0,0.18); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
-                                <span style="opacity:0.85; font-size:10px;">adhoc</span>
-                                <strong style="color:#a9d0ff">{{adHoc}}</strong>
-                            </span>
-                        {{/with}}
+                    {{#if system.combate.movimento.breakdown}}
+                        <div style="margin-top:8px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+                            {{#with system.combate.movimento.breakdown}}
+                                <span style="background:rgba(155,77,202,0.12); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                    <span style="opacity:0.85; font-size:10px;">base</span>
+                                    <strong style="color:#f5e8ff">{{base}}</strong>
+                                </span>
+                                <span style="background:rgba(0,0,0,0.18); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                    <span style="opacity:0.85; font-size:10px;">bônus</span>
+                                    <strong style="color:#bfe6c6">{{bonus}}</strong>
+                                </span>
+                                <span style="background:rgba(0,0,0,0.22); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                    <span style="opacity:0.85; font-size:10px;">x</span>
+                                    <strong style="color:#ffd580">{{multiplicador}}</strong>
+                                </span>
+                            {{/with}}
+                        </div>
+                    {{/if}}
+                </div>
+                <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
+                    <label class="roll-initiative rollable" style="cursor: pointer; color: #9b4dca;">
+                        <i class="fas fa-dice-d20"></i> INICIATIVA
+                    </label>
+                    <input type="number" value="{{system.combate.iniciativa.value}}" readonly disabled>
+                    {{#if system.combate.iniciativa.breakdown}}
+                        <div style="margin-top:8px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+                            {{#with system.combate.iniciativa.breakdown}}
+                                <span style="background:rgba(0,0,0,0.26); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                    <span style="opacity:0.85; font-size:10px;">dex</span>
+                                    <strong style="color:#ffd580">{{dex}}</strong>
+                                </span>
+                                <span style="background:rgba(0,0,0,0.18); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
+                                    <span style="opacity:0.85; font-size:10px;">outros</span>
+                                    <strong style="color:#a9d0ff">{{outrosTotal}}</strong>
+                                </span>
+                            {{/with}}
+                        </div>
+                    {{/if}}
+                </div>
+                <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
+                    <label class="roll-dice rollable" data-formula="1d8" data-flavor="Dados de Vida">
+                        <i class="fas fa-dice"></i> DADOS VIDA
+                    </label>
+                    <input type="text" name="system.combate.dadosVida.lado" value="{{system.combate.dadosVida.lado}}" style="font-size: 12px; height: 20px; margin-bottom: 3px; text-align:center;" placeholder="Ex: 1d8">
+                    <div class="status-inputs flexrow" style="gap: 2px;">
+                        <input type="number" value="{{system.combate.dadosVida.value}}" style="font-size: 14px; height: 25px;" readonly disabled>
+                        <span style="color:#888;">/</span>
+                        <input type="number" value="{{system.combate.dadosVida.max}}" style="font-size: 14px; height: 25px;" readonly disabled>
                     </div>
-                {{else if system.combate.ca.breakdown}}
-                    {{! fallback to ca.breakdown if defesa.breakdown missing }}
-                    <div style="margin-top:6px; display:flex; gap:6px; justify-content:center; flex-wrap:wrap;">
-                        {{#with system.combate.ca.breakdown}}
-                            <span style="background:rgba(155,77,202,0.12); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
-                                <span style="opacity:0.85; font-size:10px;">base</span>
-                                <strong style="color:#f5e8ff">{{base}}</strong>
-                            </span>
-                            <span style="background:rgba(0,0,0,0.26); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
-                                <span style="opacity:0.85; font-size:10px;">dex</span>
-                                <strong style="color:#ffd580">{{dex}}</strong>
-                            </span>
-                            <span style="background:rgba(0,0,0,0.18); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
-                                <span style="opacity:0.85; font-size:10px;">equip</span>
-                                <strong style="color:#bfe6c6">{{equipment}}</strong>
-                            </span>
-                            <span style="background:rgba(0,0,0,0.18); color:#fff; padding:4px 8px; border-radius:10px; font-size:11px; display:flex; gap:6px; align-items:center;">
-                                <span style="opacity:0.85; font-size:10px;">adhoc</span>
-                                <strong style="color:#a9d0ff">{{adHoc}}</strong>
-                            </span>
-                        {{/with}}
+                </div>
+                <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
+                    <label class="roll-dice rollable" data-formula="1d6" data-flavor="Dados de Energia">
+                        <i class="fas fa-dice"></i> DADOS ENERGIA
+                    </label>
+                    <input type="text" name="system.combate.dadosEnergia.lado" value="{{system.combate.dadosEnergia.lado}}" style="font-size: 12px; height: 20px; margin-bottom: 3px; text-align:center;" placeholder="Ex: 1d6">
+                    <div class="status-inputs flexrow" style="gap: 2px;">
+                        <input type="number" value="{{system.combate.dadosEnergia.value}}" style="font-size: 14px; height: 25px;" readonly disabled>
+                        <span style="color:#888;">/</span>
+                        <input type="number" value="{{system.combate.dadosEnergia.max}}" style="font-size: 14px; height: 25px;" readonly disabled>
                     </div>
-                {{/if}}
-    </div>
-
-    <div class="combat-card flexcol flex-group-center" style="grid-column: span 1; padding:8px;">
-        <label style="font-size:0.9rem;">MOVIMENTO</label>
-        <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
-            <input type="number" name="system.combate.movimento.value" value="{{system.combate.movimento.value}}" style="width:64px; height:28px; text-align:center;"/>
-            <span style="font-size: 10px; color: #888;">m</span>
-        </div>
-    </div>
-
-    <div class="combat-card flexcol flex-group-center" style="grid-column: span 1; padding:8px;">
-        <label class="roll-initiative rollable" style="cursor: pointer; color: #9b4dca; font-size:0.9rem;">
-            <i class="fas fa-dice-d20"></i> INICIATIVA
-        </label>
-        <input type="number" name="system.combate.iniciativa.value" value="{{system.combate.iniciativa.value}}" placeholder="+0" style="width:64px; height:28px; text-align:center;"/>
-    </div>
-
-    {{!-- Linha de baixo: Testes de Morte (ocupando 2 colunas), Dados Vida e Dados Energia --}}
-    <div class="combat-card death-saves flexcol flex-group-center" style="grid-column: 1 / span 2; margin-top: 5px;">
-        <label style="width:100%; text-align:center; border-bottom: 1px solid #444; margin-bottom: 8px;">TESTES DE MORTE</label>
-        <div style="width:100%; display:flex; justify-content:center; gap:12px; align-items:center; margin-bottom:6px;">
-            <div style="text-align:center;">
-                <div class="death-row-label" style="font-size:11px; color:#4caf50;">Sucesso</div>
-                <div class="death-pills" data-type="success">
-                    <div class="death-pill {{#if system.combate.morte.s1}}active{{/if}}" data-path="system.combate.morte.s1" data-index="1"></div>
-                    <div class="death-pill {{#if system.combate.morte.s2}}active{{/if}}" data-path="system.combate.morte.s2" data-index="2"></div>
-                    <div class="death-pill {{#if system.combate.morte.s3}}active{{/if}}" data-path="system.combate.morte.s3" data-index="3"></div>
                 </div>
             </div>
-            <div style="text-align:center;">
-                <div class="death-row-label" style="font-size:11px; color:#ff5252;">Falha</div>
-                <div class="death-pills" data-type="fail">
-                    <div class="death-pill {{#if system.combate.morte.f1}}active fail{{/if}}" data-path="system.combate.morte.f1" data-index="1"></div>
-                    <div class="death-pill {{#if system.combate.morte.f2}}active fail{{/if}}" data-path="system.combate.morte.f2" data-index="2"></div>
-                    <div class="death-pill {{#if system.combate.morte.f3}}active fail{{/if}}" data-path="system.combate.morte.f3" data-index="3"></div>
-                </div>
-            </div>
-            <div style="display:flex; flex-direction:row; gap:8px; align-items:center;">
-                <button class="death-test-btn" type="button" title="Fazer um teste de morte">Testar</button>
-                <button class="death-reset-btn" type="button" title="Resetar testes">Resetar</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="combat-card flexcol flex-group-center" style="grid-column: span 1; padding:8px; margin-top: 5px;">
-        <label class="roll-dice rollable" data-formula="{{system.combate.dadosVida.lado}}" data-flavor="Dados de Vida" style="font-size:0.9rem;">
-            <i class="fas fa-dice"></i> DADOS VIDA
-        </label>
-        <input type="text" name="system.combate.dadosVida.lado" value="{{system.combate.dadosVida.lado}}" style="font-size: 12px; height: 24px; margin-bottom: 3px; text-align:center; width:84px;" placeholder="Ex: 1d8"/>
-        <div class="status-inputs flexrow" style="gap: 6px;">
-            <input type="number" value="{{system.combate.dadosVida.value}}" style="font-size: 13px; height: 24px; width:44px;" readonly disabled/>
-            <span style="color:#888;">/</span>
-            <input type="number" value="{{system.combate.dadosVida.max}}" style="font-size: 13px; height: 24px; width:44px;" readonly disabled/>
-        </div>
-    </div>
-
-    <div class="combat-card flexcol flex-group-center" style="grid-column: span 1; margin-top: 5px; padding:8px;">
-        <label class="roll-dice rollable" data-formula="{{system.combate.dadosEnergia.lado}}" data-flavor="Dados de Energia" style="font-size:0.9rem;">
-            <i class="fas fa-dice"></i> DADOS ENERGIA
-        </label>
-        <input type="text" name="system.combate.dadosEnergia.lado" value="{{system.combate.dadosEnergia.lado}}" style="font-size: 12px; height: 24px; margin-bottom: 3px; text-align:center; width:84px;" placeholder="Ex: 1d6"/>
-        <div class="status-inputs flexrow" style="gap: 6px;">
-            <input type="number" value="{{system.combate.dadosEnergia.value}}" style="font-size: 13px; height: 24px; width:44px;" readonly disabled/>
-            <span style="color:#888;">/</span>
-            <input type="number" value="{{system.combate.dadosEnergia.max}}" style="font-size: 13px; height: 24px; width:44px;" readonly disabled/>
-        </div>
-    </div>
-</div>

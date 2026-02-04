@@ -4,7 +4,6 @@ import {
 } from '../helpers/effects.mjs';
 
 import { MAPA_ATRIBUTOS } from './actor-sheet/atributos.mjs';
-// Mapeamento configurável para escolher qual atributo usar ao recuperar Dados de Energia (DE)
 const MAPA_DE_ATRIBUTOS = {
   'lutador': 'sabedoria',
   'especialista em combate': 'sabedoria',
@@ -12,7 +11,7 @@ const MAPA_DE_ATRIBUTOS = {
   'especialista em tecnica': 'inteligencia',
   'controlador': 'inteligencia',
   'suporte': 'sabedoria',
-  'restringido': null // explícito: nenhum DE
+  'restringido': null 
 };
 import {
   APTIDOES_CATALOGO,
@@ -35,8 +34,6 @@ function _normalizarTextoAptidaoLocal(str = '') {
 function _resolverAptidaoPorLabel(tokenNormalizado) {
   if (!tokenNormalizado) return null;
 
-  // Aliases explícitos para pré-requisitos comuns (texto → chave do catálogo)
-  // Mantém previsível e evita depender de heurísticas.
   const alias = {
     'tecnicas de barreira': { cat: 'barreiras', key: 'tecnicasDeBarreiras', label: 'Técnicas de Barreiras' },
     'tecnicas de barreiras': { cat: 'barreiras', key: 'tecnicasDeBarreiras', label: 'Técnicas de Barreiras' },
@@ -49,7 +46,6 @@ function _resolverAptidaoPorLabel(tokenNormalizado) {
   const aliased = alias[tokenNormalizado];
   if (aliased) return aliased;
 
-  // 1) tentativa exata
   for (const [cat, bloco] of Object.entries(APTIDOES_CATALOGO ?? {})) {
     const entradas = bloco?.entradas;
     if (!Array.isArray(entradas)) continue;
@@ -59,7 +55,6 @@ function _resolverAptidaoPorLabel(tokenNormalizado) {
     }
   }
 
-  // 2) tentativa por inclusão/substring (token dentro do label ou vice-versa)
   for (const [cat, bloco] of Object.entries(APTIDOES_CATALOGO ?? {})) {
     const entradas = bloco?.entradas;
     if (!Array.isArray(entradas)) continue;
@@ -69,7 +64,6 @@ function _resolverAptidaoPorLabel(tokenNormalizado) {
       if (lbl.includes(tokenNormalizado) || tokenNormalizado.includes(lbl)) {
         return { cat, key: entry.key, label: entry.label };
       }
-      // comparar sem plural simples (s)
       const lblSing = lbl.replace(/s\b/, '');
       const tokSing = tokenNormalizado.replace(/s\b/, '');
       if (lblSing === tokSing || lblSing.includes(tokSing) || tokSing.includes(lblSing)) {
@@ -78,7 +72,6 @@ function _resolverAptidaoPorLabel(tokenNormalizado) {
     }
   }
 
-  // 3) tentativa por palavras-chave compostas (todas as palavras do token presentes no label)
   const tokenWords = tokenNormalizado.split(/\s+/).filter(Boolean);
   if (tokenWords.length > 0) {
     for (const [cat, bloco] of Object.entries(APTIDOES_CATALOGO ?? {})) {
@@ -98,17 +91,14 @@ function _resolverAptidaoPorLabel(tokenNormalizado) {
 
 function _resolverTecnicaPorLabel(tokenNormalizado, actor) {
   if (!tokenNormalizado || !actor) return null;
-  // Procura nas técnicas embutidas no ator (Item.type === 'tecnica')
   const tecnicas = actor.items?.filter?.(i => i?.type === 'tecnica') ?? [];
   if (!Array.isArray(tecnicas) || tecnicas.length === 0) return null;
 
-  // 1) tentativa exata por nome normalizado
   for (const t of tecnicas) {
     const nameNorm = _normalizarTextoAptidaoLocal(t?.name ?? '');
     if (nameNorm && nameNorm === tokenNormalizado) return { type: 'tecnica', itemId: t.id, label: t.name };
   }
 
-  // 2) substring / palavras-chave
   for (const t of tecnicas) {
     const nameNorm = _normalizarTextoAptidaoLocal(t?.name ?? '');
     if (!nameNorm) continue;
@@ -118,7 +108,6 @@ function _resolverTecnicaPorLabel(tokenNormalizado, actor) {
     if (nameSing === tokSing || nameSing.includes(tokSing) || tokSing.includes(nameSing)) return { type: 'tecnica', itemId: t.id, label: t.name };
   }
 
-  // 3) palavras todas presentes
   const tokenWords = tokenNormalizado.split(/\s+/).filter(Boolean);
   if (tokenWords.length > 0) {
     for (const t of tecnicas) {
@@ -170,28 +159,23 @@ function _getNivelDaClasse(actor, classeNome) {
 async function _verificarPrereqsTecnica(item, actor, visited = new Set()) {
   if (!item) return true;
   if (!actor) return true;
-  // Evita loops
   if (visited.has(item.id)) return true;
   visited.add(item.id);
 
-  // Requisitos podem estar em system.requisito.value e/ou na descrição
   const requisitoText = String(item.system?.requisito?.value ?? '').trim();
   const descText = String(item.system?.descricao?.value ?? '').trim();
   const combined = `${requisitoText} ${descText}`.trim();
 
   const prereq = extrairPrereqsDaDescricao(combined, null);
 
-  // Nível do personagem
   const actorNivel = _getActorNivel(actor);
   if (prereq?.nivelPersonagemMin && actorNivel < prereq.nivelPersonagemMin) return false;
 
-  // Aptidão mínima
   if (prereq?.aptidaoCampo && prereq?.aptidaoMin) {
     const atual = Number(actor.system?.aptidaoNiveis?.[prereq.aptidaoCampo]?.value ?? 0) || 0;
     if (atual < prereq.aptidaoMin) return false;
   }
 
-  // Atributos mínimos
   if (prereq?.atributosMin && Object.keys(prereq.atributosMin).length > 0) {
     for (const [attrKey, minVal] of Object.entries(prereq.atributosMin)) {
       const atual = Number(actor.system?.atributos?.[attrKey]?.value ?? 0) || 0;
@@ -199,7 +183,6 @@ async function _verificarPrereqsTecnica(item, actor, visited = new Set()) {
     }
   }
 
-  // Tokens de pré-requisito: podem ser aptidões ou técnicas
   if (Array.isArray(prereq?.prereqTokens) && prereq.prereqTokens.length > 0) {
     for (const token of prereq.prereqTokens) {
       const resolvedA = _resolverAptidaoPorLabel(token);
@@ -216,7 +199,6 @@ async function _verificarPrereqsTecnica(item, actor, visited = new Set()) {
         if (!ok) return false;
         continue;
       }
-      // Token não mapeado: assume verificado para evitar falso negativo
       continue;
     }
   }
@@ -224,10 +206,8 @@ async function _verificarPrereqsTecnica(item, actor, visited = new Set()) {
   return true;
 }
 export class BoilerplateActorSheet extends ActorSheet {
-  // Guarda valor anterior do select de Origem para reverter se o usuário cancelar
   _prevOrigemValue = null;
 
-  // Tipo alvo ao soltar Aptidões na ficha ("passiva" | "ativa")
   _dropAptidaoTipo = null;
   
   /** @override */
@@ -249,24 +229,24 @@ export class BoilerplateActorSheet extends ActorSheet {
   async getData() {
     const context = super.getData();
     const actorData = this.document.toObject(false);
+    // Start from raw system data, then apply ActiveEffects transiently for display
     context.system = actorData.system;
+    try {
+      context.system = this._applyActiveEffectsToSystem(foundry.utils.deepClone(context.system));
+    } catch (e) { console.warn('Falha ao aplicar ActiveEffects ao contexto da ficha:', e); }
     context.flags = actorData.flags;
     context.config = CONFIG.FEITICEIROS ?? CONFIG.BOILERPLATE;
 
-    // Disponibiliza catálogo de aptidões para o template.
-    // Clonamos o catálogo para poder ocultar entradas dependentes (ex.: paredesResistentes)
     const aptCatalogClone = foundry.utils.deepClone(APTIDOES_CATALOGO);
     context.aptidoesCatalogo = aptCatalogClone;
 
     if (actorData.type == 'character') {
-            // Se o ator não tem a técnica de Barreiras, removemos a entrada de Paredes Resistentes
             const hasTecnicasBarreiras = Boolean(context.system?.aptidoes?.barreiras?.tecnicasDeBarreiras);
             if (!hasTecnicasBarreiras && context.aptidoesCatalogo?.barreiras?.entradas) {
               context.aptidoesCatalogo.barreiras.entradas = context.aptidoesCatalogo.barreiras.entradas.filter(e => e.key !== 'paredesResistentes');
             }
             const detalhes = context.system.detalhes || {};
 
-            // derivados: limite PE, RD barreira, refinamento
             context.system.aptidaoDerivados = context.system.aptidaoDerivados || {};
             const clNivel = Number(context.system?.aptidaoNiveis?.controleELeitura?.value ?? 0) || 0;
             const barNivel = Number(context.system?.aptidaoNiveis?.barreiras?.value ?? 0) || 0;
@@ -284,11 +264,8 @@ export class BoilerplateActorSheet extends ActorSheet {
             // BARREIRA: cálculos específicos
             const tamanhoSegmentoM = 1.5;
             const custoPEporParede = 1;
-            // PV padrão por parede: 5 + (Nível de Aptidão em Barreira × Metade do Nível do Personagem)
             const pvPadrao = 5 + (barNivel * Math.floor(charNivel / 2));
-            // PV com Paredes Resistentes: 10 + (Nível de Aptidão em Barreira × Nível do Personagem)
             const pvParedesResistentes = 10 + (barNivel * charNivel);
-            // Casca do Domínio: PV igual ao dobro do total que suas Técnicas de Barreira teriam (usamos dobro do PV padrão aqui)
             const pvCascaDominio = pvPadrao * 2;
 
             context.system.aptidaoDerivados.barreira = {
@@ -298,7 +275,6 @@ export class BoilerplateActorSheet extends ActorSheet {
               pvParedesResistentes,
               pvCascaDominio,
               maxSegmentos: 6,
-              // para compatibilidade com templates que esperam label/value
               pvPadraoObj: { label: 'PV por Parede (Padrão)', value: pvPadrao },
               pvParedesResistentesObj: { label: 'PV Paredes Resistentes', value: pvParedesResistentes },
               pvCascaDominioObj: { label: 'PV Casca do Domínio', value: pvCascaDominio }
@@ -308,7 +284,6 @@ export class BoilerplateActorSheet extends ActorSheet {
           ? `Maldição - ${context.system.detalhes.racaMaldicao.value}`
           : 'Maldição';
 
-        // `selectOptions` espera um objeto {value: label}
         context.listas = {
           origens: {
             'Inato': 'Inato',
@@ -339,7 +314,6 @@ export class BoilerplateActorSheet extends ActorSheet {
           },
         };
 
-        // --- CÁLCULO DAS BARRAS DE PORCENTAGEM ---
         if (context.system.recursos) {
             for (let [key, resource] of Object.entries(context.system.recursos)) {
                 if (resource.max > 0) {
@@ -350,8 +324,6 @@ export class BoilerplateActorSheet extends ActorSheet {
             }
         }
 
-        // Sincroniza `integridade` inicialmente apenas se o ator NÃO tiver o campo configurado
-        // Não espelha integridade em HP: são recursos distintos. Inicializa apenas se ausente.
         try {
           const actorHasIntegridade = typeof actorData.system?.recursos?.integridade?.value !== 'undefined' || typeof actorData.system?.recursos?.integridade?.max !== 'undefined';
           if (!actorHasIntegridade) {
@@ -363,11 +335,57 @@ export class BoilerplateActorSheet extends ActorSheet {
               : 0;
           }
         } catch (e) { /* ignore */ }
+        try {
+          context.system.combate = context.system.combate || {};
 
-        // --- APTIDÕES: GARANTE DEFAULTS PARA ATORES ANTIGOS ---
-        // Atores criados antes da adição de `system.aptidoes` podem não ter o bloco salvo.
-        // Mescla o model do sistema (template.json) com os dados atuais do ator para o template renderizar.
-        // Observação: em Foundry, o model costuma ficar em `game.system.model.Actor[actorType]`.
+          context.system.combate.defesa = context.system.combate.defesa || {};
+          context.system.combate.defesa.breakdown = context.system.combate.defesa.breakdown || context.system.combate.ca?.breakdown || {
+            base: Number(context.system.combate?.baseValue ?? 10) || 10,
+            dex: Number(context.system.atributos?.destreza?.mod ?? Math.floor((Number(context.system.atributos?.destreza?.value ?? 10) - 10) / 2)) || 0,
+            equipment: Number(0),
+            uniform: Number(0),
+            adHoc: Number(0)
+          };
+
+          context.system.combate.cd = context.system.combate.cd || {};
+          context.system.combate.cd.breakdown = context.system.combate.cd.breakdown || {
+            base: Number(context.system.combate?.cd?.breakdown?.base ?? context.system.combate?.cd?.base ?? 10) || 10,
+            metadeNivel: Number(
+              context.system.combate?.cd?.breakdown?.metadeNivel ?? (
+                Math.floor(Number(context.system.detalhes?.nivel?.value ?? 0) / 2)
+              )
+            ) || 0,
+            atributo: Number(
+              context.system.combate?.cd?.breakdown?.atributo ?? (
+                Math.max(Number(context.system.atributos?.inteligencia?.mod ?? 0), Number(context.system.atributos?.sabedoria?.mod ?? 0))
+              )
+            ) || 0,
+            treinamento: Number(
+              context.system.combate?.cd?.breakdown?.treinamento ?? context.system.detalhes?.treinamento?.value ?? 0
+            ) || 0,
+            outros: Number(
+              context.system.combate?.cd?.breakdown?.outros ?? (
+                Number(context.system.combate?.cd?.breakdown?.equipment ?? 0) +
+                Number(context.system.combate?.cd?.breakdown?.adHoc ?? context.system.combate?.cd?.bonusAdHoc ?? 0) +
+                Number(context.system.combate?.cd?.breakdown?.manual ?? context.system.combate?.cd?.outrosBonus ?? 0) +
+                Number(context.system.combate?.cd?.breakdown?.flags ?? 0)
+              )
+            ) || 0,
+            equipment: Number(context.system.combate?.cd?.breakdown?.equipment ?? context.system.combate?.cd?.equipment ?? 0) || 0,
+            adHoc: Number(context.system.combate?.cd?.breakdown?.adHoc ?? context.system.combate?.cd?.bonusAdHoc ?? 0) || 0,
+            flags: Number(context.system.combate?.cd?.breakdown?.flags ?? 0) || 0,
+            manual: Number(context.system.combate?.cd?.breakdown?.manual ?? context.system.combate?.cd?.outrosBonus ?? 0) || 0
+          };
+
+          try {
+            console.debug('DEBUG: sheet context combate.defesa.breakdown', {
+              actorId: actorData._id || actorData.id,
+              defesa: context.system.combate.defesa.breakdown,
+              cd: context.system.combate.cd.breakdown
+            });
+          } catch (e) { /* ignore */ }
+        } catch (e) { /* ignore normalization errors */ }
+
         const modelAptidoes = game?.system?.model?.Actor?.[actorData.type]?.aptidoes ?? {};
 
         if (Object.keys(modelAptidoes).length > 0) {
@@ -377,12 +395,9 @@ export class BoilerplateActorSheet extends ActorSheet {
             { inplace: false, overwrite: true }
           );
         } else {
-          // Fallback mínimo pra não quebrar o template.
           context.system.aptidoes = context.system.aptidoes ?? {};
         }
 
-        // --- NÍVEIS DE APTIDÃO (AU/CL/BAR/DOM/ER) ---
-        // Mesma lógica: atores antigos podem não ter `system.aptidaoNiveis`.
         const modelAptidaoNiveis = game?.system?.model?.Actor?.[actorData.type]?.aptidaoNiveis ?? {
           aura: { value: 0, label: 'Aura (AU)' },
           controleELeitura: { value: 0, label: 'Controle e Leitura (CL)' },
@@ -403,21 +418,15 @@ export class BoilerplateActorSheet extends ActorSheet {
           context.system.aptidaoNiveis[k].value = clamp05(context.system.aptidaoNiveis[k].value);
         }
 
-        // Pontos ganhos por nível:
-        // - níveis pares: +1
-        // - nível 10 e 20: +1 extra adicional (totalizando 2 ganhos nesses níveis)
         const nivelTotalDerivado = context.system.detalhes?.nivel?.value ??
           ((context.system.detalhes?.niveis?.principal?.value || 0) + (context.system.detalhes?.niveis?.secundario?.value || 0));
 
-        // Defaults para Dados de Vida / Dados de Energia: quantidade igual ao nível
         try {
           const lvl = Number(nivelTotalDerivado) || 0;
           context.system.combate = context.system.combate || {};
-          // Dados de Vida
           context.system.combate.dadosVida = context.system.combate.dadosVida || {};
           context.system.combate.dadosVida.max = Number(context.system.combate.dadosVida.max ?? lvl) || lvl;
           context.system.combate.dadosVida.value = Number(context.system.combate.dadosVida.value ?? context.system.combate.dadosVida.max) || context.system.combate.dadosVida.max;
-          // Se não tiver lado configurado, define por classe (defaults)
           if (!context.system.combate.dadosVida.lado) {
             const cls = String(context.system.detalhes?.classe?.value ?? '').toLowerCase();
             if (cls.includes('lutador') || cls.includes('especialista em combate')) context.system.combate.dadosVida.lado = '1d10';
@@ -425,13 +434,10 @@ export class BoilerplateActorSheet extends ActorSheet {
             else context.system.combate.dadosVida.lado = '1d8';
           }
 
-          // Dados de Energia
           context.system.combate.dadosEnergia = context.system.combate.dadosEnergia || {};
-          // Normaliza nome da classe para lookup seguro
           const clsRaw = String(context.system.detalhes?.classe?.value ?? '');
           const clsNorm = clsRaw.toLowerCase().trim();
 
-          // Se for 'restringido', garante que não tenham DE
           if (clsNorm === 'restringido') {
             context.system.combate.dadosEnergia.max = 0;
             context.system.combate.dadosEnergia.value = 0;
@@ -439,9 +445,7 @@ export class BoilerplateActorSheet extends ActorSheet {
           } else {
             context.system.combate.dadosEnergia.max = Number(context.system.combate.dadosEnergia.max ?? lvl) || lvl;
             context.system.combate.dadosEnergia.value = Number(context.system.combate.dadosEnergia.value ?? context.system.combate.dadosEnergia.max) || context.system.combate.dadosEnergia.max;
-            // Define lado de DE por classe (padrões propostos)
             if (!context.system.combate.dadosEnergia.lado) {
-              // escolha de lado baseada em classe normalizada via mapa (fallback manual)
               if (clsNorm === 'especialista em tecnica' || clsNorm === 'especialista em técnica' || clsNorm === 'controlador') context.system.combate.dadosEnergia.lado = '1d10';
               else if (clsNorm === 'suporte') context.system.combate.dadosEnergia.lado = '1d8';
               else if (clsNorm === 'lutador' || clsNorm === 'especialista em combate') context.system.combate.dadosEnergia.lado = '1d6';
@@ -467,23 +471,16 @@ export class BoilerplateActorSheet extends ActorSheet {
           restantes: { value: pontosRestantes, label: 'Pontos Restantes' },
         };
 
-        // --- DERIVADOS (automação) ---
-        // 1) Limitador de gasto de PE extra (igual ao nível de Controle e Leitura)
         const nivelCL = clamp05(context.system.aptidaoNiveis?.controleELeitura?.value);
-        // 2) RD de estruturas/barreiras (igual ao nível de Barreira)
         const nivelBAR = clamp05(context.system.aptidaoNiveis?.barreiras?.value);
-        // 3) Refinamento (nível do personagem + aptidão em Domínio)
         const nivelDOM = clamp05(context.system.aptidaoNiveis?.dominio?.value);
         const refinamento = (Number(nivelTotalDerivado) || 0) + nivelDOM;
 
-        // Não sobrescreve o objeto inteiro para preservar `aptidaoDerivados.barreira`
-        // (PV por parede, max segmentos, etc.) calculado acima.
         context.system.aptidaoDerivados = context.system.aptidaoDerivados ?? {};
         context.system.aptidaoDerivados.limiteGastoPE = { value: nivelCL, label: 'Limite de Gasto (PE)' };
         context.system.aptidaoDerivados.rdBarreira = { value: nivelBAR, label: 'RD Barreira' };
         context.system.aptidaoDerivados.refinamento = { value: refinamento, label: 'Refinamento' };
 
-        // --- TREINO / INTERLÚDIO (anotações) ---
         const modelAptidaoTreino = game?.system?.model?.Actor?.[actorData.type]?.aptidaoTreino ?? {
           notas: { value: '', label: 'Treino (Interlúdio)' },
         };
@@ -493,9 +490,6 @@ export class BoilerplateActorSheet extends ActorSheet {
           { inplace: false, overwrite: true }
         );
 
-        // --- VINCULAR SIGLA DO ATRIBUTO À PERÍCIA ---
-        // Preenche `pericia.atributoLabel` e `pericia.atributoMod` buscando em
-        // ordem: atributos -> recursos -> combate, e definindo um default.
         if (context.system.pericias) {
           for (let [key, pericia] of Object.entries(context.system.pericias)) {
             const atributoKey = MAPA_ATRIBUTOS[key];
@@ -506,7 +500,6 @@ export class BoilerplateActorSheet extends ActorSheet {
               continue;
             }
 
-            // 1) Procura em atributos (padrão)
             if (context.system.atributos && context.system.atributos[atributoKey]) {
               const atributoObj = context.system.atributos[atributoKey];
               pericia.atributoLabel = (atributoObj.label || atributoKey).substring(0, 3).toUpperCase();
@@ -514,7 +507,6 @@ export class BoilerplateActorSheet extends ActorSheet {
               continue;
             }
 
-            // 2) Fallback para recursos (ex: hp, energia)
             if (context.system.recursos && context.system.recursos[atributoKey]) {
               const recursoObj = context.system.recursos[atributoKey];
               pericia.atributoLabel = (recursoObj.label || atributoKey).substring(0, 3).toUpperCase();
@@ -522,7 +514,6 @@ export class BoilerplateActorSheet extends ActorSheet {
               continue;
             }
 
-            // 3) Fallback para combate (ex: defesa, cd, movimento)
             if (context.system.combate && context.system.combate[atributoKey]) {
               const combateObj = context.system.combate[atributoKey];
               pericia.atributoLabel = (combateObj.label || atributoKey).substring(0, 3).toUpperCase();
@@ -530,7 +521,6 @@ export class BoilerplateActorSheet extends ActorSheet {
               continue;
             }
 
-            // Default
             pericia.atributoLabel = atributoKey.substring(0, 3).toUpperCase();
             pericia.atributoMod = 0;
           }
@@ -539,21 +529,15 @@ export class BoilerplateActorSheet extends ActorSheet {
         context.niveisPericia = { 0: "—", 1: "Treinado", 2: "Mestre" };
     }
 
-      // Garante que exista um ataque padrão (Soco) como Item real para permitir drag&drop.
       await this._ensureUnarmedAttackItem();
 
-      // Prepara listas de itens para QUALQUER tipo de ator.
-      // (Sem isso, atores de tipos adicionais como "maldicao" criam o Item embutido,
-      // mas a aba Itens não recebe `context.aptidoes` e parece vazia.)
       this._prepareItems(context);
 
-      // Lista de ataques (itens) para a aba Status
       try {
         const attacks = (this.actor?.items?.contents ?? [])
           .filter(i => ['arma', 'tecnica'].includes(String(i.type)))
           .map(i => i.toObject(false));
 
-        // Ordena deixando "Soco" (desarmado) no topo
         const norm = (s) => String(s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
         attacks.sort((a, b) => {
           const an = norm(a?.name);
@@ -577,7 +561,6 @@ export class BoilerplateActorSheet extends ActorSheet {
       { secrets: this.document.isOwner, async: true, rollData: context.rollData, relativeTo: this.actor }
     );
 
-    // Persistir automaticamente os valores calculados de Dados de Vida / Dados de Energia
     try {
       const updateData = {};
       const sys = this.actor.system || {};
@@ -592,7 +575,6 @@ export class BoilerplateActorSheet extends ActorSheet {
       if ((sys.combate?.dadosEnergia?.value ?? 0) !== desiredDEValue) updateData['system.combate.dadosEnergia.value'] = desiredDEValue;
 
       if (Object.keys(updateData).length) {
-        // Atualiza sem forçar re-render excessivo; é seguro aguardar para garantir persistência
         await this.actor.update(updateData);
       }
     } catch (e) {
@@ -602,10 +584,6 @@ export class BoilerplateActorSheet extends ActorSheet {
     return context;
   }
 
-  /**
-   * Garante que o ator tenha um item "Soco" (arma desarmada) para rolar e arrastar para a hotbar.
-   * Faz a criação apenas para atores editáveis e apenas uma vez por ator.
-   */
   async _ensureUnarmedAttackItem() {
     try {
       if (!this.actor) return;
@@ -627,7 +605,6 @@ export class BoilerplateActorSheet extends ActorSheet {
         type: 'arma',
         img: 'icons/svg/dice.svg',
         system: {
-          // Fórmula base: o roll() do Item vai aplicar conversão de níveis em cima do primeiro dado.
           formula: '1d4 + @forca',
           damage: {
             base: { value: '1d4', label: 'Dano Base' },
@@ -654,7 +631,6 @@ export class BoilerplateActorSheet extends ActorSheet {
     const aptidoesAtivas = [];
     const aptidoesPassivas = [];
 
-    // Garante defaults pro template não quebrar
     context.equipamentos = equipamentos;
     context.tecnicas = tecnicas;
     context.aptidoes = aptidoes;
@@ -668,19 +644,15 @@ export class BoilerplateActorSheet extends ActorSheet {
     for (let i of context.items) {
       i.img = i.img || Item.DEFAULT_ICON;
 
-      // Equipamentos
       if (['item', 'arma', 'armadura'].includes(i.type)) {
           equipamentos.push(i);
       }
-      // Técnicas
       else if (i.type === 'tecnica') {
           tecnicas.push(i);
       }
-      // Habilidades (novo tipo para habilidades de classe)
       else if (i.type === 'habilidade') {
         habilidades.push(i);
       }
-      // Aptidões (Aqui entra a Aura Anuladora)
       else if (i.type === 'aptidao') {
         aptidoes.push(i);
       }
@@ -691,7 +663,6 @@ export class BoilerplateActorSheet extends ActorSheet {
     context.aptidoes = aptidoes;
     context.habilidades = habilidades;
 
-    // Separa aptidões em ativas vs passivas para UI
     for (const it of aptidoes) {
       const acao = String(it.system?.acao?.value ?? 'Passiva').trim().toLowerCase();
       if (!acao || acao === 'passiva') aptidoesPassivas.push(it);
@@ -701,7 +672,6 @@ export class BoilerplateActorSheet extends ActorSheet {
     context.aptidoesAtivas = aptidoesAtivas;
     context.aptidoesPassivas = aptidoesPassivas;
 
-    // Expor item tipo `uniforme` para o template (se existir, pega o primeiro)
     try {
       context.uniformItem = (Array.isArray(context.items) ? context.items.find(i => i.type === 'uniforme') : null) || null;
     } catch (e) {
@@ -709,7 +679,6 @@ export class BoilerplateActorSheet extends ActorSheet {
     }
   }
 
-  /* -------------------------------------------- */
 
   /** @override */
   async _onDrop(event) {
@@ -721,18 +690,15 @@ export class BoilerplateActorSheet extends ActorSheet {
   /** @override */
   async _onDropItemCreate(itemData, event) {
     try {
-      // Se for aptidão e o usuário soltou em uma coluna específica, já marca ativa/passiva
       if (itemData?.type === 'aptidao' && this._dropAptidaoTipo) {
         itemData.system ??= {};
         itemData.system.acao ??= {};
         itemData.system.acao.value = (this._dropAptidaoTipo === 'passiva') ? 'Passiva' : 'Ativa';
       }
 
-      // Validação: (desativada) - pré-requisitos IGNORADOS para permitir adição livre
       if (false) {
         const descricao = String(itemData?.system?.descricao?.value ?? itemData?.system?.requisito?.value ?? '');
         const prereq = extrairPrereqsDaDescricao(descricao, null);
-        // nível do ator
         const actorNivel = _getActorNivel(this.actor);
         if (prereq?.nivelPersonagemMin && actorNivel < prereq.nivelPersonagemMin) {
           ui.notifications.warn(`Não é possível adicionar: pré-requisito não atendido (Nível ${prereq.nivelPersonagemMin}).`);
@@ -777,13 +743,10 @@ export class BoilerplateActorSheet extends ActorSheet {
               }
               continue;
             }
-            // token não mapeado: não bloqueamos para evitar falsos positivos
             console.warn('Token de pré-requisito não mapeado durante drop:', token);
           }
         }
 
-        // Validação extra: nível mínimo por CLASSE (ex.: aptidões do Lutador nível 6)
-        // Espera `system.nivelMin.value` e `system.classe.value` (preenchidos por macros de seed/compêndio).
         if (itemData?.type === 'aptidao') {
           const nivelMin = Number(itemData?.system?.nivelMin?.value ?? itemData?.system?.nivelMin ?? 0) || 0;
           const classeReq = String(itemData?.system?.classe?.value ?? itemData?.system?.classe ?? itemData?.system?.categoria?.value ?? '').trim();
@@ -803,8 +766,6 @@ export class BoilerplateActorSheet extends ActorSheet {
 
       const created = await super._onDropItemCreate(itemData, event);
 
-      // Passivas 100% do tempo: se a aptidão tiver ActiveEffects no Item, aplicamos automaticamente ao ator.
-      // (Para passivas sem efeitos, não há o que aplicar — isso é resolvido ao adicionar efeitos/macros depois.)
       try {
         const createdItems = Array.isArray(created) ? created : (created ? [created] : []);
         for (const it of createdItems) {
@@ -845,7 +806,6 @@ export class BoilerplateActorSheet extends ActorSheet {
 
     html.find('.level-up-btn').click(this._onLevelUp.bind(this));
 
-    // --- NOVO: Listener para Dados de Vida e Energia ---
     html.find('.roll-dice').click(async (event) => {
         event.preventDefault();
         const element = event.currentTarget;
@@ -858,7 +818,6 @@ export class BoilerplateActorSheet extends ActorSheet {
         const isVida = flavorText.includes('vida');
         const isEnergia = flavorText.includes('energia');
 
-        // Para Dados de Vida/Energia: perguntar quantos dados gastar
         if (isVida || isEnergia) {
           if (!this.isEditable) return ui.notifications.warn('Sem permissão para modificar este ator.');
 
@@ -869,7 +828,6 @@ export class BoilerplateActorSheet extends ActorSheet {
           const lado = String(combate?.[dadosKey]?.lado ?? formula).trim() || formula;
           if (available <= 0) return ui.notifications.warn('Nenhum Dado disponível para gastar.');
 
-          // diálogo simples para escolher quantidade
           const dlgContent = `
             <form class="dice-spend-dialog">
               <div class="form-group">
@@ -890,7 +848,6 @@ export class BoilerplateActorSheet extends ActorSheet {
                 if (!n || n <= 0) return ui.notifications.warn('Quantidade inválida.');
                 if (n > available) return ui.notifications.warn('Quantidade maior que disponível.');
 
-                // monta fórmula substituindo o fator de quantidade (ex: '1d8' -> '3d8')
                 const dIndex = lado.indexOf('d');
                 const diePart = (dIndex >= 0) ? lado.slice(dIndex) : lado;
                 const rollFormulaStr = `${n}${diePart}`;
@@ -903,12 +860,10 @@ export class BoilerplateActorSheet extends ActorSheet {
                   return ui.notifications.error('Fórmula inválida.');
                 }
 
-                // determina modificador por dado
                 let attrKey = 'constituicao';
                 if (isEnergia) {
                   const clsRaw = String(this.actor.system?.detalhes?.classe?.value ?? '');
                   const clsNorm = clsRaw.toLowerCase().trim();
-                  // usa mapa configurável; se mapeamento for explicitamente null (ex: restringido), trata como nenhum DE
                   const mapped = MAPA_DE_ATRIBUTOS[clsNorm];
                   if (typeof mapped === 'string' && mapped) attrKey = mapped;
                   else attrKey = 'inteligencia';
@@ -918,18 +873,14 @@ export class BoilerplateActorSheet extends ActorSheet {
                 const diceTotal = Number(roll.total ?? 0) || 0;
                 const recovered = diceTotal + (n * attrMod);
 
-                // Mensagem no chat com detalhe
                 const chatContent = `<div class="dice-recovery"><strong>${this.actor.name}</strong> gastou <b>${n}</b> ${isVida ? 'DV' : 'DE'} (${rollFormula}) → ` +
                   `<b>${diceTotal}</b> + ${n}×${attrMod} = <b>${recovered}</b> ${isVida ? 'PV' : 'PE'} recuperados.</div>`;
                 await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor: this.actor }), flavor: chatContent });
 
-                // atualiza ator: decrementa dados disponíveis e aplica recuperação (cap em max)
                 const updates = {};
-                // decrementa contador de dados
                 const newAvailable = Math.max(0, available - n);
                 updates[`system.combate.${dadosKey}.value`] = newAvailable;
 
-                // aplica recuperação no recurso correspondente
                 const atual = Number(this.actor.system?.recursos?.[recursosKey]?.value ?? 0) || 0;
                 const max = Number(this.actor.system?.recursos?.[recursosKey]?.max ?? atual) || atual;
                 updates[`system.recursos.${recursosKey}.value`] = Math.min(max, atual + recovered);
@@ -942,7 +893,6 @@ export class BoilerplateActorSheet extends ActorSheet {
           }, { id: 'dice-spend-dialog' }).render(true);
         }
         else {
-          // Rolagem padrão (não DV/DE) usando helper central
           let roll;
           try {
             roll = await rollFormula(formula, { actor: this.actor }, { asyncEval: true, toMessage: false, flavor: `Rolou <b>${flavor}</b>` });
@@ -955,27 +905,19 @@ export class BoilerplateActorSheet extends ActorSheet {
         }
     });
 
-    // ESCUTA O CLIQUE NA PERÍCIA
+    html.find('.roll-initiative').click(this._onRollInitiative.bind(this));
+
     html.find('.pericia-label').click(this._onRollPericia.bind(this));
 
-    // Níveis de Aptidão: +/- dentro da aba Aptidões
     html.on('click', '[data-action="aptidao-nivel-inc"]', this._onAptidaoNivelInc.bind(this));
     html.on('click', '[data-action="aptidao-nivel-dec"]', this._onAptidaoNivelDec.bind(this));
-    // Criar paredes no mapa a partir da ficha
     html.on('click', '[data-action="create-walls"]', this._onCreateWallsClick.bind(this));
-    // Adicionar ponto de Aptidão via Treino (Interlúdio)
     html.on('click', '.aptidao-treino-add', this._onAptidaoTreinoAdd.bind(this));
 
-    // Criar Expansão de Domínio
-    // (Removido do template) A criação de Domínio é feita ao usar o Item de aptidão na aba Itens.
-
-    // Usar aptidão (Item) como botão
     html.on('click', '[data-action="use-aptidao"]', this._onUseAptidaoItem.bind(this));
-    // Mostrar descrição da aptidão em modal (listener mantido por compatibilidade, mas o botão foi removido)
     html.on('click', '[data-action="show-aptidao-desc"]', this._onShowAptidaoDescription.bind(this));
 
 
-    // --- ORIGEM: abrir modal ao selecionar "Maldição" ---
     const $origemSelect = html.find('select[name="system.detalhes.origem.value"]');
     if ($origemSelect.length) {
       $origemSelect.on('focus', (ev) => {
@@ -987,9 +929,6 @@ export class BoilerplateActorSheet extends ActorSheet {
       });
     }
 
-    // Botões de Descanso Curto/Longo removidos da ficha — usar macros de Descanso em massa
-
-    // Rolagem de item (ex.: ataques) a partir da ficha
     html.on('click', '.item-roll', async (ev) => {
       ev.preventDefault();
       const row = $(ev.currentTarget).closest('[data-item-id]');
@@ -1002,7 +941,6 @@ export class BoilerplateActorSheet extends ActorSheet {
       }
     });
 
-    // Drag&Drop para hotbar: garante que os itens sejam arrastáveis
     try {
       const handler = (ev) => this._onDragStart(ev);
       html.find('li.item').each((i, li) => {
@@ -1013,7 +951,6 @@ export class BoilerplateActorSheet extends ActorSheet {
       console.warn('Falha ao registrar dragstart para itens:', e);
     }
 
-    // Uniform slot: allow dragover and drop specifically on the uniform slot
     try {
       html.find('.uniform-slot').on('dragover', (ev) => {
         ev.preventDefault();
@@ -1032,7 +969,6 @@ export class BoilerplateActorSheet extends ActorSheet {
           if (payload) payload = JSON.parse(payload);
         } catch (e) { /* keep raw */ }
 
-        // Accept either {type:'Item', data: <item>} or raw UUID
         try {
           if (payload && payload.type === 'Item' && payload.data) {
             await this.actor.createEmbeddedDocuments('Item', [payload.data]);
@@ -1041,7 +977,6 @@ export class BoilerplateActorSheet extends ActorSheet {
           }
           const uri = dt.getData('text/uri-list') || dt.getData('text/uri');
           if (uri) {
-            // try fromUuid fallback
             try {
               const doc = await fromUuid(uri);
               if (doc && doc.toObject) {
@@ -1058,7 +993,6 @@ export class BoilerplateActorSheet extends ActorSheet {
       });
     } catch (e) { console.warn('Falha ao registrar drop para uniform-slot', e); }
 
-    // Listeners Padrões
     if (!this.isEditable) return;
     html.on('click', '.item-edit', (ev) => {
       ev.stopPropagation();
@@ -1075,7 +1009,6 @@ export class BoilerplateActorSheet extends ActorSheet {
         row.slideUp(200, () => this.render(false));
       }
     });
-    // Remover uniforme do slot (botão pequeno no card)
     html.on('click', '.uniform-remove', async (ev) => {
       ev.stopPropagation();
       const $card = $(ev.currentTarget).closest('.uniform-card');
@@ -1104,27 +1037,113 @@ export class BoilerplateActorSheet extends ActorSheet {
       }).render(true);
     });
     html.on('click', '.item-create', this._onItemCreate.bind(this));
-    // Death-saves visual UI handlers
     html.on('click', '.death-test-btn', this._onDeathTest.bind(this));
     html.on('click', '.death-reset-btn', this._onDeathReset.bind(this));
     html.on('click', '.death-pill', this._onToggleDeathMark.bind(this));
 
-    // Atualiza classes visuais de HP (hp-full, hp-high, hp-medium, hp-low, hp-zero)
+    // Ao marcar/desmarcar uma condição na lista, persistir e aplicar um ActiveEffect correspondente
+    html.on('change', '.condition-list input[type=checkbox]', this._onToggleCondition.bind(this));
+
     try {
       this._updateHpVisualState(html);
     } catch (err) {
       console.warn('Falha ao aplicar estado visual de HP:', err);
     }
 
-    // Nota: não espelhamos automaticamente HP→Integridade após inicialização
   }
 
-  /** Atualiza classes CSS no root do sheet conforme percentual de HP */
+  async _onRollInitiative(event) {
+    event.preventDefault();
+    if (!this.actor) return;
+
+    if (!this.actor.isOwner) {
+      return ui?.notifications?.warn?.('Sem permissão para rolar iniciativa deste ator.');
+    }
+
+    const actor = this.actor;
+
+    // Preferir token controlado do ator; senão, um token ativo qualquer.
+    let token = null;
+    try {
+      const controlled = canvas?.tokens?.controlled ?? [];
+      token = controlled.find(t => t?.actor?.id === actor.id) ?? null;
+    } catch (_) { /* ignore */ }
+
+    if (!token) {
+      try {
+        const active = (typeof actor.getActiveTokens === 'function') ? actor.getActiveTokens(true, true) : [];
+        token = (Array.isArray(active) && active.length) ? active[0] : null;
+      } catch (_) { /* ignore */ }
+    }
+
+    const combat = game?.combat ?? null;
+    const sameScene = !combat?.scene || !canvas?.scene || (combat.scene.id === canvas.scene.id);
+
+    // Se existir combate ativo na cena, rolar iniciativa no combate.
+    if (combat && sameScene) {
+      try {
+        const combatants = combat.combatants;
+        let combatant = null;
+
+        if (token) {
+          combatant = combatants?.find?.(c => c?.actor?.id === actor.id && c?.tokenId === token.id) ?? null;
+        }
+
+        if (!combatant) {
+          combatant = combatants?.find?.(c => c?.actor?.id === actor.id) ?? null;
+        }
+
+        if (!combatant) {
+          const data = { actorId: actor.id };
+          if (token) data.tokenId = token.id;
+
+          if (typeof combat.createEmbeddedDocuments === 'function') {
+            await combat.createEmbeddedDocuments('Combatant', [data]);
+          } else if (typeof combat.createCombatants === 'function') {
+            await combat.createCombatants([data]);
+          }
+
+          if (token) {
+            combatant = combatants?.find?.(c => c?.actor?.id === actor.id && c?.tokenId === token.id) ?? null;
+          }
+          if (!combatant) {
+            combatant = combatants?.find?.(c => c?.actor?.id === actor.id) ?? null;
+          }
+        }
+
+        if (!combatant) {
+          return ui?.notifications?.error?.('Não foi possível adicionar o ator ao combate para rolar iniciativa.');
+        }
+
+        await combat.rollInitiative([combatant.id]);
+        return;
+      } catch (e) {
+        console.warn('Falha ao rolar iniciativa no combate; caindo para rolagem no chat.', e);
+      }
+    }
+
+    // Fallback: rolar no chat (útil fora de combate ou se o combate não está na cena atual).
+    const formula = String(CONFIG?.Combat?.initiative?.formula ?? '1d20 + @iniciativa');
+    const rollData = actor.getRollData();
+    rollData.actor = actor;
+
+    try {
+      await rollFormula(formula, rollData, {
+        asyncEval: true,
+        toMessage: true,
+        flavor: `<b>Iniciativa</b> — ${actor.name}`,
+      });
+    } catch (err) {
+      console.warn('Erro ao rolar iniciativa via rollFormula:', err);
+      ui?.notifications?.error?.('Falha ao rolar iniciativa. Veja o console.');
+    }
+  }
+
   _updateHpVisualState(html) {
     const hpVal = Number(this.actor.system?.recursos?.hp?.value ?? 0) || 0;
     const hpMax = Number(this.actor.system?.recursos?.hp?.max ?? 0) || 0;
     const percent = hpMax > 0 ? Math.round((hpVal / hpMax) * 100) : (hpVal > 0 ? 100 : 0);
-    const $root = this.element; // jQuery root of the sheet
+    const $root = this.element; 
     $root.removeClass('hp-full hp-high hp-medium hp-low hp-zero hp-dead');
     if (hpVal <= 0) {
       $root.addClass('hp-zero hp-dead');
@@ -1139,6 +1158,165 @@ export class BoilerplateActorSheet extends ActorSheet {
     }
   }
 
+  async _onToggleCondition(event) {
+    event.preventDefault();
+    const input = event.currentTarget;
+    if (!input || !input.name) return;
+    if (!this.actor) return;
+    if (!this.actor.isOwner) return ui.notifications.warn('Sem permissão para modificar este ator.');
+
+    const checked = !!input.checked;
+    const name = input.name; // ex: system.condicoes.fisicas.condenado
+    try {
+      // Persistir o estado do checkbox no actor
+      await this.actor.update({ [name]: checked });
+    } catch (err) {
+      console.warn('Falha ao atualizar condição no actor data:', err);
+      return ui.notifications.error('Falha ao salvar condição. Veja o console.');
+    }
+
+    // Mapear severidade para cada condição (baseado nas regras fornecidas)
+    const severityMap = {
+      'condicoes.fisicas.condenado': 'media',
+      'condicoes.fisicas.engasgando': 'media',
+      'condicoes.fisicas.enjoado': 'media',
+      'condicoes.fisicas.envenenado': 'media',
+      'condicoes.fisicas.sangramento': 'variavel',
+      'condicoes.fisicas.sofrendo': 'fraca',
+      'condicoes.fisicas.paralisado': 'extrema',
+      'condicoes.fisicas.fragilizado': 'forte',
+
+      'condicoes.mentais.abalado': 'fraca',
+      'condicoes.mentais.amedrontado': 'media',
+      'condicoes.mentais.aterrorizado': 'forte',
+      'condicoes.mentais.confuso': 'media',
+      'condicoes.mentais.enfeitiacado': 'media',
+      'condicoes.mentais.indefeso': 'especial',
+      'condicoes.mentais.exposto': 'forte',
+
+      'condicoes.sensoriais.cego': 'forte',
+      'condicoes.sensoriais.desorientado': 'fraca',
+      'condicoes.sensoriais.desprevenido': 'fraca',
+      'condicoes.sensoriais.surdo': 'media',
+      'condicoes.sensoriais.surpreso': 'especial',
+      'condicoes.sensoriais.inconsciente': 'extrema',
+
+      'condicoes.movimento.agarrado': 'media',
+      'condicoes.movimento.caido': 'fraca',
+      'condicoes.movimento.enredado': 'media',
+      'condicoes.movimento.imovel': 'forte',
+      'condicoes.movimento.lento': 'media',
+      'condicoes.movimento.atordoado': 'extrema'
+    };
+
+    const key = name.replace(/^system\./, '');
+    const severity = severityMap[key] || 'desconhecida';
+
+    // Procurar ActiveEffect já existente para esta condição (procura pela flag customizada)
+    const existing = this.actor.effects.find(e => {
+      try { return e?.flags?.['feiticeiros-e-maldicoes']?.condition === key; } catch (e) { return false; }
+    });
+
+    if (checked) {
+      if (existing) return; // já aplicado
+      const label = `Condição: ${key.split('.').pop()} (${severity})`;
+      const changes = [];
+
+      const pericias = Object.keys(this.actor.system?.pericias || {});
+      const ataques = Object.keys(this.actor.system?.ataques || {});
+      const salvaguardas = Object.keys(this.actor.system?.salvaguardas || {});
+
+      // Helpers
+      const addPericias = (n) => {
+        for (const p of pericias) changes.push({ key: `system.pericias.${p}.value`, mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(n), priority: 20 });
+      };
+      const addAtaques = (n) => {
+        for (const a of ataques) changes.push({ key: `system.ataques.${a}.value`, mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(n), priority: 20 });
+      };
+      const addSalv = (n) => {
+        for (const s of salvaguardas) changes.push({ key: `system.salvaguardas.${s}.value`, mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(n), priority: 20 });
+      };
+
+      // Mapear efeitos mecânicos básicos por condição
+      if (key === 'condicoes.sensoriais.desprevenido') {
+        changes.push({ key: 'system.combate.defesa.value', mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(-3), priority: 20 });
+        if (salvaguardas.includes('reflexos')) changes.push({ key: 'system.salvaguardas.reflexos.value', mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(-3), priority: 20 });
+      }
+      else if (key === 'condicoes.movimento.caido') {
+        changes.push({ key: 'system.combate.defesa.value', mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(-3), priority: 20 });
+        changes.push({ key: 'system.combate.movimento.value', mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE, value: String(4.5), priority: 20 });
+      }
+      else if (key === 'condicoes.movimento.enredado') {
+        changes.push({ key: 'system.combate.movimento.value', mode: CONST.ACTIVE_EFFECT_MODES.MULTIPLY, value: '0.5', priority: 20 });
+        changes.push({ key: 'system.combate.defesa.value', mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(-2), priority: 20 });
+        addPericias(-2); addAtaques(-2);
+      }
+      else if (key === 'condicoes.movimento.imovel') {
+        changes.push({ key: 'system.combate.movimento.value', mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE, value: String(0), priority: 20 });
+      }
+      else if (key === 'condicoes.movimento.lento') {
+        changes.push({ key: 'system.combate.movimento.value', mode: CONST.ACTIVE_EFFECT_MODES.MULTIPLY, value: '0.5', priority: 20 });
+      }
+      else if (key === 'condicoes.fisicas.envenenado') {
+        addPericias(-2); addSalv(-2); addAtaques(-2);
+      }
+      else if (key === 'condicoes.fisicas.paralisado') {
+        changes.push({ key: 'system.combate.defesa.value', mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(-10), priority: 20 });
+        changes.push({ key: 'system.combate.movimento.value', mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE, value: String(0), priority: 20 });
+      }
+      else if (key === 'condicoes.sensoriais.surdo') {
+        changes.push({ key: 'system.combate.iniciativa.value', mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(-5), priority: 20 });
+      }
+      else if (key === 'condicoes.sensoriais.cego') {
+        if (pericias.includes('percepcao')) changes.push({ key: 'system.pericias.percepcao.value', mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(-5), priority: 20 });
+      }
+      else if (key === 'condicoes.fisicas.fragilizado') {
+        changes.push({ key: 'system.combate.rd.value', mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE, value: String(0), priority: 20 });
+      }
+      else if (key === 'condicoes.mentais.abalado') {
+        addPericias(-1); addAtaques(-1);
+      }
+      else if (key === 'condicoes.mentais.amedrontado') {
+        addPericias(-3); addAtaques(-3);
+      }
+
+      const effectData = {
+        label,
+        icon: 'icons/svg/downgrade.svg',
+        origin: this.actor.uuid || this.actor.id,
+        disabled: false,
+        changes: changes.length ? changes : undefined,
+        flags: {
+          'feiticeiros-e-maldicoes': {
+            condition: key,
+            severity
+          }
+        }
+      };
+      try {
+        const created = await this.actor.createEmbeddedDocuments('ActiveEffect', [effectData]);
+        console.log('CONDITION EFFECT CREATED', { key, severity, changes, created });
+        try { this.render(false); } catch (e) { /* non-fatal */ }
+        try { console.log('Actor effects count after create:', (this.actor.effects?.size ?? this.actor.effects?.length ?? null)); } catch (e) {}
+        try { console.log('Find created effect on actor by flag:', this.actor.effects?.find?.(e => e?.flags?.['feiticeiros-e-maldicoes']?.condition === key)); } catch (e) {}
+      } catch (err) {
+        console.error('Falha ao criar ActiveEffect de condição:', err);
+        return ui.notifications.error('Falha ao aplicar condição. Veja o console.');
+      }
+    } else {
+      if (!existing) return;
+      try {
+        const removed = await this.actor.deleteEmbeddedDocuments('ActiveEffect', [existing.id]);
+        console.log('CONDITION EFFECT REMOVED', { key, existing, removed });
+        try { this.render(false); } catch (e) { /* non-fatal */ }
+        try { console.log('Actor effects count after remove:', (this.actor.effects?.size ?? this.actor.effects?.length ?? null)); } catch (e) {}
+      } catch (err) {
+        console.error('Falha ao remover ActiveEffect de condição:', err);
+        return ui.notifications.error('Falha ao remover condição. Veja o console.');
+      }
+    }
+  }
+
   async _onUseAptidaoItem(event) {
     event.preventDefault();
     if (!this.isEditable) return;
@@ -1149,8 +1327,6 @@ export class BoilerplateActorSheet extends ActorSheet {
 
     const systemId = game?.system?.id ?? 'feiticeiros-e-maldicoes';
     const aptidaoKey = item.getFlag(systemId, 'aptidaoKey');
-
-    // Validação: nível mínimo por CLASSE (caso o item tenha sido adicionado manualmente/por compêndio)
     try {
       const nivelMin = Number(item.system?.nivelMin?.value ?? item.system?.nivelMin ?? 0) || 0;
       const classeReq = String(item.system?.classe?.value ?? item.system?.classe ?? item.system?.categoria?.value ?? '').trim();
@@ -1165,7 +1341,6 @@ export class BoilerplateActorSheet extends ActorSheet {
       console.warn('Erro ao validar nível mínimo por classe ao usar aptidão:', e);
     }
 
-    // Caso especial: aptidões de Domínio criam walls no mapa ao serem usadas
     if (aptidaoKey === 'dominio.expansaoDeDominioIncompleta'
       || aptidaoKey === 'dominio.expansaoDeDominioCompleta'
       || aptidaoKey === 'dominio.acertoGarantido') {
@@ -1174,7 +1349,7 @@ export class BoilerplateActorSheet extends ActorSheet {
         ? 15
         : (aptidaoKey === 'dominio.expansaoDeDominioCompleta')
           ? 20
-          : 25; // acertoGarantido = completa +5
+          : 25;
 
       const atualPE = Number(this.actor.system?.recursos?.energia?.value ?? 0) || 0;
       if (atualPE < custo) {
@@ -1192,7 +1367,6 @@ export class BoilerplateActorSheet extends ActorSheet {
         const { radiusMeters, squares } = await this._createDominioFromActor(dominioArgs);
         await this.actor.update({ 'system.recursos.energia.value': Math.max(0, atualPE - custo) });
 
-        // Aplica Active Effects do Item (se houver)
         const effects = item.effects?.contents ?? [];
         if (effects.length) {
           const toCreate = effects.map((e) => {
@@ -1216,18 +1390,22 @@ export class BoilerplateActorSheet extends ActorSheet {
       return;
     }
 
-    // Custo de PE (opcional)
     const custoPE = Number(item.system?.custo?.value ?? 0) || 0;
-    if (custoPE > 0) {
+    let actualCost = custoPE;
+    try {
+      const condCondenado = Boolean(this.actor.system?.condicoes?.fisicas?.condenado);
+      if (condCondenado && actualCost > 0) actualCost = actualCost + 1; // Condenado: +1 PE em todas as habilidades
+    } catch (e) { /* ignore */ }
+
+    if (actualCost > 0) {
       const atual = Number(this.actor.system?.recursos?.energia?.value ?? 0) || 0;
-      if (atual < custoPE) {
+      if (atual < actualCost) {
         ui.notifications.warn('PE insuficiente para usar esta aptidão.');
         return;
       }
-      await this.actor.update({ 'system.recursos.energia.value': Math.max(0, atual - custoPE) });
+      await this.actor.update({ 'system.recursos.energia.value': Math.max(0, atual - actualCost) });
     }
 
-    // Aplica Active Effects do Item no Actor (copia)
     const effects = item.effects?.contents ?? [];
     if (effects.length) {
       const toCreate = effects.map((e) => {
@@ -1240,7 +1418,6 @@ export class BoilerplateActorSheet extends ActorSheet {
       await this.actor.createEmbeddedDocuments('ActiveEffect', toCreate);
     }
 
-    // Executa macros mencionados na descrição (tag: [MACRO:Nome do Macro])
     try {
       const desc = (item.system && item.system.descricao && item.system.descricao.value) ? item.system.descricao.value : '';
       const macros = extrairMacrosDaDescricao(desc ?? '');
@@ -1252,7 +1429,6 @@ export class BoilerplateActorSheet extends ActorSheet {
             continue;
           }
           try {
-            // Alguns ambientes usam macro.execute(), outros usam macro.run(); tentamos ambos.
             if (typeof macro.execute === 'function') await macro.execute();
             else if (typeof macro.run === 'function') await macro.run();
             else await game.macros.execute?.(macro.id);
@@ -1265,13 +1441,11 @@ export class BoilerplateActorSheet extends ActorSheet {
       console.warn('Erro ao processar macros da descrição:', e);
     }
 
-    // Mensagem simples no chat
     await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this.actor }),
       content: `<b>${item.name}</b> foi usada.${custoPE ? ` (Custo: ${custoPE} PE)` : ''}`,
     });
 
-    // Habilidades específicas de classe (ex.: Lutador) podem abrir um fluxo guiado e/ou aplicar efeitos.
     try {
       await handleLutadorUse({ actor: this.actor, item });
     } catch (e) {
@@ -1323,12 +1497,10 @@ export class BoilerplateActorSheet extends ActorSheet {
     for (const [cat, entries] of Object.entries(activeApt)) {
       if (!entries || typeof entries !== 'object') continue;
       for (const [key, val] of Object.entries(entries)) {
-        if (!val) continue; // só as aptidões ativas
-        // checa se já existe Item com flag aptidaoKey
+        if (!val) continue;
         const aptidaoKey = `${cat}.${key}`;
         const exists = this.actor.items.find(i => i.type === 'aptidao' && i.getFlag(systemId, 'aptidaoKey') === aptidaoKey);
         if (exists) continue;
-        // prepara dados mínimos (usa catálogo/descrições se disponível)
         const name = (APTIDOES_CATALOGO?.[cat]?.entradas?.find(e => e.key === key)?.label) ?? key;
         const desc = APTIDOES_DESCRICOES?.[`${cat}.${key}`] ?? '';
         tasks.push(this._syncAptidaoEmbeddedItem({ cat, key, name, desc, active: true }));
@@ -1347,7 +1519,6 @@ export class BoilerplateActorSheet extends ActorSheet {
     }
   }
 
-  /* --------------------------- Expansão de Domínio --------------------------- */
   _getControlledTokenOrWarn() {
     if (!canvas?.scene) {
       ui.notifications.warn('Nenhuma cena aberta.');
@@ -1359,6 +1530,57 @@ export class BoilerplateActorSheet extends ActorSheet {
       return null;
     }
     return controlled[0];
+  }
+
+  _applyActiveEffectsToSystem(system) {
+    if (!system || !this.actor) return system;
+    try {
+      const effects = (this.actor.effects || []).filter(e => !e.disabled);
+      for (const eff of effects) {
+        const changes = (eff.changes && eff.changes.length) ? eff.changes : (eff.toObject().changes || []);
+        for (const ch of changes) {
+          try {
+            const mode = Number(ch.mode);
+            const key = String(ch.key || '').trim();
+            const raw = ch.value ?? '';
+            if (!key) continue;
+            // Only handle keys under system.* for templates
+            if (!key.startsWith('system.')) continue;
+            const path = key.replace(/^system\./, '').split('.');
+            // Resolve reference to target container and property
+            let target = system;
+            for (let i = 0; i < path.length - 1; i++) {
+              const p = path[i];
+              if (typeof target[p] === 'undefined') { target[p] = {}; }
+              target = target[p];
+            }
+            const last = path[path.length - 1];
+            // Current value (coerce numeric when possible)
+            const curVal = target[last];
+            const curNum = (typeof curVal === 'number') ? curVal : (typeof curVal === 'string' && !Number.isNaN(Number(curVal)) ? Number(curVal) : null);
+            const delta = (raw === null || raw === undefined) ? 0 : (Number.isNaN(Number(raw)) ? raw : Number(raw));
+
+            if (mode === CONST.ACTIVE_EFFECT_MODES.ADD) {
+              if (typeof curNum === 'number' && typeof delta === 'number') target[last] = curNum + delta;
+            } else if (mode === CONST.ACTIVE_EFFECT_MODES.MULTIPLY) {
+              const mul = Number(delta) || 1;
+              if (typeof curNum === 'number') target[last] = curNum * mul;
+            } else if (mode === CONST.ACTIVE_EFFECT_MODES.OVERRIDE) {
+              // override with given value (try numeric)
+              target[last] = (typeof delta === 'number') ? delta : raw;
+            } else if (mode === CONST.ACTIVE_EFFECT_MODES.UPGRADE) {
+              // treat as max(current, delta) when numeric
+              if (typeof curNum === 'number' && typeof delta === 'number') target[last] = Math.max(curNum, delta);
+            } else {
+              // unsupported modes are ignored for now
+            }
+          } catch (e) { /* ignore single change errors */ }
+        }
+      }
+    } catch (e) {
+      console.warn('Erro ao aplicar efeitos ativos ao system:', e);
+    }
+    return system;
   }
 
   async _createDominioFromActor({ tipo, acertoGarantido = false }) {
@@ -1494,7 +1716,6 @@ export class BoilerplateActorSheet extends ActorSheet {
     await this.actor.update({ ['system.aptidaoTreino.pontosAdicionais.value']: current + 1 });
   }
 
-  /** Criar paredes simples no mapa em volta do token selecionado */
   async _onCreateWallsClick(event) {
     event.preventDefault();
     if (!canvas?.scene) return ui.notifications.warn('Nenhuma cena aberta.');
@@ -1517,10 +1738,9 @@ export class BoilerplateActorSheet extends ActorSheet {
     const segments = Number(segInput) || 0;
     if (segments <= 0) return;
 
-    // Gera pequenas paredes em torno do centro do token
     const center = token.center;
     const grid = canvas.grid.size;
-    const radius = grid; // distância do centro para posicionar as paredes
+    const radius = grid; 
     const walls = [];
     for (let i = 0; i < segments; i++) {
       const angle = (i / segments) * Math.PI * 2;
@@ -1533,18 +1753,13 @@ export class BoilerplateActorSheet extends ActorSheet {
     }
 
     try {
-      // Decide qual PV usar (se o ator tem Paredes Resistentes ativas)
       const system = this.actor.system;
       const usoParedesResistentes = !!system?.aptidoes?.barreiras?.paredesResistentes;
 
-      // `system.aptidaoDerivados` é calculado no `getData()` da sheet (não é persistido no Actor).
-      // Ao clicar no botão, ele pode não existir e cair em 0. Recalcula aqui com dados persistidos.
       const barNivel = Number(system?.aptidaoNiveis?.barreiras?.value ?? 0) || 0;
       const charNivel = Number(system?.detalhes?.nivel?.value ?? 0) || 0;
 
-      // PV padrão por parede: 5 + (BAR × floor(nível/2))
       const pvPadrao = 5 + (barNivel * Math.floor(charNivel / 2));
-      // PV com Paredes Resistentes: 10 + (BAR × nível)
       const pvResist = 10 + (barNivel * charNivel);
       const pvUsado = usoParedesResistentes ? pvResist : pvPadrao;
 
@@ -1556,7 +1771,6 @@ export class BoilerplateActorSheet extends ActorSheet {
 
       if (!created || created.length === 0) throw new Error('Nenhuma wall criada');
 
-      // Salva sumário das paredes criadas no ator para exibir na ficha
       const resumo = created.map(w => ({ id: w.id, pv: pvUsado }));
       await this.actor.setFlag('feiticeiros-e-maldicoes', 'lastBarreiras', resumo);
 
@@ -1567,13 +1781,12 @@ export class BoilerplateActorSheet extends ActorSheet {
     }
   }
 
-  // --- FUNÇÃO DE ROLAR PERÍCIA ---
   async _onRollPericia(event) {
     event.preventDefault();
     const element = event.currentTarget;
     const dataset = element.dataset;
-    const key = dataset.key;   // Ex: "atletismo"
-    const group = dataset.group; // Ex: "pericias"
+    const key = dataset.key;   
+    const group = dataset.group; 
 
     return await this._rollPericiaByKey({ key, group });
   }
@@ -1581,10 +1794,8 @@ export class BoilerplateActorSheet extends ActorSheet {
   async _rollPericiaByKey({ key, group = 'pericias' } = {}) {
     if (!key) return;
 
-    // 1. Pega os dados do Ator
     const system = this.actor.system;
     
-    // 2. Acha a perícia no sistema
     const pericia = system?.[group]?.[key];
     if (!pericia) {
       ui.notifications.warn('Perícia inválida.');
@@ -1592,7 +1803,6 @@ export class BoilerplateActorSheet extends ActorSheet {
     }
     const grauTreino = pericia.value; // 0, 1 ou 2
 
-    // 3. Acha o Atributo correspondente com fallbacks (atributos -> recursos -> combate)
     const atributoKey = MAPA_ATRIBUTOS[key];
     let atributoMod = 0;
     let atributoLabel = "Atributo";
@@ -1612,21 +1822,16 @@ export class BoilerplateActorSheet extends ActorSheet {
       }
     }
 
-    // 4. Calcula o Bônus de Treinamento com base no valor derivado do ator
-    // Valores por faixa de nível são calculados em `prepareDerivedData` (actor.mjs)
     const baseTreino = system.detalhes?.treinamento?.value ?? 0;
     let treinoBonus = 0;
     if (grauTreino === 1) {
       treinoBonus = baseTreino;
     } else if (grauTreino === 2) {
-      // Mestre: 1.5x do bônus base (arredondado para baixo)
       treinoBonus = Math.floor(baseTreino * 1.5);
     }
 
-    // 5. Calcula o Bônus Total e monta a fórmula de rolagem
     let totalBonus = atributoMod + treinoBonus;
 
-    // Última Ação: se existir flag, força o dado para 20 (crítico garantido) e consome a flag
     let dieTerm = '1d20';
     try {
       const forceCrit = await this.actor.getFlag(game.system.id, 'ultimaAcao.critico');
@@ -1636,10 +1841,6 @@ export class BoilerplateActorSheet extends ActorSheet {
       }
     } catch (_) {}
 
-    // Bônus/Modos temporários e persistentes via flags do sistema
-    // - flags.<systemId>.bonuses.tests.<group>.<key> => bônus fixo
-    // - flags.<systemId>.temp.tests.<group>.<key> => bônus one-shot
-    // - flags.<systemId>.temp.rollMode.<group>.<key> => 'adv' | 'dis' (consumido)
     let bonusExtra = 0;
     try {
       const sysId = game?.system?.id ?? 'feiticeiros-e-maldicoes';
@@ -1678,7 +1879,6 @@ export class BoilerplateActorSheet extends ActorSheet {
     let formulaString = `${dieTerm} + ${atributoMod}[${atributoLabel}]`;
     if (treinoBonus > 0) formulaString += ` + ${treinoBonus}[Treino]`;
 
-    // 6. Soma metade do nível total do personagem para TODOS os testes (arredondado para baixo)
     const nivelTotalDerivado = system.detalhes?.nivel?.value ?? ((system.detalhes?.niveis?.principal?.value || 0) + (system.detalhes?.niveis?.secundario?.value || 0));
     const metadeNivel = Math.floor(nivelTotalDerivado / 2);
     if (metadeNivel > 0) {
@@ -1691,7 +1891,6 @@ export class BoilerplateActorSheet extends ActorSheet {
       formulaString += ` + ${bonusExtra}[Bônus]`;
     }
 
-    // 6. Rola o dado usando helper central
     let roll;
     try {
       roll = await rollFormula(formulaString, { actor: this.actor }, { asyncEval: true, toMessage: false });
@@ -1701,10 +1900,8 @@ export class BoilerplateActorSheet extends ActorSheet {
       return null;
     }
 
-    // 7. Manda pro Chat: exibe a face do d20 e a fórmula compacta `1d20 + <bônus>`
     const sign = (totalBonus >= 0) ? `+${totalBonus}` : `${totalBonus}`;
 
-    // Extrai a face do d20 (respeita se o dado foi forçado para 20)
     let dieFace = null;
     if (/^\s*20\s*$/.test(String(dieTerm))) {
       dieFace = 20;
@@ -1713,16 +1910,13 @@ export class BoilerplateActorSheet extends ActorSheet {
       if (firstDie && firstDie.results && firstDie.results.length) dieFace = firstDie.results[0].result;
     }
 
-    // Monta fórmula exibida explicitamente: 1d20 + atributo + metadeNivel + treino
     const totalRoll = Number(roll.total ?? 0) || 0;
     const parts = ['1d20'];
-    // Atributo (pode ser negativo)
     parts.push((atributoMod >= 0 ? '+ ' : '- ') + Math.abs(Number(atributoMod || 0)));
     if (metadeNivel > 0) parts.push('+ ' + metadeNivel);
     if (treinoBonus > 0) parts.push('+ ' + treinoBonus);
     const formulaShort = parts.join(' ');
 
-    // HTML estilizado para o chat (fundo preto, texto branco)
     const content = `
       <div class="card chat-card skill-roll" style="background:#000; color:#fff; padding:8px; display:flex; gap:12px; align-items:center; border-radius:6px;">
         <div class="die" style="width:56px; height:56px; border-radius:8px; background:#111; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; color:#fff;">
@@ -1748,7 +1942,6 @@ export class BoilerplateActorSheet extends ActorSheet {
       flags: { 'feiticeiros-e-maldicoes': { skillRoll: true } }
     });
 
-    // --- Kokusen: agora dispara APENAS para ataque corpo-a-corpo quando o d20 foi 20 ---
     try {
       const isMeleeAttack = (group === 'ataques' && key === 'corpo');
       if (isMeleeAttack) {
@@ -1768,11 +1961,9 @@ export class BoilerplateActorSheet extends ActorSheet {
           }
         }
 
-        // Dispara apenas com face exatamente 20
         if (d20Face === 20) {
           await this.actor.setFlag(game.system.id, 'kokusen.pendingDoubleDamage', true);
 
-          // Roda 1d6 para decidir a recuperação
           try {
             const rollD6 = await rollFormula('1d6', { actor: this.actor }, { asyncEval: true, toMessage: false });
             const face = Number(rollD6.total || 0);
@@ -1780,7 +1971,6 @@ export class BoilerplateActorSheet extends ActorSheet {
             let recoveredHP = 0;
             let recoveredEnergy = 0;
 
-            // Função auxiliar para rolar o dado de vida/energia
             const rollDie = async (lado) => {
               try {
                 const r = await rollFormula(String(lado || '1d8'), { actor: this.actor }, { asyncEval: true, toMessage: false });
@@ -1788,12 +1978,6 @@ export class BoilerplateActorSheet extends ActorSheet {
               } catch (e) { return 0; }
             };
 
-            // 1: nada
-            // 2: recupera 1 dado de vida (roda o lado de dadosVida e cura)
-            // 3: recupera 1 dado de energia (roda o lado de dadosEnergia e recupera energia)
-            // 4: recupera o dobro do dado de vida
-            // 5: recupera o dobro do dado de energia
-            // 6: recupera dobro de ambos
             const vidaLado = this.actor.system?.combate?.dadosVida?.lado ?? '1d8';
             const energiaLado = this.actor.system?.combate?.dadosEnergia?.lado ?? '1d6';
 
@@ -1806,7 +1990,6 @@ export class BoilerplateActorSheet extends ActorSheet {
               recoveredEnergy += (face === 5 || face === 6) ? (e * 2) : e;
             }
 
-            // Aplica recuperação nos recursos (cap na max)
             if (recoveredHP > 0 && this.actor.system?.recursos?.hp) {
               const atualHP = Number(this.actor.system.recursos.hp.value ?? 0) || 0;
               const maxHP = Number(this.actor.system.recursos.hp.max ?? atualHP) || atualHP;
@@ -1854,9 +2037,6 @@ export class BoilerplateActorSheet extends ActorSheet {
     return roll;
   }
 
-  /**
-   * Abrir modal simplificado para ativar/remover aptidão (sem descrição)
-   */
   async _onAptidaoClick(event) {
     event.preventDefault();
 
@@ -1868,11 +2048,9 @@ export class BoilerplateActorSheet extends ActorSheet {
 
     const current = foundry.utils.getProperty(this.actor.system, `aptidoes.${cat}.${key}`) ?? false;
     const action = current ? 'Remover' : 'Ativar';
-    // Try to find an existing embedded Item for this aptidão to prefill modal fields
     const aptidaoKey = `${cat}.${key}`;
     const existingItem = this.actor.items.find(i => i.type === 'aptidao' && i.getFlag(game?.system?.id ?? 'feiticeiros-e-maldicoes', 'aptidaoKey') === aptidaoKey);
 
-    // Mostrar somente a descrição específica da aptidão clicada
     const specificKey = `${cat}.${key}`;
     const specificDesc = APTIDOES_DESCRICOES[specificKey] || APTIDOES_CATALOGO[cat]?.entradas?.find(e => e.key === key)?.description;
     const descHtml = specificDesc ? `<div class="aptidao-desc"><p>${specificDesc}</p></div>` : `<div class="aptidao-desc"><p>Descrição não disponível.</p></div>`;
@@ -1899,13 +2077,10 @@ export class BoilerplateActorSheet extends ActorSheet {
             const update = {};
             const next = !current;
 
-            // Validação de pré-requisitos (cadeia) ao ATIVAR (DESATIVADA)
             if (next && false) {
               const nivelTotalDerivado = this.actor.system.detalhes?.nivel?.value ??
                 ((this.actor.system.detalhes?.niveis?.principal?.value || 0) + (this.actor.system.detalhes?.niveis?.secundario?.value || 0));
 
-              // Regras explícitas para Domínio (evita depender de parsing de texto)
-              // Fonte: module/sheets/actor-sheet/aptidoes-data.mjs
               if (cat === 'dominio' && key === 'expansaoDeDominioIncompleta') {
                 const domNivel = Number(this.actor.system?.aptidaoNiveis?.dominio?.value ?? 0) || 0;
                 if ((Number(nivelTotalDerivado) || 0) < 8) {
@@ -1982,7 +2157,6 @@ export class BoilerplateActorSheet extends ActorSheet {
                 }
               }
 
-              // Atributos mínimos (ex.: Presença 16)
               if (prereq?.atributosMin && Object.keys(prereq.atributosMin).length > 0) {
                 for (const [attrKey, minVal] of Object.entries(prereq.atributosMin)) {
                   const atual = Number(this.actor.system?.atributos?.[attrKey]?.value ?? 0) || 0;
@@ -1994,7 +2168,6 @@ export class BoilerplateActorSheet extends ActorSheet {
                 }
               }
 
-              // Aptidões prévias mencionadas em [Pré: ...]
               if (Array.isArray(prereq?.prereqTokens) && prereq.prereqTokens.length > 0) {
                 for (const token of prereq.prereqTokens) {
                   const resolved = _resolverAptidaoPorLabel(token);
@@ -2007,7 +2180,6 @@ export class BoilerplateActorSheet extends ActorSheet {
                     continue;
                   }
 
-                  // Tentar mapear como Técnica embutida no ator
                   const resolvedTec = _resolverTecnicaPorLabel(token, this.actor);
                   if (resolvedTec) {
                     const tItem = this.actor.items.find(i => i.id === resolvedTec.itemId);
@@ -2015,7 +2187,6 @@ export class BoilerplateActorSheet extends ActorSheet {
                       ui.notifications.warn(`Pré-requisito não atendido: Técnica ${resolvedTec.label}.`);
                       return;
                     }
-                    // Verifica pré-requisitos da própria técnica (recursivo)
                     const ok = await _verificarPrereqsTecnica(tItem, this.actor, new Set());
                     if (!ok) {
                       ui.notifications.warn(`Pré-requisito não atendido: Técnica ${resolvedTec.label} (pré-requisitos não satisfeitos).`);
@@ -2024,13 +2195,11 @@ export class BoilerplateActorSheet extends ActorSheet {
                     continue;
                   }
 
-                  // Se não conseguimos mapear, não bloqueia (evita falsos positivos), mas registra para debug.
                   console.warn('Pré-requisito não mapeado no catálogo nem como técnica:', token, 'para', `${cat}.${key}`);
                   continue;
                 }
               }
 
-              // Regra explícita do sistema: Paredes Resistentes exige Técnicas de Barreira
               if (cat === 'barreiras' && key === 'paredesResistentes') {
                 const hasTecnicas = Boolean(this.actor.system?.aptidoes?.barreiras?.tecnicasDeBarreiras);
                 if (!hasTecnicas) {
@@ -2044,11 +2213,9 @@ export class BoilerplateActorSheet extends ActorSheet {
             await this.actor.update(update);
 
             try {
-              // Ação e custo são inferidos pela descrição (não há mais inputs no modal)
               const chosenAction = inferirTipoAcao(specificDesc ?? '');
               let chosenCost = inferirCustoPE(specificDesc ?? '');
 
-              // Custos fixos para Expansões de Domínio (evita ambiguidade do texto)
               if (cat === 'dominio' && key === 'expansaoDeDominioIncompleta') chosenCost = 15;
               if (cat === 'dominio' && key === 'expansaoDeDominioCompleta') chosenCost = 20;
               if (cat === 'dominio' && key === 'acertoGarantido') chosenCost = 25;
@@ -2063,7 +2230,6 @@ export class BoilerplateActorSheet extends ActorSheet {
                 custo: chosenCost,
               });
 
-              // Ajuda a diagnosticar rapidamente se o problema é criação vs. visibilidade.
               if (result?.action === 'created') {
                 ui.notifications.info(`Item de Aptidão criado: ${name}.`);
               } else if (result?.action === 'updated') {
@@ -2089,23 +2255,14 @@ export class BoilerplateActorSheet extends ActorSheet {
     }, { classes: ['aptidao-dialog'], width: 720, height: 'auto' }).render(true);
   }
 
-  /**
-   * Garante que uma aptidão ativa exista como Item embutido no ator.
-   * - Ativar: cria (ou atualiza) um Item do tipo `aptidao`.
-   * - Remover: apaga o Item correspondente.
-   */
   async _syncAptidaoEmbeddedItem({ cat, key, name, desc, active, acao, custo }) {
-    // Se o usuário estiver rodando outra pasta/sistema por engano, isso aparece imediatamente.
     const systemId = game?.system?.id ?? 'feiticeiros-e-maldicoes';
 
-    // Em Foundry v12, o sistema precisa declarar o tipo no system.json.
     const supportedTypes = game?.system?.documentTypes?.Item;
     const hasAptidaoType = (() => {
       if (!supportedTypes) return false;
       if (Array.isArray(supportedTypes)) return supportedTypes.includes('aptidao');
-      // Foundry pode expor como Set em alguns contextos
       if (supportedTypes instanceof Set) return supportedTypes.has('aptidao');
-      // Ou como objeto { aptidao: true } / { aptidao: <schema> }
       if (typeof supportedTypes === 'object') {
         return Object.prototype.hasOwnProperty.call(supportedTypes, 'aptidao');
       }
@@ -2138,9 +2295,7 @@ export class BoilerplateActorSheet extends ActorSheet {
     }
 
     const fonte = APTIDOES_CATALOGO[cat]?.titulo ?? 'Aptidões';
-    // Inferir tipo de ação a partir da descrição (se disponível)
     const inferredAction = inferirTipoAcao(desc ?? '');
-    // Tentar extrair custo em Pontos de Energia (PE) da descrição se não for fornecido explicitamente
     let inferredCost = undefined;
     if (typeof desc === 'string' && desc) {
       const peRegex = /(?:gasta|custa|paga|pagar|pago|paga)\s*(?:até\s*)?(\d+)\s*(?:PE|Pontos? de Energia|pontos? de energia)\b/i;
@@ -2155,7 +2310,6 @@ export class BoilerplateActorSheet extends ActorSheet {
       name,
       'system.descricao.value': desc,
       'system.fonte.value': fonte,
-      // Campos comuns do nosso template de aptidão (mantém coerente)
       'system.custo.value': (custo ?? inferredCost ?? this.actor.items.get(existing?.id)?.system?.custo?.value) ?? 0,
       'system.acao.value': (acao ?? this.actor.items.get(existing?.id)?.system?.acao?.value ?? inferredAction) ?? 'Passiva',
       'system.requisito.value': this.actor.items.get(existing?.id)?.system?.requisito?.value ?? '',
@@ -2204,12 +2358,8 @@ export class BoilerplateActorSheet extends ActorSheet {
     return await Item.create(itemData, { parent: this.actor });
   }
 
-  /**
-   * Modal específica para Origem = Maldição: escolha de raça
-   */
   async _openOrigemMaldicaoDialog() {
     const currentRace = this.actor.system.detalhes?.racaMaldicao?.value ?? "";
-    // Mapeamento de valores legados para os novos nomes
     const legacyMap = {
       'Besta': 'Colosso Carniçal',
       'Aristocrata': 'Soberano Carmesim',
@@ -2287,7 +2437,6 @@ export class BoilerplateActorSheet extends ActorSheet {
     dlg.render(true);
   }
   
-  /** Toggle manual pill (click) */
   async _onToggleDeathMark(event) {
     event.preventDefault();
     if (!this.isEditable) return;
@@ -2304,7 +2453,6 @@ export class BoilerplateActorSheet extends ActorSheet {
     }
   }
 
-  /** Reset all death save marks */
   async _onDeathReset(event) {
     event?.preventDefault();
     if (!this.isEditable) return;
@@ -2319,11 +2467,9 @@ export class BoilerplateActorSheet extends ActorSheet {
     await this.actor.update(update);
   }
 
-  /** Perform a death save roll and mark the next pill */
   async _onDeathTest(event) {
     event?.preventDefault();
     if (!this.isEditable) return;
-    // only allow death tests when at 0 HP
     const hp = Number(this.actor.system?.recursos?.hp?.value ?? 0) || 0;
     if (hp > 0) return ui.notifications.warn('Testes de morte só podem ser feitos com 0 de HP.');
     const conMod = Number(this.actor.system?.atributos?.constituicao?.mod ?? 0) || 0;
@@ -2342,7 +2488,6 @@ export class BoilerplateActorSheet extends ActorSheet {
     const total = Number(roll.total ?? 0);
     const success = total >= 10;
 
-    // find next empty slot
     const successPaths = ['system.combate.morte.s1','system.combate.morte.s2','system.combate.morte.s3'];
     const failPaths = ['system.combate.morte.f1','system.combate.morte.f2','system.combate.morte.f3'];
     const update = {};
@@ -2359,15 +2504,12 @@ export class BoilerplateActorSheet extends ActorSheet {
       await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: this.actor }), content: `<strong>${this.actor.name}</strong> obteve <span style="color:#ff5252;">Falha</span> no teste de morte (${total}).` });
     }
 
-    // apply update (if any)
     if (Object.keys(update).length) await this.actor.update(update);
 
-    // check successes count
     const successes = successPaths
       .map(p => Boolean(foundry.utils.getProperty(this.actor, p)))
       .filter(Boolean).length;
     if (successes >= 3) {
-      // estabiliza: define 1 de HP e limpa marcas de morte
       const reset = {
         'system.recursos.hp.value': 1,
         'system.combate.morte.s1': false,
@@ -2386,20 +2528,15 @@ export class BoilerplateActorSheet extends ActorSheet {
       return;
     }
 
-    // check failures count
     const failures = ['system.combate.morte.f1','system.combate.morte.f2','system.combate.morte.f3']
       .map(p => Boolean(foundry.utils.getProperty(this.actor, p)))
       .filter(Boolean).length;
     if (failures >= 3) {
-      // abrir mini-modal dramático
       this._openLastActionDialog();
     }
   }
 
-  /** Mini-modal dramático: Última Ação */
   async _openLastActionDialog() {
-    // Última ação: aplica uma ação com crítico garantido e mata o personagem sem criar mensagens
-    // Listar apenas ataques presentes na ficha (system.ataques)
     const ataques = this.actor.system?.ataques ?? {};
     const ataqueEntries = Object.entries(ataques)
       .map(([key, a]) => ({ key, label: a?.label ?? key }))
@@ -2442,18 +2579,14 @@ export class BoilerplateActorSheet extends ActorSheet {
                 return;
               }
 
-              // 1) Marcar flag temporária para garantir crítico
               await this.actor.setFlag(game.system.id, 'ultimaAcao.critico', true);
 
-              // 2) Rolar o ataque (vai para o chat normalmente)
               await this._rollPericiaByKey({ key: String(selectedKey), group: 'ataques' });
 
-              // 3) Garantir limpeza caso algo falhe antes de consumir
               try { await this.actor.unsetFlag(game.system.id, 'ultimaAcao.critico'); } catch (_) {}
             } catch (err) {
               console.warn('Erro ao aplicar flag de último-crit:', err);
             }
-            // Matar o personagem sem mensagens
             await this.actor.update({ 'system.recursos.hp.value': 0 });
             this.render(false);
           }
@@ -2470,14 +2603,10 @@ export class BoilerplateActorSheet extends ActorSheet {
     }, { classes: ['ultima-acao'] });
     dlg.render(true);
   }
-/**
-   * Lida com a subida de nível e multiclasse com XP Curvo
-   */
+
   async _onLevelUp(event) {
     event.preventDefault();
     const system = this.actor.system;
-
-    // --- TABELA DE XP ---
     const XP_TABELA = [0, 1000, 3000, 6000, 10000, 15000, 21000, 28000, 36000, 45000, 55000, 66000, 78000, 91000, 105000, 120000, 136000, 153000, 171000, 190000];
 
     const niveis = system.detalhes.niveis || { principal: { value: 0 }, secundario: { value: 0 } };
@@ -2490,7 +2619,6 @@ export class BoilerplateActorSheet extends ActorSheet {
     const temMulticlasse = multiclasseNome !== "Nenhuma";
     const xpAtual = system.detalhes.xp?.value || 0;
 
-    // --- TRAVAS DE XP ---
     let nivelPermitido = 1;
     for (let i = 0; i < XP_TABELA.length; i++) {
         if (xpAtual >= XP_TABELA[i]) nivelPermitido = i + 1;
@@ -2510,7 +2638,6 @@ export class BoilerplateActorSheet extends ActorSheet {
         return;
     }
 
-    // Abrir o diálogo de Level Up usando a nova API: apenas actor
     try {
       new LevelUpDialog(this.actor).render(true);
     } catch (err) {

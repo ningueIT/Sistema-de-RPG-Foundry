@@ -1653,57 +1653,90 @@ input[type=number]::-webkit-inner-spin-button {
 
 /* CONDIÇÕES */
 .condition-group {
-    background: rgba(0,0,0,0.2);
-    border: 1px solid #444;
-    border-radius: 5px;
+    background: rgba(0,0,0,0.18);
+    border: 1px solid rgba(155,77,202,0.12);
+    border-radius: 8px;
     overflow: hidden;
+    padding-bottom: 6px;
 }
 
 .condition-header {
-    text-align: center;
-    font-weight: bold;
+    text-align: left;
+    font-weight: 700;
     font-size: 13px;
     color: #fff;
-    padding: 3px;
+    padding: 8px 10px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 
 /* Cores dos cabeçalhos */
-.condition-header.physical { background: #8b0000; }
-.condition-header.mental { background: #4a0d67; }
-.condition-header.sensory { background: #0d4a67; }
-.condition-header.movement { background: #674a0d; }
+.condition-header.physical { background: linear-gradient(90deg,#7e0b0b,#b02b2b); }
+.condition-header.mental { background: linear-gradient(90deg,#3b0f4f,#6a2a86); }
+.condition-header.sensory { background: linear-gradient(90deg,#0b4960,#16738f); }
+.condition-header.movement { background: linear-gradient(90deg,#5a3b0b,#9a6a2b); }
 
 .condition-list {
-    padding: 8px; /* Mais espaço interno */
-    font-size: 12px;
+    padding: 10px 12px;
+    font-size: 13px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 6px 12px;
 }
 
 /* ALINHAMENTO DO CHECKBOX COM O TEXTO */
 .condition-list label {
     display: flex;
-    align-items: center; /* Isso é o que alinha o centro verticalmente */
-    gap: 6px; /* Espaço entre a caixa e o texto */
+    align-items: center;
+    gap: 8px;
     cursor: pointer;
-    margin-bottom: 4px; /* Espaço entre uma condição e a de baixo */
-    line-height: 1; /* Garante que a altura da linha não atrapalhe */
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: background .15s ease, transform .05s ease, color .12s ease;
+    line-height: 1.1;
+    margin-bottom: 6px;
+}
+
+/* Estado hover / foco */
+.condition-list label:hover,
+.condition-list label:focus-within {
+    background: rgba(155,77,202,0.03);
+    transform: translateY(-1px);
 }
 
 /* Tira as margens estranhas do navegador */
 .condition-list input[type="checkbox"] {
-    margin: 0; 
-    width: 14px;  /* Tamanho fixo */
-    height: 14px; /* Tamanho fixo */
-    position: relative;
-    top: -1px; /* Ajuste fino para subir um pouquinho se precisar */
-    accent-color: var(--main-color, #ff4444);
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    accent-color: var(--main-color, #9b4dca);
+    border-radius: 3px;
 }
 
-/* Efeito ao passar o mouse */
-.condition-list label:hover {
-    color: var(--main-color, #ff4444);
-    text-shadow: 0 0 5px rgba(var(--main-rgb,255,68,68), 0.25);
+/* Força alinhamento consistente entre checkbox e label texto */
+.condition-list label { line-height: 16px; }
+.condition-list input[type="checkbox"] { vertical-align: middle; align-self: center; }
+.condition-list label .cond-text { display: inline-block; vertical-align: middle; }
+
+/* Checked visual stronger */
+.condition-list input[type="checkbox"]:checked {
+    box-shadow: 0 0 0 3px rgba(155,77,202,0.12) inset;
+}
+
+/* Subtle text color when checked */
+.condition-list input[type="checkbox"]:checked + span,
+.condition-list input[type="checkbox"]:checked ~ span {
+    color: #fff;
+}
+
+/* Responsive: collapse to single column on small widths */
+@media (max-width: 720px) {
+    .condition-list { grid-template-columns: 1fr; }
 }
 
 /* CARTÃO DE ATRIBUTO REFORMULADO */

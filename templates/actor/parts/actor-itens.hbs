@@ -61,5 +61,163 @@
         </div>
       {{/if}}
     </div>
+
+    <h3 class="jem-section-title" style="margin-top: 14px;">CD de Técnica</h3>
+    <div style="border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:10px; background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); color:#fff;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <label style="color:#cfcfcf; font-size:12px;">Atributo principal</label>
+        <select name="system.combate.cd.atributoPrincipal" style="height: 26px; font-size: 12px; color:#fff; background:transparent; border:1px solid rgba(255,255,255,0.04);">
+          <option value="forca" {{#if (eq system.combate.cd.atributoPrincipal "forca")}}selected{{/if}}>FOR</option>
+          <option value="destreza" {{#if (eq system.combate.cd.atributoPrincipal "destreza")}}selected{{/if}}>DES</option>
+          <option value="constituicao" {{#if (eq system.combate.cd.atributoPrincipal "constituicao")}}selected{{/if}}>CON</option>
+          <option value="inteligencia" {{#if (eq system.combate.cd.atributoPrincipal "inteligencia")}}selected{{/if}}>INT</option>
+          <option value="sabedoria" {{#if (eq system.combate.cd.atributoPrincipal "sabedoria")}}selected{{/if}}>SAB</option>
+          <option value="presenca" {{#if (eq system.combate.cd.atributoPrincipal "presenca")}}selected{{/if}}>PRE</option>
+        </select>
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;">
+        <label style="color:#cfcfcf; font-size:12px;">Bônus ad-hoc</label>
+        <input type="number" name="system.combate.cd.bonusAdHoc" value="{{system.combate.cd.bonusAdHoc}}" style="width: 90px; height: 26px; font-size: 12px; text-align:center; color:#fff; background:transparent; border:1px solid rgba(255,255,255,0.04);" placeholder="0" title="Bônus ad-hoc (entra em Outros bônus)">
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px;">
+        <label style="color:#cfcfcf; font-size:12px;">Outros bônus</label>
+        <input type="number" name="system.combate.cd.outrosBonus" value="{{system.combate.cd.outrosBonus}}" style="width: 90px; height: 26px; font-size: 12px; text-align:center; color:#fff; background:transparent; border:1px solid rgba(255,255,255,0.04);" placeholder="0" title="Outros bônus manuais (entra em Outros bônus)">
+      </div>
+      {{#if system.combate.cd.log}}
+        <details style="margin-top:10px; background:rgba(255,255,255,0.01); padding:8px; border-radius:6px;">
+          <summary style="cursor:pointer; color:#cfcfcf; font-size:13px;">Ver log detalhado da CD</summary>
+          <div style="margin-top:8px; color:#ddd; font-size:12px;">
+            <ol style="margin-left:16px;">
+              {{#each system.combate.cd.log}}
+                <li>{{this}}</li>
+              {{/each}}
+            </ol>
+          </div>
+        </details>
+      {{/if}}
+
+    </div>
+    
+    <h3 class="jem-section-title" style="margin-top: 14px;">Defesa</h3>
+    <div style="border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:10px; background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); margin-top:6px; color:#fff;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <label style="color:#cfcfcf; font-size:12px;">Bônus ad-hoc</label>
+        <input type="number" name="system.combate.defesa.bonusAdHoc" value="{{system.combate.defesa.bonusAdHoc}}" style="width: 90px; height: 26px; font-size: 12px; text-align:center; color:#fff; background:transparent; border:1px solid rgba(255,255,255,0.04);" placeholder="0" title="Bônus ad-hoc (entra em Outros bônus)">
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;">
+        <label style="color:#cfcfcf; font-size:12px;">Outros bônus</label>
+        <input type="number" name="system.combate.defesa.outrosBonus" value="{{system.combate.defesa.outrosBonus}}" style="width: 90px; height: 26px; font-size: 12px; text-align:center; color:#fff; background:transparent; border:1px solid rgba(255,255,255,0.04);" placeholder="0" title="Outros bônus manuais (entra em Outros bônus)">
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px;">
+        <label style="color:#cfcfcf; font-size:12px;">Bônus manual de equipamento</label>
+        <input type="number" name="system.combate.defesa.bonusEquipManual" value="{{system.combate.defesa.bonusEquipManual}}" style="width: 90px; height: 26px; font-size: 12px; text-align:center; color:#fff; background:transparent; border:1px solid rgba(255,255,255,0.04);" placeholder="0" title="Bônus manual de equipamento (soma com equipamentos)">
+      </div>
+
+      {{#if system.combate.defesa.log}}
+        <details style="margin-top:10px; background:rgba(255,255,255,0.01); padding:8px; border-radius:6px;">
+          <summary style="cursor:pointer; color:#cfcfcf; font-size:13px;">Ver log detalhado da Defesa</summary>
+          <div style="margin-top:8px; color:#ddd; font-size:12px;">
+            <ol style="margin-left:16px;">
+              {{#each system.combate.defesa.log}}
+                <li>{{this}}</li>
+              {{/each}}
+            </ol>
+          </div>
+        </details>
+      {{/if}}
+    </div>
+
+    <h3 class="jem-section-title" style="margin-top: 14px;">Movimento</h3>
+    <div style="border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:10px; background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); margin-top:6px; color:#fff;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <label style="color:#cfcfcf; font-size:12px;">Base (m)</label>
+        <input type="number" name="system.combate.movimento.base" value="{{system.combate.movimento.base}}" step="0.5" style="width: 90px; height: 26px; font-size: 12px; text-align:center; color:#fff; background:transparent; border:1px solid rgba(255,255,255,0.04);" placeholder="9" title="Deslocamento base (padrão do livro: 9m)">
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;">
+        <label style="color:#cfcfcf; font-size:12px;">Bônus ad-hoc (m)</label>
+        <input type="number" name="system.combate.movimento.bonusAdHoc" value="{{system.combate.movimento.bonusAdHoc}}" step="0.5" style="width: 90px; height: 26px; font-size: 12px; text-align:center; color:#fff; background:transparent; border:1px solid rgba(255,255,255,0.04);" placeholder="0" title="Bônus ad-hoc (soma no deslocamento)">
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px;">
+        <label style="color:#cfcfcf; font-size:12px;">Outros bônus (m)</label>
+        <input type="number" name="system.combate.movimento.outrosBonus" value="{{system.combate.movimento.outrosBonus}}" step="0.5" style="width: 90px; height: 26px; font-size: 12px; text-align:center; color:#fff; background:transparent; border:1px solid rgba(255,255,255,0.04);" placeholder="0" title="Outros bônus manuais (soma no deslocamento)">
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;">
+        <label style="color:#cfcfcf; font-size:12px;">Em Domínio (x2)</label>
+        <input type="checkbox" name="system.combate.movimento.emDominio" {{checked system.combate.movimento.emDominio}} title="Dentro do seu próprio Domínio, o movimento dobra (v2.5.2)" />
+      </div>
+
+      {{#if system.combate.movimento.salto}}
+        <div style="margin-top:10px; background:rgba(0,0,0,0.18); padding:8px; border-radius:6px; color:#ddd; font-size:12px;">
+          <strong style="color:#fff;">Pular (linha reta)</strong>: {{system.combate.movimento.salto.value}}m <span style="opacity:0.8;">(Mod. Força {{system.combate.movimento.salto.forMod}})</span>
+        </div>
+      {{/if}}
+
+      {{#if system.combate.movimento.log}}
+        <details style="margin-top:10px; background:rgba(255,255,255,0.01); padding:8px; border-radius:6px;">
+          <summary style="cursor:pointer; color:#cfcfcf; font-size:13px;">Ver log detalhado do Movimento</summary>
+          <div style="margin-top:8px; color:#ddd; font-size:12px;">
+            <ol style="margin-left:16px;">
+              {{#each system.combate.movimento.log}}
+                <li>{{this}}</li>
+              {{/each}}
+            </ol>
+          </div>
+        </details>
+      {{/if}}
+    </div>
+
+    <h3 class="jem-section-title" style="margin-top: 14px;">Iniciativa</h3>
+    <div style="border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:10px; background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); margin-top:6px; color:#fff;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <label style="color:#cfcfcf; font-size:12px;">Atributo extra</label>
+        <select name="system.combate.iniciativa.atributoExtra" style="height: 26px; font-size: 12px; color:#fff; background:transparent; border:1px solid rgba(255,255,255,0.04);">
+          <option value="nenhum" {{#if (eq system.combate.iniciativa.atributoExtra "nenhum")}}selected{{/if}}>Nenhum</option>
+          <option value="inteligencia" {{#if (eq system.combate.iniciativa.atributoExtra "inteligencia")}}selected{{/if}}>INT</option>
+          <option value="sabedoria" {{#if (eq system.combate.iniciativa.atributoExtra "sabedoria")}}selected{{/if}}>SAB</option>
+          <option value="melhorIntSab" {{#if (eq system.combate.iniciativa.atributoExtra "melhorIntSab")}}selected{{/if}}>Melhor INT/SAB</option>
+          <option value="presenca" {{#if (eq system.combate.iniciativa.atributoExtra "presenca")}}selected{{/if}}>PRE</option>
+        </select>
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;">
+        <label style="color:#cfcfcf; font-size:12px;">Usar Treinamento</label>
+        <input type="checkbox" name="system.combate.iniciativa.usarTreinamento" {{checked system.combate.iniciativa.usarTreinamento}} title="Algumas habilidades somam Treinamento na Iniciativa" />
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;">
+        <label style="color:#cfcfcf; font-size:12px;">Bônus fixo</label>
+        <input type="number" name="system.combate.iniciativa.bonusFixo" value="{{system.combate.iniciativa.bonusFixo}}" step="1" style="width: 90px; height: 26px; font-size: 12px; text-align:center; color:#fff; background:transparent; border:1px solid rgba(255,255,255,0.04);" placeholder="0" title="Bônus fixo (ex.: Iniciativa Aprimorada +4)">
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px;">
+        <label style="color:#cfcfcf; font-size:12px;">Bônus ad-hoc</label>
+        <input type="number" name="system.combate.iniciativa.bonusAdHoc" value="{{system.combate.iniciativa.bonusAdHoc}}" step="1" style="width: 90px; height: 26px; font-size: 12px; text-align:center; color:#fff; background:transparent; border:1px solid rgba(255,255,255,0.04);" placeholder="0" title="Bônus ad-hoc (entra em Outros bônus)">
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px;">
+        <label style="color:#cfcfcf; font-size:12px;">Outros bônus</label>
+        <input type="number" name="system.combate.iniciativa.outrosBonus" value="{{system.combate.iniciativa.outrosBonus}}" step="1" style="width: 90px; height: 26px; font-size: 12px; text-align:center; color:#fff; background:transparent; border:1px solid rgba(255,255,255,0.04);" placeholder="0" title="Outros bônus manuais (entra em Outros bônus)">
+      </div>
+
+      {{#if system.combate.iniciativa.log}}
+        <details style="margin-top:10px; background:rgba(255,255,255,0.01); padding:8px; border-radius:6px;">
+          <summary style="cursor:pointer; color:#cfcfcf; font-size:13px;">Ver log detalhado da Iniciativa</summary>
+          <div style="margin-top:8px; color:#ddd; font-size:12px;">
+            <ol style="margin-left:16px;">
+              {{#each system.combate.iniciativa.log}}
+                <li>{{this}}</li>
+              {{/each}}
+            </ol>
+          </div>
+        </details>
+      {{/if}}
+    </div>
   </div>
 </div>

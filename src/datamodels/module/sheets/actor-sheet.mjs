@@ -156,6 +156,8 @@ export class BoilerplateActorSheet extends ActorSheet {
       item.sheet.render(true);
     });
 
+    html.on('click', '.roll-initiative', this._onRollInitiative.bind(this));
+
     // -------------------------------------------------------------
     // Everything below here is only needed if the sheet is editable
     if (!this.isEditable) return;
@@ -192,6 +194,66 @@ export class BoilerplateActorSheet extends ActorSheet {
         li.setAttribute('draggable', true);
         li.addEventListener('dragstart', handler, false);
       });
+    }
+  }
+
+  async _onRollInitiative(event) {
+    event.preventDefault();
+    if (!this.actor) return;
+    if (!this.actor.isOwner) return ui?.notifications?.warn?.('Sem permissão para rolar iniciativa deste ator.');
+
+    const actor = this.actor;
+
+    let token = null;
+    try {
+      const controlled = canvas?.tokens?.controlled ?? [];
+      token = controlled.find(t => t?.actor?.id === actor.id) ?? null;
+    } catch (_) { /* ignore */ }
+
+    if (!token) {
+      try {
+        const active = (typeof actor.getActiveTokens === 'function') ? actor.getActiveTokens(true, true) : [];
+        token = (Array.isArray(active) && active.length) ? active[0] : null;
+      } catch (_) { /* ignore */ }
+    }
+
+    const combat = game?.combat ?? null;
+    const sameScene = !combat?.scene || !canvas?.scene || (combat.scene.id === canvas.scene.id);
+
+    if (combat && sameScene) {
+      try {
+        const combatants = combat.combatants;
+        let combatant = null;
+        if (token) combatant = combatants?.find?.(c => c?.actor?.id === actor.id && c?.tokenId === token.id) ?? null;
+        if (!combatant) combatant = combatants?.find?.(c => c?.actor?.id === actor.id) ?? null;
+
+        if (!combatant) {
+          const data = { actorId: actor.id };
+          if (token) data.tokenId = token.id;
+          if (typeof combat.createEmbeddedDocuments === 'function') await combat.createEmbeddedDocuments('Combatant', [data]);
+          else if (typeof combat.createCombatants === 'function') await combat.createCombatants([data]);
+
+          if (token) combatant = combatants?.find?.(c => c?.actor?.id === actor.id && c?.tokenId === token.id) ?? null;
+          if (!combatant) combatant = combatants?.find?.(c => c?.actor?.id === actor.id) ?? null;
+        }
+
+        if (!combatant) return ui?.notifications?.error?.('Não foi possível adicionar o ator ao combate para rolar iniciativa.');
+        await combat.rollInitiative([combatant.id]);
+        return;
+      } catch (e) {
+        console.warn('Falha ao rolar iniciativa no combate; caindo para rolagem no chat.', e);
+      }
+    }
+
+    const formula = String(CONFIG?.Combat?.initiative?.formula ?? '1d20 + @iniciativa');
+    const rollData = actor.getRollData();
+    rollData.actor = actor;
+
+    try {
+      await import('../../../../module/helpers/rolls.mjs').then(m => m.rollFormula(formula, rollData, { asyncEval: true, toMessage: true, flavor: `<b>Iniciativa</b> — ${actor.name}` }));
+    } catch (err) {
+      console.warn('Erro ao rolar iniciativa via rollFormula:', err);
+      ui?.notifications?.error?.('Falha ao rolar iniciativa. Veja o console.');
     }
   }
 

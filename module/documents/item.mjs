@@ -391,13 +391,31 @@ export class BoilerplateItem extends Item {
       }
 
       const raw = Number(roll.total) || 0;
-      const total = raw + attrMod + training + itemBonus;
+
+      // Aplicar penalidades provenientes de condições ativas no ator
+      let attackPenalty = 0;
+      try {
+        const effects = this.actor?.effects?.filter?.(e => !e.disabled) ?? [];
+        for (const eff of effects) {
+          try {
+            const cond = eff?.flags?.['feiticeiros-e-maldicoes']?.condition;
+            if (!cond) continue;
+            if (cond === 'condicoes.fisicas.envenenado') attackPenalty += 2;
+            if (cond === 'condicoes.movimento.enredado') attackPenalty += 2;
+            if (cond === 'condicoes.mentais.abalado') attackPenalty += 1;
+            if (cond === 'condicoes.mentais.amedrontado') attackPenalty += 3;
+            if (cond === 'condicoes.fisicas.paralisado') attackPenalty += 9999; // effectively prevents
+          } catch (e) { /* ignore effect parsing errors */ }
+        }
+      } catch (e) { /* ignore */ }
+
+      const total = raw + attrMod + training + itemBonus - attackPenalty;
 
       const isCritical = (usedD20 != null) ? (Number(usedD20) >= Number(critThreshold)) : false;
 
       const flavor = `Ataque — ${item.name}`;
       // Construir cartão estilizado parecido com skill-roll
-      const formulaShort = `1d20 + ${attrMod}${training ? ' + ' + training + '[Treino]' : ''}${itemBonus ? ' + ' + itemBonus + '[Item]' : ''}`;
+      const formulaShort = `1d20 + ${attrMod}${training ? ' + ' + training + '[Treino]' : ''}${itemBonus ? ' + ' + itemBonus + '[Item]' : ''}${attackPenalty ? ' - ' + attackPenalty + '[Cond]' : ''}`;
       const content = `
         <div class="card chat-card skill-roll">
           <div class="die"><i class="fas fa-dice-d20"></i><span>${usedD20 ?? '-'}</span></div>

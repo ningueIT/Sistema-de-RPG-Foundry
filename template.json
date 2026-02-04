@@ -158,9 +158,30 @@
       },
       "combate": {
         "defesa": { "value": 10, "label": "Defesa" },
-        "cd": { "value": 10, "label": "Classe de Dificuldade" },
-        "movimento": { "value": 9, "label": "Deslocamento" },
-        "iniciativa": { "value": 0, "label": "Iniciativa" },
+        "cd": {
+          "value": 10,
+          "label": "Classe de Dificuldade",
+          "atributoPrincipal": "inteligencia",
+          "bonusAdHoc": 0,
+          "outrosBonus": 0
+        },
+        "movimento": {
+          "value": 9,
+          "label": "Deslocamento",
+          "base": 9,
+          "bonusAdHoc": 0,
+          "outrosBonus": 0,
+          "emDominio": false
+        },
+        "iniciativa": {
+          "value": 0,
+          "label": "Iniciativa",
+          "atributoExtra": "nenhum",
+          "usarTreinamento": false,
+          "bonusFixo": 0,
+          "bonusAdHoc": 0,
+          "outrosBonus": 0
+        },
         "dadosVida": { "value": 1, "max": 1, "lado": "1d8", "label": "Dados de Vida" },
         "dadosEnergia": { "value": 1, "max": 1, "lado": "1d6", "label": "Dados de Energia" },
         "rd": { "value": 0, "special": "", "byType": {} },

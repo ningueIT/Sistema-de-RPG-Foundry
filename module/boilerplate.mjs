@@ -47,7 +47,7 @@ Hooks.once('init', function () {
    * @type {String}
    */
   CONFIG.Combat.initiative = {
-    formula: '1d20 + @abilities.dex.mod',
+    formula: '1d20 + @iniciativa',
     decimals: 2,
   };
 
@@ -186,18 +186,17 @@ Hooks.once('ready', function () {
           const addHP = Math.floor(maxHP / 2);
           const newHP = Math.min(maxHP, curHP + addHP);
 
-          // Para DV/DE, usa actor.shortRest() que recupera 1/4 dos dados (mínimo 1)
           const { recoveredDV, recoveredDE } = await actor.shortRest();
 
           const updates = {};
           if (maxHP > 0) updates['system.recursos.hp.value'] = newHP;
           if (Object.keys(updates).length) await actor.update(updates);
-          parts.push(`<div>${actor.name} (NPC): HP +${newHP - curHP}, DV +${recoveredDV}, DE +${recoveredDE}</div>`);
+          parts.push(`<div>${actor.name} (NPC): HP +${newHP - curHP} (DV/DE: recuperam apenas no Descanso Longo)</div>`);
         } else {
           // Personagem jogador: aplicar shortRest automaticamente se solicitado
           if (applyToPlayers) {
-            const { recoveredDV, recoveredDE } = await actor.shortRest();
-            parts.push(`<div>${actor.name} (PC): DV +${recoveredDV}, DE +${recoveredDE}</div>`);
+            await actor.shortRest();
+            parts.push(`<div>${actor.name} (PC): Descanso Curto (DV/DE recuperam apenas no Descanso Longo)</div>`);
           } else {
             await actor.setFlag(game.system.id, 'lastShortRest', Date.now());
             parts.push(`<div>${actor.name}: Descanso Curto declarado (jogador deve gastar DV/DE manualmente).</div>`);
@@ -228,10 +227,7 @@ Hooks.once('ready', function () {
           <div class="hint">Dica: 'Selecionados' é padrão para evitar curar toda a cena por engano.</div>
         </div>
         <div class="form-group">
-          <label class="title">Opções</label>
-          <div class="form-fields">
-            <label class="option"><input type="checkbox" name="applyToPlayers" value="1"><span>Aplicar automaticamente a Personagens (recuperar DV/DE)</span></label>
-          </div>
+          <div class="hint">Regra: DV/DE recuperam apenas no Descanso Longo (1 vez por dia). Descanso Curto não recupera DV/DE.</div>
         </div>
       </form>
     `;
@@ -244,9 +240,8 @@ Hooks.once('ready', function () {
           label: 'Confirmar',
           callback: (html) => {
             const filter = html.find('input[name="target"]:checked').val() || 'selected';
-            const applyToPlayers = Boolean(html.find('input[name="applyToPlayers"]:checked').val());
             if (restType === 'long') game.feiticeirosEAMaldicoes.massLongRestSelected(filter);
-            else game.feiticeirosEAMaldicoes.massShortRestSelected(filter, applyToPlayers);
+            else game.feiticeirosEAMaldicoes.massShortRestSelected(filter, false);
           }
         },
         cancel: {
