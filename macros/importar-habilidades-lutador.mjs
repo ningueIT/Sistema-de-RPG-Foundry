@@ -78,7 +78,7 @@
     { name: "Armas Absolutas", nivel: 12, system: { categoria: "Lutador", custo: "2 PE (+2/rodada)", ativacao: "Especial", duracao: "Sustentada" }, description: `Com arma dedicada: +3 Defesa ou +3 Ataque. Pode rolar novamente erros uma vez por ataque.` },
     { name: "Corpo Arsenal", nivel: 12, system: { categoria: "Lutador", custo: "", ativacao: "Passiva", duracao: "Permanente" }, description: `Crítico desarmado pode aplicar efeito de Bastão, Haste ou Martelo.` },
     { name: "Seja Água", nivel: 16, system: { categoria: "Lutador", custo: "", ativacao: "Passiva", duracao: "Permanente" }, description: `+3m deslocamento, ignora terreno difícil físico, evita agarrão sem teste (1/rodada).` },
-    { name: "Tempestade Sufocante", nivel: 16, system: { categoria: "Lutador", custo: "", ativacao: "Passiva", duracao: "Até próximo turno" }, description: `Acertos acumulam penalidade de -1 na Defesa e TR do alvo.` },
+    { name: "Tempestade Sufocante", nivel: 12, system: { categoria: "Lutador", custo: "", ativacao: "Passiva", duracao: "Até próximo turno" }, description: `Acertos acumulam penalidade de -1 na Defesa e TR do alvo.` },
     { name: "Corpo Supremo", nivel: 16, system: { categoria: "Lutador", custo: "", ativacao: "Passiva", duracao: "Permanente" }, description: `+3m movimento, +4 Defesa, RD massiva contra tipos físicos e +1 escolhido.` },
 
     // Extras / Manobras

@@ -222,7 +222,42 @@ export class BoilerplateActorSheet extends ActorSheet {
   }
 
   get template() {
+    if (this.actor?.type === 'inimigo') {
+      return 'systems/feiticeiros-e-maldicoes/templates/actor/actor-inimigo-sheet.hbs';
+    }
     return 'systems/feiticeiros-e-maldicoes/templates/actor/actor-character-sheet.hbs';
+  }
+
+  /** @override */
+  async _updateObject(event, formData) {
+    // NPC/Inimigo: `system.combate.movimento.base` é exibido/editável, mas é derivado
+    // de `baseUnscaled * movMult` (movMult por ND/patamar). Ao editar `base`,
+    // retrocalculamos e persistimos `baseUnscaled` para manter consistência.
+    try {
+      if (this.actor?.type === 'npc' || this.actor?.type === 'inimigo') {
+        const baseKey = 'system.combate.movimento.base';
+        if (Object.prototype.hasOwnProperty.call(formData, baseKey)) {
+          const baseVal = Number(formData[baseKey]);
+          if (Number.isFinite(baseVal)) {
+            const nd = Number(formData['system.nd'] ?? this.actor.system.nd ?? 1) || 1;
+            const pat = String(formData['system.patamar'] ?? this.actor.system.patamar ?? 'comum').toLowerCase();
+            const aplicaMult = (pat === 'capanga' || pat === 'comum' || pat === 'desafio' || pat === 'calamidade');
+            let movMult = 1;
+            if (aplicaMult) {
+              if (nd >= 17) movMult = 3;
+              else if (nd >= 9) movMult = 2;
+              else if (nd >= 5) movMult = 1.5;
+            }
+            const round1 = (n) => Math.round(Number(n) * 10) / 10;
+            formData['system.combate.movimento.baseUnscaled'] = round1(baseVal / movMult);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Falha ao sincronizar movimento.baseUnscaled:', e);
+    }
+
+    return super._updateObject(event, formData);
   }
 
 /** @override */
@@ -237,8 +272,136 @@ export class BoilerplateActorSheet extends ActorSheet {
     context.flags = actorData.flags;
     context.config = CONFIG.FEITICEIROS ?? CONFIG.BOILERPLATE;
 
+    const items = this.actor?.items ? Array.from(this.actor.items) : [];
+
+    const caracteristicasAll = items
+      .filter(i => i?.type === 'caracteristica')
+      .map(i => i.toObject(false));
+    const getCat = (it) => String(it?.system?.categoria?.value ?? it?.system?.categoria ?? 'caracteristica');
+    context.caracteristicas = {
+      all: caracteristicasAll,
+      resistencias: caracteristicasAll.filter(it => getCat(it) === 'resistencia'),
+      imunidades: caracteristicasAll.filter(it => getCat(it) === 'imunidade'),
+      vulnerabilidades: caracteristicasAll.filter(it => getCat(it) === 'vulnerabilidade'),
+      caracteristicas: caracteristicasAll.filter(it => getCat(it) === 'caracteristica'),
+    };
+
     const aptCatalogClone = foundry.utils.deepClone(APTIDOES_CATALOGO);
     context.aptidoesCatalogo = aptCatalogClone;
+
+    if (actorData.type === 'inimigo') {
+      context.acoesNpc = items.filter(i => i?.type === 'acao-npc').map(i => i.toObject(false));
+      context.dotes = items.filter(i => i?.type === 'dote').map(i => i.toObject(false));
+
+      // Necessário para selects de treino (0/1/2) na ficha do inimigo.
+      // Sem isso, o helper `selectOptions` pode quebrar ao receber `undefined`.
+      context.niveisPericia = { 0: "—", 1: "Treinado", 2: "Mestre" };
+
+      // Garante estrutura mínima de aptidaoNiveis (a ficha do inimigo acessa direto).
+      try {
+        const modelAptidaoNiveis = game?.system?.model?.Actor?.[actorData.type]?.aptidaoNiveis ?? {
+          aura: { value: 0, label: 'Aura (EA)' },
+          controleELeitura: { value: 0, label: 'Controle e Leitura (CL)' },
+          barreiras: { value: 0, label: 'Barreira (BAR)' },
+          dominio: { value: 0, label: 'Domínio (DOM)' },
+          energiaReversa: { value: 0, label: 'Energia Reversa (ER)' },
+        };
+
+        context.system.aptidaoNiveis = foundry.utils.mergeObject(
+          foundry.utils.deepClone(modelAptidaoNiveis),
+          context.system.aptidaoNiveis ?? {},
+          { inplace: false, overwrite: true }
+        );
+      } catch (e) {
+        context.system.aptidaoNiveis = context.system.aptidaoNiveis ?? {
+          aura: { value: 0, label: 'Aura (EA)' },
+          controleELeitura: { value: 0, label: 'Controle e Leitura (CL)' },
+          barreiras: { value: 0, label: 'Barreira (BAR)' },
+          dominio: { value: 0, label: 'Domínio (DOM)' },
+          energiaReversa: { value: 0, label: 'Energia Reversa (ER)' },
+        };
+      }
+
+      // Pontos de aptidão para inimigos: derivados de ND/patamar.
+      try {
+        const nd = Math.max(0, Number(context.system?.nd ?? 0) || 0);
+        const pat = String(context.system?.patamar ?? 'comum').toLowerCase();
+        const usaRegraND2 = (pat === 'comum' || pat === 'desafio' || pat === 'calamidade');
+        const ganhos = usaRegraND2 ? Math.min(10, Math.floor(nd / 2)) : 0;
+
+        const clamp10 = (n) => Math.max(0, Math.min(10, Number(n ?? 0) || 0));
+        const gastos = ['aura', 'controleELeitura', 'barreiras', 'dominio', 'energiaReversa']
+          .reduce((acc, k) => acc + clamp10(context.system?.aptidaoNiveis?.[k]?.value), 0);
+
+        context.system.aptidaoPontos = {
+          ganhos: { value: ganhos, label: 'Pontos Ganhos' },
+          gastos: { value: gastos, label: 'Pontos Gastos' },
+          restantes: { value: Math.max(0, ganhos - gastos), label: 'Pontos Restantes' },
+        };
+      } catch (e) {
+        context.system.aptidaoPontos = context.system.aptidaoPontos ?? {
+          ganhos: { value: 0, label: 'Pontos Ganhos' },
+          gastos: { value: 0, label: 'Pontos Gastos' },
+          restantes: { value: 0, label: 'Pontos Restantes' },
+        };
+      }
+
+      // Prepara tags de atributo para perícias gerais (reuso do layout padrão).
+      try {
+        if (context.system?.pericias) {
+          for (let [key, pericia] of Object.entries(context.system.pericias)) {
+            const atributoKey = MAPA_ATRIBUTOS[key];
+            if (!atributoKey) {
+              pericia.atributoLabel = "";
+              pericia.atributoMod = 0;
+              continue;
+            }
+
+            const attr = context.system?.atributos?.[atributoKey];
+            if (attr) {
+              pericia.atributoLabel = (attr.label || atributoKey).substring(0, 3).toUpperCase();
+              pericia.atributoMod = attr.mod ?? 0;
+            } else {
+              pericia.atributoLabel = atributoKey.substring(0, 3).toUpperCase();
+              pericia.atributoMod = 0;
+            }
+          }
+        }
+      } catch (e) { /* ignore */ }
+
+      context.listasInimigo = {
+        patamares: {
+          lacaio: 'lacaio',
+          capanga: 'capanga',
+          comum: 'comum',
+          desafio: 'desafio',
+          calamidade: 'calamidade'
+        },
+        origens: {
+          humano: 'humano',
+          espirito: 'espírito',
+          feiticeiro: 'feiticeiro',
+          corpo_amaldicoado: 'corpo_amaldicoado',
+          restrito_corpo: 'restrito_corpo',
+          restrito_fisico: 'restrito_fisico'
+        },
+        dificuldades: {
+          facil: 'fácil',
+          intermediario: 'intermediário',
+          dificil: 'difícil'
+        },
+        tamanhos: {
+          minusculo: 'minúsculo',
+          pequeno: 'pequeno',
+          medio: 'médio',
+          grande: 'grande',
+          enorme: 'enorme',
+          colossal: 'colossal'
+        }
+      };
+
+      return context;
+    }
 
     if (actorData.type == 'character') {
             const hasTecnicasBarreiras = Boolean(context.system?.aptidoes?.barreiras?.tecnicasDeBarreiras);
@@ -603,7 +766,7 @@ export class BoilerplateActorSheet extends ActorSheet {
       const itemData = {
         name: 'Soco',
         type: 'arma',
-        img: 'icons/svg/dice.svg',
+        img: 'icons/svg/d20-black.svg',
         system: {
           formula: '1d4 + @forca',
           damage: {
@@ -913,6 +1076,8 @@ export class BoilerplateActorSheet extends ActorSheet {
     html.on('click', '[data-action="aptidao-nivel-dec"]', this._onAptidaoNivelDec.bind(this));
     html.on('click', '[data-action="create-walls"]', this._onCreateWallsClick.bind(this));
     html.on('click', '.aptidao-treino-add', this._onAptidaoTreinoAdd.bind(this));
+    html.on('click', '[data-action="auto-calcular-inimigo-tests"]', this._onAutoCalcularInimigoTests.bind(this));
+    html.on('click', '[data-action="auto-calcular-inimigo-aptidoes"]', this._onAutoCalcularInimigoAptidoes.bind(this));
 
     html.on('click', '[data-action="use-aptidao"]', this._onUseAptidaoItem.bind(this));
     html.on('click', '[data-action="show-aptidao-desc"]', this._onShowAptidaoDescription.bind(this));
@@ -1272,6 +1437,7 @@ export class BoilerplateActorSheet extends ActorSheet {
       }
       else if (key === 'condicoes.fisicas.fragilizado') {
         changes.push({ key: 'system.combate.rd.value', mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE, value: String(0), priority: 20 });
+        changes.push({ key: 'system.combate.rd.irreducivel', mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE, value: String(0), priority: 20 });
       }
       else if (key === 'condicoes.mentais.abalado') {
         addPericias(-1); addAtaques(-1);
@@ -1656,6 +1822,26 @@ export class BoilerplateActorSheet extends ActorSheet {
 
   _computeAptidaoPontosSnapshot() {
     const system = this.actor.system;
+
+    // Inimigos: pontos vêm de ND e Patamar (Grimório). Não é compra por nível.
+    if (this.actor?.type === 'inimigo') {
+      const ndRaw = (typeof system.nd === 'number') ? system.nd : Number(system.nd?.value ?? system.nd);
+      const nd = Math.max(0, Number.isFinite(ndRaw) ? ndRaw : 0);
+      const pat = String(system.patamar ?? system.patamar?.value ?? 'comum').toLowerCase();
+      const usaRegraND2 = (pat === 'comum' || pat === 'desafio' || pat === 'calamidade');
+      const pontosGanhos = usaRegraND2 ? Math.min(10, Math.floor(nd / 2)) : 0;
+
+      const clamp10 = (n) => Math.max(0, Math.min(10, Number(n ?? 0) || 0));
+      const pontosGastos = ['aura', 'controleELeitura', 'barreiras', 'dominio', 'energiaReversa']
+        .reduce((acc, k) => acc + clamp10(system.aptidaoNiveis?.[k]?.value), 0);
+
+      return {
+        ganhos: pontosGanhos,
+        gastos: pontosGastos,
+        restantes: Math.max(0, pontosGanhos - pontosGastos),
+      };
+    }
+
     const nivelTotalDerivado = system.detalhes?.nivel?.value ??
       ((system.detalhes?.niveis?.principal?.value || 0) + (system.detalhes?.niveis?.secundario?.value || 0));
 
@@ -1683,7 +1869,8 @@ export class BoilerplateActorSheet extends ActorSheet {
     if (!['aura', 'controleELeitura', 'barreiras', 'dominio', 'energiaReversa'].includes(key)) return;
 
     const current = Number(this.actor.system?.aptidaoNiveis?.[key]?.value ?? 0) || 0;
-    if (current >= 5) return;
+    const maxNivel = (this.actor?.type === 'inimigo') ? 10 : 5;
+    if (current >= maxNivel) return;
 
     const { restantes } = this._computeAptidaoPontosSnapshot();
     if (restantes <= 0) {
@@ -1691,7 +1878,7 @@ export class BoilerplateActorSheet extends ActorSheet {
       return;
     }
 
-    await this.actor.update({ [`system.aptidaoNiveis.${key}.value`]: Math.min(5, current + 1) });
+    await this.actor.update({ [`system.aptidaoNiveis.${key}.value`]: Math.min(maxNivel, current + 1) });
   }
 
   async _onAptidaoNivelDec(event) {
@@ -1962,14 +2149,56 @@ export class BoilerplateActorSheet extends ActorSheet {
         }
 
         if (d20Face === 20) {
-          await this.actor.setFlag(game.system.id, 'kokusen.pendingDoubleDamage', true);
+          const sysId = game?.system?.id ?? 'feiticeiros-e-maldicoes';
+          const norm = (s) => String(s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+          const hasKokusenAbility = Boolean(
+            foundry.utils.getProperty(this.actor.system, 'aptidoes.especiais.raioNegro') ||
+            this.actor.items?.some(i => ['kokusen', 'raio negro'].includes(norm(i?.name)))
+          );
+
+          let kokusenTriggered = false;
+          let chanceD6 = null;
+          try {
+            if (hasKokusenAbility) {
+              kokusenTriggered = true;
+            } else {
+              const rollD6 = await rollFormula('1d6', { actor: this.actor }, { asyncEval: true, toMessage: false });
+              chanceD6 = Number(rollD6.total || 0);
+              kokusenTriggered = (chanceD6 === 6);
+            }
+          } catch (e) {
+            console.warn('Erro ao rolar d6 de chance do Kokusen:', e);
+            kokusenTriggered = false;
+          }
+
+          if (!kokusenTriggered) {
+            try {
+              const extra = (chanceD6 != null) ? ` (d6: <b>${chanceD6}</b>)` : '';
+              const chatContent = `<div class="kokusen-chat"><div class="kokusen-chat__title">20 natural</div><div class="kokusen-chat__body"><strong>${this.actor.name}</strong> não ativou <span class="kokusen-badge">Kokusen</span>${extra}.</div></div>`;
+              await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: this.actor }), content: chatContent });
+            } catch (_) {}
+            return roll;
+          }
+
+          await this.actor.setFlag(sysId, 'kokusen.pending', true);
 
           try {
-            const rollD6 = await rollFormula('1d6', { actor: this.actor }, { asyncEval: true, toMessage: false });
-            const face = Number(rollD6.total || 0);
-
             let recoveredHP = 0;
             let recoveredEnergy = 0;
+
+            // d6 de bônus: com a habilidade, não decide se é Kokusen (é sempre),
+            // mas ainda rola para determinar os bônus. Sem a habilidade, o Kokusen
+            // só ativa no 6, então o d6 de bônus é efetivamente 6.
+            let bonusFace = 6;
+            if (hasKokusenAbility) {
+              try {
+                const rollBonus = await rollFormula('1d6', { actor: this.actor }, { asyncEval: true, toMessage: false });
+                bonusFace = Number(rollBonus.total || 0);
+              } catch (e) {
+                console.warn('Erro ao rolar d6 de bônus do Kokusen:', e);
+                bonusFace = 0;
+              }
+            }
 
             const rollDie = async (lado) => {
               try {
@@ -1981,13 +2210,13 @@ export class BoilerplateActorSheet extends ActorSheet {
             const vidaLado = this.actor.system?.combate?.dadosVida?.lado ?? '1d8';
             const energiaLado = this.actor.system?.combate?.dadosEnergia?.lado ?? '1d6';
 
-            if (face === 2 || face === 4 || face === 6) {
+            if (bonusFace === 2 || bonusFace === 4 || bonusFace === 6) {
               const v = await rollDie(vidaLado);
-              recoveredHP += (face === 4 || face === 6) ? (v * 2) : v;
+              recoveredHP += (bonusFace === 4 || bonusFace === 6) ? (v * 2) : v;
             }
-            if (face === 3 || face === 5 || face === 6) {
+            if (bonusFace === 3 || bonusFace === 5 || bonusFace === 6) {
               const e = await rollDie(energiaLado);
-              recoveredEnergy += (face === 5 || face === 6) ? (e * 2) : e;
+              recoveredEnergy += (bonusFace === 5 || bonusFace === 6) ? (e * 2) : e;
             }
 
             if (recoveredHP > 0 && this.actor.system?.recursos?.hp) {
@@ -2019,14 +2248,14 @@ export class BoilerplateActorSheet extends ActorSheet {
 
             const parts = [];
             parts.push(`<div class="kokusen-chat__title">KOKUSEN!</div>`);
-            parts.push(`<div class="kokusen-chat__body"><strong>${this.actor.name}</strong> ativou <span class="kokusen-badge">Kokusen</span> (d6: <b>${face}</b>).`);
+            parts.push(`<div class="kokusen-chat__body"><strong>${this.actor.name}</strong> ativou <span class="kokusen-badge">Kokusen</span>${hasKokusenAbility ? ' (habilidade)' : ''} (d6: <b>${bonusFace}</b>).`);
             if (recoveredHP > 0) parts.push(`<div>Recuperou <b>${recoveredHP}</b> PV.</div>`);
             if (recoveredEnergy > 0) parts.push(`<div>Recuperou <b>${recoveredEnergy}</b> PE.</div>`);
             const chatContent = `<div class="kokusen-chat">${parts.join('')}</div>`;
             await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: this.actor }), content: chatContent });
-            try { Hooks.call('kokusen', this.actor, { fluxDepth: newFluxDepth, bonusMaestria, d6: face, recoveredHP, recoveredEnergy }); } catch(e) { console.warn('Hook kokusen erro:', e); }
+            try { Hooks.call('kokusen', this.actor, { fluxDepth: newFluxDepth, bonusMaestria, d6: bonusFace, recoveredHP, recoveredEnergy }); } catch(e) { console.warn('Hook kokusen erro:', e); }
           } catch (e) {
-            console.warn('Erro ao rolar d6 para Kokusen:', e);
+            console.warn('Erro ao processar efeitos de Kokusen:', e);
           }
         }
       }
@@ -2035,6 +2264,59 @@ export class BoilerplateActorSheet extends ActorSheet {
     }
 
     return roll;
+  }
+
+  async _onAutoCalcularInimigoTests(event) {
+    event.preventDefault();
+
+    const updates = {};
+
+    // Neste sistema, `value` é o grau de treino (0=—, 1=Treinado, 2=Mestre).
+    // Marcar como Treinado faz o teste usar Atributo Base + BT (Treino) automaticamente.
+    const toTreinado = (path) => { updates[path] = 1; };
+
+    // Salvaguardas (TR obrigatórias)
+    for (const key of ['fortitude', 'reflexos', 'vontade', 'astucia']) {
+      toTreinado(`system.salvaguardas.${key}.value`);
+    }
+
+    // Ataques (mapeados como Luta / Pontaria / Feitiçaria)
+    for (const key of ['corpo', 'distancia', 'amaldicoado']) {
+      toTreinado(`system.ataques.${key}.value`);
+    }
+
+    // Táticas essenciais
+    toTreinado('system.pericias.furtividade.value');
+
+    try {
+      await this.actor.update(updates);
+    } catch (err) {
+      console.warn('Falha ao Auto-Calcular testes do inimigo:', err);
+      ui?.notifications?.error?.('Falha ao auto-calcular. Veja o console.');
+    }
+  }
+
+  async _onAutoCalcularInimigoAptidoes(event) {
+    event.preventDefault();
+
+    if (this.actor?.type !== 'inimigo') return;
+
+    const sys = this.actor.system ?? {};
+    const ndRaw = (typeof sys.nd === 'number') ? sys.nd : Number(sys.nd?.value ?? sys.nd);
+    const nd = Math.max(0, Number.isFinite(ndRaw) ? ndRaw : 0);
+
+    const pat = String(sys.patamar ?? sys.patamar?.value ?? 'comum').toLowerCase();
+    const usaRegraND2 = (pat === 'comum' || pat === 'desafio' || pat === 'calamidade');
+
+    // Lacaios/Capangas: tabelas não listam aptidões; default 0.
+    // Comum/Desafio/Calamidade: floor(ND/2), até 10 (ND 20 -> 10).
+    const pontos = usaRegraND2 ? Math.min(10, Math.floor(nd / 2)) : 0;
+
+    try {
+      ui?.notifications?.info?.(`Pontos de Aptidão disponíveis: ${pontos} (ND ${nd}, ${pat}).`);
+    } catch (_) {}
+
+    try { this.render(false); } catch (_) {}
   }
 
   async _onAptidaoClick(event) {
@@ -2351,7 +2633,7 @@ export class BoilerplateActorSheet extends ActorSheet {
     event.preventDefault();
     const header = event.currentTarget;
     const type = header.dataset.type;
-    const data = duplicate(header.dataset);
+    const data = foundry.utils.duplicate(header.dataset);
     const name = `Novo(a) ${type.capitalize()}`;
     const itemData = { name: name, type: type, system: data };
     delete itemData.system['type'];
@@ -2367,6 +2649,49 @@ export class BoilerplateActorSheet extends ActorSheet {
     };
     const displayRace = legacyMap[currentRace] || currentRace;
 
+    const choices = [
+      {
+        key: 'Colosso Carniçal',
+        icon: 'fas fa-drumstick-bite',
+        iconClass: 'colosso-icon',
+        sub: '"A fome não é um sentimento. É um motor que exige combustível."',
+      },
+      {
+        key: 'Parasita do Vazio',
+        icon: 'fas fa-bug',
+        iconClass: 'parasita-icon',
+        sub: '"A realidade é tão... quebradiça. Vamos ver o que acontece se eu puxar este fio."',
+      },
+      {
+        key: 'Soberano Carmesim',
+        icon: 'fas fa-crown',
+        iconClass: 'soberano-icon',
+        sub: '"Humanos construíram castelos. Eu construirei um império sobre as artérias deles."',
+      },
+      {
+        key: 'Vetor da Calamidade',
+        icon: 'fas fa-dice',
+        iconClass: 'vetor-icon',
+        sub: '"A sorte não existe. Só estatística e consequências."',
+      },
+      {
+        key: 'Zênite da Soberba',
+        icon: 'fas fa-sun',
+        iconClass: 'zenite-icon',
+        sub: '"Curvem-se. A luz também pesa."',
+      },
+    ];
+
+    const choicesHtml = choices
+      .map(c => `
+          <button type="button" class="maldicao-origem__choice" data-choice="${c.key}">
+            <i class="${c.icon} maldicao-icon ${c.iconClass}"></i>
+            <div class="title">${c.key}</div>
+            <div class="sub">${c.sub}</div>
+          </button>
+      `)
+      .join('');
+
     const content = `
       <div class="maldicao-origem">
         <div class="maldicao-origem__header">
@@ -2375,32 +2700,10 @@ export class BoilerplateActorSheet extends ActorSheet {
         </div>
 
         <div class="maldicao-origem__choices">
-          <button type="button" class="maldicao-origem__choice" data-choice="Colosso Carniçal">
-            <i class="fas fa-drumstick-bite maldicao-icon colosso-icon"></i>
-            <div class="title">Colosso Carniçal</div>
-            <div class="sub">"A fome não é um sentimento. É um motor que exige combustível."</div>
-          </button>
-
-          <button type="button" class="maldicao-origem__choice" data-choice="Soberano Carmesim">
-            <i class="fas fa-crown maldicao-icon soberano-icon"></i>
-            <div class="title">Soberano Carmesim</div>
-            <div class="sub">"Humanos construíram castelos. Eu construirei um império sobre as artérias deles."</div>
-          </button>
-
-          <button type="button" class="maldicao-origem__choice" data-choice="Parasita do Vazio">
-            <i class="fas fa-bug maldicao-icon parasita-icon"></i>
-            <div class="title">Parasita do Vazio</div>
-            <div class="sub">"A realidade é tão... quebradiça. Vamos ver o que acontece se eu puxar este fio."</div>
-          </button>
-
-          <button type="button" class="maldicao-origem__choice" data-choice="Espreitador das Sombras">
-            <i class="fas fa-user-secret maldicao-icon espreitador-icon"></i>
-            <div class="title">Espreitador das Sombras</div>
-            <div class="sub">"O medo tem um sabor. É frio, metálico e... delicioso."</div>
-          </button>
+          ${choicesHtml}
         </div>
 
-        ${currentRace ? `<div class="maldicao-origem__current">Atual: <b>${currentRace}</b></div>` : ``}
+        ${currentRace ? `<div class="maldicao-origem__current">Atual: <b>${displayRace}</b></div>` : ``}
       </div>
     `;
 

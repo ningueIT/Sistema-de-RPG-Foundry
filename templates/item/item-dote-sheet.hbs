@@ -1,0 +1,68 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <button type="button" class="jem-sheet-close" title="Fechar" aria-label="Fechar">
+      <i class="fas fa-times"></i>
+    </button>
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}"/>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Nome do Dote"/></h1>
+      <div class="item-meta grid grid-2col">
+        <div>
+          <label>Categoria</label>
+          <select name="system.categoria.value">
+            <option value="geral" {{#if (eq system.categoria.value "geral")}}selected{{/if}}>Geral</option>
+            <option value="amaldiçoado" {{#if (eq system.categoria.value "amaldiçoado")}}selected{{/if}}>Amaldiçoado</option>
+            <option value="restrito" {{#if (eq system.categoria.value "restrito")}}selected{{/if}}>Restrito</option>
+          </select>
+        </div>
+        <div>
+          <label>Ação</label>
+          <select name="system.acao.value">
+            <option value="Passiva" {{#if (eq system.acao.value "Passiva")}}selected{{/if}}>Passiva</option>
+            <option value="Ativa" {{#if (eq system.acao.value "Ativa")}}selected{{/if}}>Ativa</option>
+            <option value="Reação" {{#if (eq system.acao.value "Reação")}}selected{{/if}}>Reação</option>
+            <option value="Bônus" {{#if (eq system.acao.value "Bônus")}}selected{{/if}}>Bônus</option>
+          </select>
+        </div>
+        <div>
+          <label>Custo (PE)</label>
+          <input type="number" name="system.custoPe.value" value="{{system.custoPe.value}}"/>
+        </div>
+        <div>
+          <label>Ativo (aplica efeito)</label>
+          <input type="checkbox" name="system.equipado.value" {{#if system.equipado.value}}checked{{/if}}/>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="sheet-body">
+    <div class="sheet-main grid grid-2col">
+      <fieldset>
+        <legend>Efeito (texto simples)</legend>
+        <div class="field">
+          <label>Exemplos</label>
+          <div class="hint">Linhas/";". Suporta: <strong>+5 iniciativa</strong>, <strong>+5 atenção</strong>, <strong>+2 percepção</strong>, <strong>+2 defesa</strong>, <strong>atenção base 12</strong>.</div>
+        </div>
+        <div class="field">
+          <textarea name="system.efeito.value" rows="6" placeholder="+5 iniciativa\n+5 atenção\natenção base 12">{{system.efeito.value}}</textarea>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Changes JSON (avançado)</legend>
+        <div class="field">
+          <div class="hint">Opcional. Deve ser um array JSON de changes do ActiveEffect.</div>
+          <textarea name="system.changesJson.value" rows="6" placeholder='[{"key":"system.combate.defesa.value","mode":2,"value":"2","priority":20}]'>{{system.changesJson.value}}</textarea>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="sheet-footer">
+      <h3 class="item-section-title">Descrição</h3>
+      <div class="editor-container">
+        {{editor system.descricao.value target="system.descricao.value" engine="prosemirror" button=true owner=owner editable=editable}}
+      </div>
+    </div>
+  </section>
+</form>

@@ -24,6 +24,18 @@ import {
   handleAptidaoPassivaUpdate,
 } from './helpers/aptidoes-passivas.mjs';
 
+import {
+  syncPassiveDoteEffectsForActor,
+  removePassiveDoteEffectsForItem,
+  handleDotePassivoUpdate,
+} from './helpers/dotes-passivos.mjs';
+
+import {
+  syncPassiveCaracteristicaEffectsForActor,
+  removePassiveCaracteristicaEffectsForItem,
+  handleCaracteristicaPassivaUpdate,
+} from './helpers/caracteristicas-passivas.mjs';
+
 /* -------------------------------------------- */
 /*  Init Hook                                   */
 /* -------------------------------------------- */
@@ -141,8 +153,8 @@ Hooks.once('ready', function () {
   // Helper para coletar tokens por filtro: 'selected' | 'players' | 'npcs'
   function _getTokensByFilter(filter = 'selected') {
     const all = canvas.tokens?.placeables ?? [];
-    if (filter === 'players') return all.filter(t => t.actor && t.actor.type !== 'npc');
-    if (filter === 'npcs') return all.filter(t => t.actor && t.actor.type === 'npc');
+    if (filter === 'players') return all.filter(t => t.actor && t.actor.type !== 'npc' && t.actor.type !== 'inimigo');
+    if (filter === 'npcs') return all.filter(t => t.actor && (t.actor.type === 'npc' || t.actor.type === 'inimigo'));
     if (filter === 'all') return all.filter(t => t.actor);
     return canvas.tokens.controlled ?? [];
   }
@@ -178,7 +190,7 @@ Hooks.once('ready', function () {
       const actor = t.actor;
       if (!actor) continue;
       try {
-        if (actor.type === 'npc') {
+        if (actor.type === 'npc' || actor.type === 'inimigo') {
           // Aplicar regra simplificada para NPCs: recuperar 50% do HP máximo (arredondado para baixo)
           const sys = actor.system ?? {};
           const maxHP = Number(sys.recursos?.hp?.max ?? 0) || 0;
@@ -259,7 +271,7 @@ Hooks.once('ready', function () {
     return Macro.create({
       name,
       type: 'script',
-      img: img || 'icons/svg/dice.svg',
+      img: img || 'icons/svg/d20-black.svg',
       command,
       flags: { [game.system.id || 'system']: { massRestMacro: true } }
     });
@@ -301,6 +313,8 @@ Hooks.once('ready', function () {
     try {
       if (item?.parent?.documentName !== 'Actor') return;
       await handleAptidaoPassivaUpdate(item);
+      if (item?.type === 'dote') await handleDotePassivoUpdate(item);
+      if (item?.type === 'caracteristica') await handleCaracteristicaPassivaUpdate(item);
     } catch (e) {
       console.warn('Erro ao sincronizar aptidão passiva (createItem):', e);
     }
@@ -309,6 +323,8 @@ Hooks.once('ready', function () {
     try {
       if (item?.parent?.documentName !== 'Actor') return;
       await handleAptidaoPassivaUpdate(item);
+      if (item?.type === 'dote') await handleDotePassivoUpdate(item);
+      if (item?.type === 'caracteristica') await handleCaracteristicaPassivaUpdate(item);
     } catch (e) {
       console.warn('Erro ao sincronizar aptidão passiva (updateItem):', e);
     }
@@ -317,6 +333,8 @@ Hooks.once('ready', function () {
     try {
       if (item?.parent?.documentName !== 'Actor') return;
       await removePassiveAptidaoEffectsForItem(item);
+      if (item?.type === 'dote') await removePassiveDoteEffectsForItem(item);
+      if (item?.type === 'caracteristica') await removePassiveCaracteristicaEffectsForItem(item);
     } catch (e) {
       console.warn('Erro ao remover efeitos de aptidão passiva (deleteItem):', e);
     }
@@ -330,6 +348,14 @@ Hooks.once('ready', function () {
         const hasPassive = (actor.items?.contents ?? []).some(i => i?.type === 'aptidao' && String(i.system?.acao?.value ?? '').toLowerCase() === 'passiva');
         if (!hasPassive) continue;
         await syncPassiveAptidaoEffectsForActor(actor, { quiet: true });
+
+        // Sync leve para dotes passivos também
+        const hasPassiveDote = (actor.items?.contents ?? []).some(i => i?.type === 'dote' && String(i.system?.acao?.value ?? '').toLowerCase() === 'passiva');
+        if (hasPassiveDote) await syncPassiveDoteEffectsForActor(actor, { quiet: true });
+
+        // Sync leve para características com efeitos também
+        const hasCaracteristica = (actor.items?.contents ?? []).some(i => i?.type === 'caracteristica');
+        if (hasCaracteristica) await syncPassiveCaracteristicaEffectsForActor(actor, { quiet: true });
       }
     } catch (e) {
       console.warn('Falha ao sincronizar aptidões passivas no ready:', e);
@@ -365,6 +391,7 @@ Hooks.once('ready', function () {
         const preferredMultiplier = (btn.data('multiplier') !== undefined) ? Number(btn.data('multiplier')) : 1;
         const damageType = btn.data('type') || '';
         const isSoul = String(btn.data('soul')) === 'true';
+        const ignoreRD = String(btn.data('ignore-rd')) === 'true';
 
         if (!rollerId) return ui.notifications.warn('Não foi possível identificar o autor da rolagem.');
 
@@ -380,10 +407,10 @@ Hooks.once('ready', function () {
         const originalMsgId = btn.closest('li.chat-message')?.attr('data-message-id') || '';
         const requestHtml = `
           <div><strong>${game.user.name}</strong> solicita que o Mestre aplique <strong>${baseValue}</strong> dano ${damageType ? `(${damageType})` : ''} a ${targetIds.length} alvo(s).</div>
-          <div class="flavor-text">Dano base: <strong>${baseValue}</strong>. Ao aprovar, o sistema aplicará o dano e subtrairá automaticamente a Resistência de Dano (RD) dos alvos.</div>
+          <div class="flavor-text">Dano base: <strong>${baseValue}</strong>. Ao aprovar, o sistema aplicará o dano ${ignoreRD ? '<strong>ignorando RD/Resistência</strong>' : 'e subtrairá automaticamente a Resistência de Dano (RD)'} dos alvos.</div>
           <div style="margin-top:8px; display:flex; gap:8px;">
-            <button class="damage-approval jem-btn jem-btn--confirm" data-action="approve" data-requestor="${rollerId}" data-damage="${baseValue}" data-targets="${targetIds.join(',')}" data-original="${originalMsgId}">Aprovar</button>
-            <button class="damage-approval jem-btn jem-btn--deny" data-action="reject" data-requestor="${rollerId}" data-damage="${baseValue}" data-targets="${targetIds.join(',')}" data-original="${originalMsgId}">Rejeitar</button>
+            <button class="damage-approval jem-btn jem-btn--confirm" data-action="approve" data-requestor="${rollerId}" data-damage="${baseValue}" data-damage-type="${String(damageType)}" data-soul="${isSoul}" data-ignore-rd="${ignoreRD}" data-targets="${targetIds.join(',')}" data-original="${originalMsgId}">Aprovar</button>
+            <button class="damage-approval jem-btn jem-btn--deny" data-action="reject" data-requestor="${rollerId}" data-damage="${baseValue}" data-damage-type="${String(damageType)}" data-soul="${isSoul}" data-ignore-rd="${ignoreRD}" data-targets="${targetIds.join(',')}" data-original="${originalMsgId}">Rejeitar</button>
           </div>`;
 
         await ChatMessage.create({ content: requestHtml });
@@ -466,6 +493,9 @@ Hooks.once('ready', function () {
         const action = btn.data('action');
         const targetIds = String(btn.data('targets') || '').split(',').filter(Boolean);
         const baseValue = Number(btn.data('damage')) || 0;
+        const damageType = String(btn.data('damage-type') || '');
+        const isSoul = String(btn.data('soul')) === 'true';
+        const ignoreRD = String(btn.data('ignore-rd')) === 'true';
         const originalMsgId = btn.data('original') || '';
         const approvalApp = app; // app refere-se à mensagem atual (a solicitação)
 
@@ -479,7 +509,7 @@ Hooks.once('ready', function () {
               const actor = token.actor;
               if (!actor || !actor.applyDamage) continue;
               const amount = Math.round(baseValue);
-              const res = await actor.applyDamage(amount, '', false);
+              const res = await actor.applyDamage(amount, damageType || 'generic', isSoul, { ignoreRD });
               applied.push({ name: actor.name, applied: res.applied ?? amount, mitigated: res.mitigated ?? 0, resource: res.resource, newValue: res.newValue });
             } catch (e) { console.error('Erro ao aplicar dano no approve', e); }
           }
@@ -503,9 +533,9 @@ Hooks.once('ready', function () {
             <div>Solicitação rejeitada. Escolha ajuste a aplicar:</div>
             <div class="flavor-text">Você pode optar por não aplicar dano, aplicar metade ou dobro. A escolha será aplicada aos alvos selecionados.</div>
             <div style="margin-top:8px; display:flex; gap:8px;">
-              <button class="damage-decision jem-btn jem-btn--neutral" data-multiplier="0" data-damage="${baseValue}" data-targets="${targetIds.join(',')}">Sem Dano</button>
-              <button class="damage-decision jem-btn jem-btn--warning" data-multiplier="0.5" data-damage="${baseValue}" data-targets="${targetIds.join(',')}">Metade</button>
-              <button class="damage-decision jem-btn jem-btn--danger" data-multiplier="2" data-damage="${baseValue}" data-targets="${targetIds.join(',')}">Dobro</button>
+              <button class="damage-decision jem-btn jem-btn--neutral" data-multiplier="0" data-damage="${baseValue}" data-damage-type="${String(damageType)}" data-soul="${isSoul}" data-ignore-rd="${ignoreRD}" data-targets="${targetIds.join(',')}">Sem Dano</button>
+              <button class="damage-decision jem-btn jem-btn--warning" data-multiplier="0.5" data-damage="${baseValue}" data-damage-type="${String(damageType)}" data-soul="${isSoul}" data-ignore-rd="${ignoreRD}" data-targets="${targetIds.join(',')}">Metade</button>
+              <button class="damage-decision jem-btn jem-btn--danger" data-multiplier="2" data-damage="${baseValue}" data-damage-type="${String(damageType)}" data-soul="${isSoul}" data-ignore-rd="${ignoreRD}" data-targets="${targetIds.join(',')}">Dobro</button>
             </div>`;
           try {
             const li = btn.closest('li.chat-message');
@@ -518,6 +548,72 @@ Hooks.once('ready', function () {
         }
       });
 
+      // Handler: executar Ação de NPC (consome PE, realiza rolagem conforme tipo)
+      html.on('click', '.npc-action-exec', async (event) => {
+        event.preventDefault();
+        const btn = $(event.currentTarget);
+        const itemUuid = String(btn.data('item-uuid') || '');
+        const actorId = String(btn.data('actor-id') || '');
+        const custo = Number(btn.data('custo') || 0) || 0;
+
+        // Só o Mestre ou o dono do ator pode executar ações de NPC via interface
+        if (!game.user.isGM && !game.user.character) return ui.notifications.warn('Apenas o Mestre pode executar ações NPC desta forma.');
+
+        // Resolve actor e item
+        let actor = game.actors.get(actorId) || null;
+        let item = null;
+        try {
+          if (itemUuid) {
+            const doc = await fromUuid(itemUuid);
+            if (doc) item = doc;
+          }
+          if (!item && actor) item = actor.items.find(i => String(i.name || '') === String(btn.closest('.card').find('div').first().text().trim()));
+        } catch (e) { /* ignore */ }
+        if (!actor) return ui.notifications.warn('Ator não encontrado para executar a ação.');
+        if (!item) return ui.notifications.warn('Item de ação não resolvido.');
+
+        // Verifica PE suficiente
+        const energia = Number(actor.system?.recursos?.energia?.value ?? 0) || 0;
+        if (energia < custo) return ui.notifications.warn('Energia insuficiente para executar a ação.');
+
+        // Deduz PE
+        try {
+          await actor.update({ ['system.recursos.energia.value']: Math.max(0, energia - custo) });
+        } catch (e) { console.error('Falha ao deduzir PE do ator:', e); }
+
+        // Executa lógica de acerto e publica resultado (simples)
+        try {
+          const tipo = String(item.system?.tipoAcerto?.value ?? item.system?.tipoAcerto ?? 'atributo_bt');
+          const atributo = String(item.system?.atributo?.value ?? item.system?.atributo ?? 'forca');
+          const danoMedio = Number(item.system?.danoMedio?.value ?? item.system?.danoMedio ?? 0) || 0;
+
+          let resultHtml = `<div><strong>${actor.name}</strong> executa <strong>${item.name}</strong>.</div>`;
+          if (tipo === 'automatico') {
+            resultHtml += `<div>Acerto automático.</div>`;
+          } else if (tipo === 'cd') {
+            resultHtml += `<div>Teste contra CD (Mestre escolhe alvo). Nenhuma rolagem automática aqui.</div>`;
+          } else {
+            // atributo_bt
+            const attrVal = Number(actor.system?.atributos?.[atributo]?.value ?? 10) || 10;
+            const attrMod = Number(actor.system?.atributos?.[atributo]?.mod ?? Math.floor((attrVal - 10) / 2)) || 0;
+            const bt = Number(actor.system?.detalhes?.treinamento?.value ?? actor.system?.treinamento ?? actor.system?.bt ?? 0) || 0;
+            const formula = `1d20 + ${attrMod + bt}`;
+            const roll = await (new Roll(formula)).roll({async: true});
+            await roll.toMessage({ flavor: `${actor.name} — ${item.name} (Ataque de NPC)` });
+            resultHtml += `<div>Rolagem: <strong>${roll.total}</strong> (1d20 + ${attrMod} + ${bt}).</div>`;
+          }
+
+          if (danoMedio) {
+            resultHtml += `<div style="margin-top:6px;">Dano médio sugerido: <strong>${danoMedio}</strong>. Use os botões abaixo para solicitar aplicação.</div>`;
+            resultHtml += `<div style="margin-top:8px;"><button class="button apply-damage" data-value="${danoMedio}" data-type="generic" data-multiplier="1" data-soul="false" data-ignore-rd="false" data-roller="${game.user.id}">Solicitar Aplicação</button></div>`;
+          }
+
+          await ChatMessage.create({ content: resultHtml });
+        } catch (e) {
+          console.error('Erro ao executar ação NPC:', e);
+        }
+      });
+
       // Handler para decisão do Mestre (aplica 0 / 0.5 / 2 multiplicador)
       html.on('click', '.damage-decision', async (event) => {
         event.preventDefault();
@@ -525,6 +621,9 @@ Hooks.once('ready', function () {
         const btn = $(event.currentTarget);
         const multiplier = Number(btn.data('multiplier')) || 0;
         const baseValue = Number(btn.data('damage')) || 0;
+        const damageType = String(btn.data('damage-type') || '');
+        const isSoul = String(btn.data('soul')) === 'true';
+        const ignoreRD = String(btn.data('ignore-rd')) === 'true';
         const targetIds = String(btn.data('targets') || '').split(',').filter(Boolean);
         const applied = [];
         for (const id of targetIds) {
@@ -534,7 +633,7 @@ Hooks.once('ready', function () {
             const actor = token.actor;
             if (!actor || !actor.applyDamage) continue;
             const amount = Math.round(baseValue * multiplier);
-            const res = await actor.applyDamage(amount, '', false);
+            const res = await actor.applyDamage(amount, damageType || 'generic', isSoul, { ignoreRD });
             applied.push({ name: actor.name, applied: res.applied ?? amount, mitigated: res.mitigated ?? 0, resource: res.resource, newValue: res.newValue });
           } catch (e) { console.error('Erro ao aplicar dano na decisão', e); }
         }

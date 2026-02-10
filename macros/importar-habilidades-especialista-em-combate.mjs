@@ -2,7 +2,7 @@
  * Macro: Importar Habilidades - Parte 2: ESPECIALISTA EM COMBATE
  * * Funcionalidades:
  * - Cria/Atualiza o Compêndio "Habilidades Amaldiçoadas".
- * - Organiza em pastas: Especialista em Combate > Nível.
+ * - Organiza em pastas: Especialista em Combate > (Habilidades / Habilidades Base / Assumir Postura / Artes do Combate).
  * - Adiciona ícones temáticos (armas, miras, escudos, posturas).
  * - Formata a descrição com parágrafos HTML.
  */
@@ -90,14 +90,153 @@
     { name: "Técnicas de Saque", nivel: 12, system: { categoria: "Especialista em Combate", custo: "", ativacao: "Passiva", duracao: "Permanente" }, description: `Aprende artes de combate de saque (Saque Devastador, Saque Trovão).` },
     { name: "Ciclagem Absoluta", nivel: 12, system: { categoria: "Especialista em Combate", custo: "", ativacao: "Passiva", duracao: "Permanente" }, description: `Pode trocar arma a cada ataque. Trocar para grupo diferente dá +2 no ataque.` },
     { name: "Manejo Único", nivel: 12, system: { categoria: "Especialista em Combate", custo: "2 PE", ativacao: "Especial", duracao: "Cena" }, description: `Gaste 2 PE para receber uma propriedade única (criada ou existente) na cena.` },
-    { name: "Mestre Pistoleiro", nivel: 16, system: { categoria: "Especialista em Combate", custo: "", ativacao: "Passiva", duracao: "Permanente" }, description: `Desemperrar vira ação movimento. Margem de crítico +1 com armas de fogo.` },
-    { name: "Sincronia Perfeita", nivel: 16, system: { categoria: "Especialista em Combate", custo: "", ativacao: "Passiva", duracao: "Permanente" }, description: `Alcance extra +3m. Vantagem contra desarme.` },
+    { name: "Mestre Pistoleiro", nivel: 12, system: { categoria: "Especialista em Combate", custo: "", ativacao: "Passiva", duracao: "Permanente" }, description: `Desemperrar vira ação movimento. Margem de crítico +1 com armas de fogo.` },
+    { name: "Sincronia Perfeita", nivel: 12, system: { categoria: "Especialista em Combate", custo: "", ativacao: "Passiva", duracao: "Permanente" }, description: `Alcance extra +3m. Vantagem contra desarme.` }
+  ];
 
-    // Extras (Posturas e Artes)
-    { name: "Assumir Postura (Posturas)", nivel: 6, system: { categoria: "Postura", custo: "", ativacao: "Ação Bônus", duracao: "1 minuto" }, description: `Lista de posturas: Sol (+Ataque/Dano, -Def), Lua (+Def/Mov, -Ataque), Terra (Imóvel, +Fort), Dragão (Dano em área), etc.` },
-    { name: "Artes: Técnicas de Avanço", nivel: 6, system: { categoria: "Artes do Combate", custo: "Pontos Preparo", ativacao: "Variável", duracao: "Instantâneo" }, description: `Avanço Bumerangue (Vai e volta), Sombra Descendente (Ataque aéreo).` },
-    { name: "Artes: Técnicas da Força", nivel: 6, system: { categoria: "Artes do Combate", custo: "Pontos Preparo", ativacao: "Variável", duracao: "Instantâneo" }, description: `Nuvens Espirais (Combo empurrão), Onda do Dragão (Empurrão massivo).` },
-    { name: "Artes: Técnicas de Saque", nivel: 6, system: { categoria: "Artes do Combate", custo: "Pontos Preparo", ativacao: "Variável", duracao: "Instantâneo" }, description: `Saque Devastador (Contra-ataque reação), Saque Trovão (Movimento com ataques).` }
+  // --- 1b. HABILIDADES BASE (concedidas automaticamente por nível) ---
+  const HABILIDADES_BASE = [
+    {
+      name: "Repertório do Especialista",
+      nivel: 1,
+      system: { categoria: "Especialista em Combate", custo: "", ativacao: "Passiva", duracao: "Permanente", requisitos: "Nível 1 de Especialista em Combate" },
+      description: `Como um Especialista em Combate, você pode escolher um estilo principal para seguir em sua especialização. No 1º nível, você recebe um dos estilos de combate abaixo:\n\n• Estilo Defensivo. Você foca em aprimorar a sua defesa. Sua Defesa aumenta em 2 e, nos níveis 4, 8, 12 e 16 aumenta em +1.\n\n• Estilo do Arremessador. Você se versa em armas de arremesso. Você pode sacar uma arma de arremesso como parte do ataque, além de receber +2 em rolagens de dano com elas, o qual aumenta em +1 nos níveis 4, 8, 12 e 16.\n\n• Estilo do Duelista. Você foca em duelar com uma única arma em mãos. Ao usar uma arma em uma mão e ter a outra livre, você recebe +1 em rolagens de acerto e +2 em rolagens de dano. Nos níveis 4, 8, 12 e 16, o bônus em dano aumenta em +1; nos níveis 8 e 16, o bônus em acerto aumenta em +1.\n\n• Estilo do Interceptador. Você se dedica a utilizar de suas armas para interceptar ataques em seus aliados. Quando um aliado dentro do seu alcance receber um ataque, você pode usar sua reação para reduzir o dano causado em 1d10 + seu modificador de força, destreza ou sabedoria, aumentando em um dado nos níveis 4, 8, 12 e 16.\n\n• Estilo do Protetor. Você se dedica a proteger seus aliados, buscando evitar um acerto. Quando uma criatura ataca um alvo além de você, que esteja dentro de 1,5 metros, você pode usar sua reação para impor desvantagem. Além disso, você pode também conceder vantagem no Teste de Resistência de um aliado dentro de 1,5 metros.\n\n• Estilo Distante. Você sabe como usar armas que focam em atingir de maneira distante. Você recebe +1 em rolagens de acerto e +2 em rolagens de dano com armas a distância. Nos níveis 4, 8, 12 e 16, o bônus em dano aumenta em +1; nos níveis 8 e 16, o bônus em acerto aumenta em +1.\n\n• Estilo Duplo. Você sabe a maneira perfeita de manejar duas armas. Enquanto estiver lutando com duas armas, você pode adicionar o seu bônus de atributo no dano do ataque com a segunda arma, além de receber um bônus de +1 em rolagens de dano, o qual aumenta em +1 nos níveis 4, 8, 12 e 16.\n\n• Estilo Massivo. Você domina armas pesadas e massivas. Quando rolar um 1 ou 2 em um dado na rolagem de dano com uma arma que esteja usando em duas mãos ou que possua a propriedade pesada, você pode rolar novamente esse dado, ficando com o novo resultado. Além disso, você recebe +1 em rolagens de dano com a arma, aumentando em +1 nos níveis 4, 8, 12 e 16.\n\nVocê recebe um novo estilo de combate no nível 6 e outro no 12, complementando suas capacidades dentro de combate.`
+    },
+    {
+      name: "Artes do Combate",
+      nivel: 1,
+      system: { categoria: "Especialista em Combate", custo: "", ativacao: "Passiva", duracao: "Permanente", requisitos: "Nível 1 de Especialista em Combate" },
+      description: `Levando o combate como uma arte a se estudar e aperfeiçoar, você sabe como se preparar e usar desse preparo para possibilitar realizar ações especiais dentro de um combate.\n\nVocê recebe uma quantidade de Pontos de Preparo igual ao seu nível de Especialista em Combate + Modificador de Sabedoria, os quais são usados para realizar artes de combate.\n\nVocê sabe as seguintes artes de combate:\n\n• Arremesso Ágil. Ao realizar um ataque corpo-a-corpo, você pode gastar 1 ponto de preparo para, como uma ação livre, realizar um outro ataque, com uma arma de arremesso, contra um segundo alvo.\n\n• Distração Letal. Ao realizar um ataque, você pode gastar 1 ponto de preparo para fazer com que ele foque em distrair o alvo. Caso o ataque acerte, a criatura atingida tem a sua Defesa reduzida em um valor igual a metade do seu Modificador de Sabedoria por uma rodada.\n\n• Execução Silenciosa. Ao realizar um ataque em uma criatura desprevenida, você pode gastar 1 ponto de preparo para aumentar a letalidade do ataque, adicionando 1d6 de dano. A cada +2 no Modificador de Sabedoria, o dano aumenta em +1d6.\n\n• Golpe Descendente. Ao realizar um ataque corpo-a-corpo, você pode gastar 1 ponto de preparo para fazer com que ele venha por cima. Ao acertar um golpe descendente, sua Defesa aumenta em um valor igual a metade do seu Modificador de Sabedoria até o começo do seu próximo turno.\n\n• Investida Imediata. Ao realizar a ação de ataque, você pode gastar 2 pontos de preparo para tornar esse ataque em uma investida imediata, aproximando-se uma quantidade de metros igual ao seu Modificador de Sabedoria x 1,5m de um alvo e realizando o ataque logo após. Esse movimento não causa ataques de oportunidade.\n\nSempre que eliminar um inimigo, você recupera um Ponto de Preparo; você pode usar sua ação comum para analisar o campo de batalha, recuperando dois Pontos de Preparo. Em um descanso curto, você recupera metade do seu máximo, enquanto em um descanso longo os recupera por completo.`
+    },
+    {
+      name: "Golpe Especial",
+      nivel: 4,
+      system: { categoria: "Especialista em Combate", custo: "", ativacao: "Passiva", duracao: "Permanente", requisitos: "Nível 4 de Especialista em Combate" },
+      description: `Quando realizar um ataque, ou arte do combate que envolva um ataque, você pode o montar como um ataque especial, escolhendo entre as opções abaixo:\n\n• Amplo. O ataque atinge uma criatura a mais. +2PE\n• Atroz. Em um acerto, o ataque causa 1 dado de dano adicional. +1PE\n• Impactante. Empurra o alvo em 1,5 metros para cada 15 pontos de dano causados. Fortitude reduz à metade. +1PE\n• Letal. Diminui em 1 a margem de crítico do ataque. +2PE\n• Longo. Aumenta o alcance da arma em 1,5 metros para corpo-a-corpo ou 9 metros para ataques a distância. +1PE\n• Penetrante. Ignora redução a dano em um valor igual a metade do seu nível de personagem. +2PE\n• Preciso. Recebe vantagem no ataque. Após o primeiro uso na rodada, o custo aumenta para 2PE. +1PE/+2PE\n• Sanguinário. Uma criatura atingida sofre sangramento leve (CD de Especialização). Pode ser pego uma segunda vez para causar sangramento médio ao invés de leve. +2PE\n• Lento. O ataque deve ser usado como ação completa. -2PE\n• Sacrifício. Recebe 15 de dano ao efetuar o ataque. -1PE\n• Desfocado. O ataque recebe uma penalidade de 4 no acerto (cumulativo até três vezes). -1PE\n\nCertas propriedades aumentam ou diminuem o custo e, ao terminar de montar o ataque especial, você paga o seu custo total; um ataque especial deve custar no mínimo 1 ponto de energia amaldiçoada (PE).`
+    },
+    {
+      name: "Implemento Marcial",
+      nivel: 4,
+      system: { categoria: "Especialista em Combate", custo: "", ativacao: "Passiva", duracao: "Permanente", requisitos: "Nível 4 de Especialista em Combate" },
+      description: `Você recebe +2 na CD de suas Habilidades de Especialização, Feitiços e Aptidões Amaldiçoadas. Esse bônus aumenta em 1 nos níveis 8° e 16° de Especialista em Combate.`
+    },
+    {
+      name: "Renovação pelo Sangue",
+      nivel: 6,
+      system: { categoria: "Especialista em Combate", custo: "", ativacao: "Passiva", duracao: "Permanente", requisitos: "Nível 6 de Especialista em Combate" },
+      description: `Com tamanha precisão e letalidade, você passa a ser capaz de renovar seu próprio estoque de energia a partir do sangue. Ao acertar um ataque crítico em um inimigo ou reduzir seus pontos de vida a 0, você recupera um ponto de energia amaldiçoada.`
+    },
+    {
+      name: "Teste de Resistência Mestre",
+      nivel: 9,
+      system: { categoria: "Especialista em Combate", custo: "", ativacao: "Passiva", duracao: "Permanente", requisitos: "Nível 9 de Especialista em Combate" },
+      description: `Você se torna treinado em um segundo teste de resistência e mestre no concedido pela sua especialização.`
+    },
+    {
+      name: "Autossuficiente",
+      nivel: 20,
+      system: { categoria: "Especialista em Combate", custo: "", ativacao: "Passiva", duracao: "Permanente", requisitos: "Nível 20 de Especialista em Combate" },
+      description: `Tornando-se um mestre das técnicas armadas, você consegue ser autossuficiente na energia para usar seu golpe especial. Sempre que realizar um Golpe Especial, recebe 3 PE temporários para serem usados no ataque. Uma vez por cena, você pode escolher transformar esse valor em 6. Além disso, todos seus ataques causam um dado de dano adicional, do mesmo tipo da arma manuseada.`
+    }
+  ];
+
+  // --- 1c. POSTURAS (itens separados) ---
+  const POSTURAS = [
+    {
+      name: "Postura do Sol",
+      nivel: 0,
+      system: { categoria: "Postura", custo: "", ativacao: "Passiva", duracao: "Enquanto em postura", requisitos: "Assumir Postura" },
+      description: `Enquanto na postura do sol, todos seus ataques recebem +2 para acertar e causam um dado de dano a mais. Entretanto, sua Defesa diminui em 4.`
+    },
+    {
+      name: "Postura da Lua",
+      nivel: 0,
+      system: { categoria: "Postura", custo: "", ativacao: "Passiva", duracao: "Enquanto em postura", requisitos: "Assumir Postura" },
+      description: `Enquanto na postura da lua, você recebe +3 de Defesa, você pode usar Andar ou Desengajar como ação livre e pode, como uma reação, reduzir um dano que você receber em um valor igual ao seu nível de personagem. Entretanto, todos seus ataques recebem -4 para acertar e não recebem seu bônus de atributo no dano.`
+    },
+    {
+      name: "Postura da Terra",
+      nivel: 0,
+      system: { categoria: "Postura", custo: "", ativacao: "Passiva", duracao: "Enquanto em postura", requisitos: "Assumir Postura" },
+      description: `Enquanto na postura da terra você não pode ser movido a força, soma seu bônus de treinamento em rolagens de Fortitude e, no começo do seu turno, você recebe pontos de vida temporários igual ao seu nível de personagem.`
+    },
+    {
+      name: "Postura do Dragão",
+      nivel: 0,
+      system: { categoria: "Postura", custo: "", ativacao: "Passiva", duracao: "Enquanto em postura", requisitos: "Assumir Postura" },
+      description: `Enquanto na postura do dragão, sempre que realizar um ataque, todo inimigo dentro de 1,5 metros do alvo desse ataque deve realizar um TR de Fortitude ou recebe metade do dano que o alvo recebeu.`
+    },
+    {
+      name: "Postura da Fortuna",
+      nivel: 0,
+      system: { categoria: "Postura", custo: "", ativacao: "Passiva", duracao: "Enquanto em postura", requisitos: "Assumir Postura" },
+      description: `Enquanto estiver na postura da fortuna, ao rodar um d20 e conseguir um resultado igual ou menor ao seu bônus de treinamento, você pode escolher o rolar novamente, ficando com o maior resultado. Você pode utilizar este efeito uma quantidade de vezes igual a metade do seu bônus de treinamento por rodada e apenas uma vez no mesmo dado.`
+    },
+    {
+      name: "Postura da Devastação",
+      nivel: 0,
+      system: { categoria: "Postura", custo: "", ativacao: "Passiva", duracao: "Enquanto em postura", requisitos: "Assumir Postura; Pré-requisito: Nível 6" },
+      description: `Enquanto na postura da devastação, para cada golpe acertado contra o mesmo alvo, você recebe +1 em acerto e ignora 2 de redução de dano, até um máximo igual ao seu bônus de treinamento para o acerto e o dobro dele para a redução de dano. Se você trocar de alvo uma vez, retorna ao zero.`
+    },
+    {
+      name: "Postura da Tempestade",
+      nivel: 0,
+      system: { categoria: "Postura", custo: "", ativacao: "Passiva", duracao: "Enquanto em postura", requisitos: "Assumir Postura; Pré-requisito: Nível 10" },
+      description: `Enquanto na postura da tempestade, sempre que acertar um ataque o alvo realiza um TR de Fortitude, sendo derrubado em uma falha. Caso acerte um ataque em um alvo já caído, ele deve repetir o teste e, caso falhe, fica imóvel até o começo do seu turno.`
+    },
+    {
+      name: "Postura do Céu",
+      nivel: 0,
+      system: { categoria: "Postura", custo: "", ativacao: "Passiva", duracao: "Enquanto em postura", requisitos: "Assumir Postura; Pré-requisito: Nível 12" },
+      description: `Enquanto na postura do céu, o alcance dos seus ataques é dobrado, você recebe 2 pontos de preparo temporários no começo de todo turno e +2 em todas as suas rolagens de perícia.`
+    }
+  ];
+
+  // --- 1d. ARTES DO COMBATE (itens separados) ---
+  const ARTES = [
+    {
+      name: "Avanço Bumerangue",
+      nivel: 0,
+      system: { categoria: "Artes do Combate", custo: "Pontos de Preparo", ativacao: "Variável", duracao: "Instantâneo", requisitos: "Técnicas de Avanço" },
+      description: `Ao utilizar a ação Atacar, você pode gastar 3 Pontos de Preparo para saltar na direção de um inimigo dentro de 6 metros e, após encerrar a ação, você retorna para o ponto de partida. Nem o avanço nem o retorno causam ataques de oportunidade. Durante o retorno, você pode gastar 1 Ponto de Preparo para realizar um ataque com uma arma de arremesso ou a distância contra o mesmo alvo.`
+    },
+    {
+      name: "Sombra Descendente",
+      nivel: 0,
+      system: { categoria: "Artes do Combate", custo: "Pontos de Preparo", ativacao: "Ação Comum", duracao: "Instantâneo", requisitos: "Técnicas de Avanço" },
+      description: `Como uma Ação Comum, você pode gastar 3 Pontos de Preparo para avançar rapidamente contra um inimigo dentro de 6 metros e realizar um ataque contra ele. Após realizar o ataque, você o utiliza como apoio e se ergue no ar, podendo escolher cair em outro inimigo dentro de 6 metros e realizar um ataque contra ele, caindo em um lugar desocupado dentro de 3 metros do alvo após isso.`
+    },
+    {
+      name: "Nuvens Espirais",
+      nivel: 0,
+      system: { categoria: "Artes do Combate", custo: "Pontos de Preparo", ativacao: "Ação Completa", duracao: "Instantâneo", requisitos: "Técnicas da Força" },
+      description: `Como uma Ação Completa, você inicia uma sequência contra um inimigo dentro do alcance da sua arma: você pode realizar até três ataques, gastando 2 Pontos de Preparo para cada um. A cada ataque, o alvo é empurrado 3 metros para qualquer direção, com você o acompanhando, além de cada ataque causar 2d6 de dano Energético adicional.`
+    },
+    {
+      name: "Onda do Dragão",
+      nivel: 0,
+      system: { categoria: "Artes do Combate", custo: "Pontos de Preparo", ativacao: "Ação Atacar", duracao: "Instantâneo", requisitos: "Técnicas da Força" },
+      description: `Quando utilizar a ação Atacar, você pode gastar 5 Pontos de Preparo para receber vantagem neste ataque e, caso acerte, o alvo é empurrado 6 metros para trás, recebe 3d12 de dano Energético adicional e tem metade da sua Redução de Dano ignorada.`
+    },
+    {
+      name: "Saque Devastador",
+      nivel: 0,
+      system: { categoria: "Artes do Combate", custo: "Pontos de Preparo", ativacao: "Reação", duracao: "Instantâneo", requisitos: "Técnicas de Saque" },
+      description: `No final do seu turno, você pode gastar 2 Pontos de Preparo para preparar um saque, o qual dura até o começo do seu próximo turno. Caso seja atacado enquanto estiver com o saque preparado, você pode gastar 4 Pontos de Preparo e sua Reação para realizar um ataque contra a criatura atacante. Caso o resultado da sua Jogada de Ataque seja maior do que a da criatura, você anula o ataque dela e acerta o seu, o qual causa 4d10 de dano adicional do mesmo tipo da arma e ignora Redução de Dano. Caso o seu resultado seja menor, você apenas causa o dano comum de um ataque.`
+    },
+    {
+      name: "Saque Trovão",
+      nivel: 0,
+      system: { categoria: "Artes do Combate", custo: "Pontos de Preparo", ativacao: "Ação Completa", duracao: "Instantâneo", requisitos: "Técnicas de Saque" },
+      description: `Como uma Ação Completa, você pode gastar 6 Pontos de Preparo para se mover uma distância igual ao seu Deslocamento e, enquanto se movendo desta maneira, você não recebe ataques de oportunidade e pode realizar um ataque contra todo inimigo que fique dentro de 3 metros de você durante a locomoção.`
+    }
+  ];
+
+  const ENTRIES = [
+    ...HABILIDADES_BASE.map(e => ({ ...e, _section: 'base' })),
+    ...APTIDOES.map(e => ({ ...e, _section: 'habilidades' })),
+    ...POSTURAS.map(e => ({ ...e, _section: 'posturas' })),
+    ...ARTES.map(e => ({ ...e, _section: 'artes' }))
   ];
 
   // --- 2. CONFIGURAÇÃO E HELPERS ---
@@ -173,7 +312,7 @@
 
   const SYSTEM_ID = game?.system?.id ?? 'feiticeiros-e-maldicoes';
   const CLASSE_BASE = 'Especialista em Combate';
-  const APTIDAO_PREFIX = 'especialista-em-combate';
+  const HABILIDADE_PREFIX = 'especialista-em-combate';
 
   function slugifyKey(text) {
     return String(text ?? '')
@@ -194,7 +333,7 @@
 
   function buildPassivePlaceholderEffect(label, icon) {
     return {
-      name: String(label ?? '').trim() || 'Aptidão Passiva',
+      name: String(label ?? '').trim() || 'Habilidade Passiva',
       icon: icon || ICON_FALLBACK,
       disabled: false,
       changes: [],
@@ -253,51 +392,54 @@
   }
 
   const rootFolder = await ensureFolder(PACK_LABEL);
-  
-  const levelsByCat = {};
-  for (const item of APTIDOES) {
-    const catName = item.system?.categoria || "Outros";
-    const lvl = item.nivel || 0;
-    
-    if (!levelsByCat[catName]) levelsByCat[catName] = new Set();
-    levelsByCat[catName].add(lvl);
-  }
-
-  const folderIdCache = {}; 
-  for (const [catName, levels] of Object.entries(levelsByCat)) {
-    const catFolder = await ensureFolder(catName, rootFolder.id);
-    for (const lvl of Array.from(levels).sort((a, b) => a - b)) {
-      const lvlName = lvl > 0 ? `Nível ${lvl}` : "Geral";
-      const lvlFolder = await ensureFolder(lvlName, catFolder.id);
-      folderIdCache[`${catName}-${lvl}`] = lvlFolder.id;
-    }
-  }
+  const especialistaFolder = await ensureFolder('Especialista em Combate', rootFolder.id);
+  const habilidadesFolder = await ensureFolder('Habilidades', especialistaFolder.id);
+  const baseFolder = await ensureFolder('Habilidades Base', especialistaFolder.id);
+  const posturasFolder = await ensureFolder('Assumir Postura', especialistaFolder.id);
+  const artesFolder = await ensureFolder('Artes do Combate', especialistaFolder.id);
 
   // --- 5. PREPARAÇÃO DOS DADOS ---
 
   const toCreate = [];
   const toUpdate = [];
+  const toDelete = [];
 
-  for (const entry of APTIDOES) {
+  for (const entry of ENTRIES) {
     const catName = entry.system?.categoria || "Outros";
     const lvl = entry.nivel || 0;
-    const folderId = folderIdCache[`${catName}-${lvl}`];
+
+    let folderId;
+    if (entry._section === 'base') {
+      const lvlFolder = await ensureFolder(`Nível ${lvl}`, baseFolder.id);
+      folderId = lvlFolder.id;
+    }
+    else if (entry._section === 'posturas') {
+      folderId = posturasFolder.id;
+    }
+    else if (entry._section === 'artes') {
+      folderId = artesFolder.id;
+    }
+    else {
+      // habilidades escolhidas por nível
+      const lvlFolder = await ensureFolder(`Nível ${lvl}`, habilidadesFolder.id);
+      folderId = lvlFolder.id;
+    }
 
     const descriptionHtml = formatDescription(entry.description);
     const icon = await resolveIcon(entry.img || guessIcon(entry.name));
 
     const acaoNorm = normalizeAcao(entry.system?.ativacao);
-    const aptidaoKey = `${APTIDAO_PREFIX}.${slugifyKey(entry.name)}`;
+    const habilidadeKey = `${HABILIDADE_PREFIX}.${slugifyKey(entry.name)}`;
     const existingDoc = existingDocByName.get(entry.name.trim().toLowerCase());
     const existingHasEffects = (existingDoc?.effects?.size ?? (existingDoc?.effects?.contents?.length ?? 0)) > 0;
 
     const itemData = {
       name: entry.name,
-      type: "aptidao", 
+      type: "habilidade", 
       img: icon,
       folder: folderId,
       flags: foundry.utils.mergeObject(existingDoc?.toObject?.()?.flags ?? {}, {
-        [SYSTEM_ID]: { aptidaoKey }
+        [SYSTEM_ID]: { habilidadeKey }
       }),
       system: {
         fonte: { value: PACK_LABEL },
@@ -310,7 +452,7 @@
         classe: { value: CLASSE_BASE, label: "Classe" },
         nivelMin: { value: lvl, label: "Nível mínimo (classe)" },
         
-        tipo: { value: "aptidao" }, 
+        tipo: { value: "habilidade" }, 
         categoria: { value: catName },
         ativacao: { value: entry.system?.ativacao || "" },
         duracao: { value: entry.system?.duracao || "" }
@@ -322,14 +464,25 @@
     }
 
     const existingId = existingIdByName.get(entry.name.trim().toLowerCase());
-    if (existingId) {
+    const shouldRecreate = Boolean(existingDoc && existingDoc.type !== itemData.type);
+    if (existingId && shouldRecreate) {
+      toDelete.push(existingId);
+      toCreate.push(itemData);
+    }
+    else if (existingId) {
       toUpdate.push({ _id: existingId, ...itemData });
-    } else {
+    }
+    else {
       toCreate.push(itemData);
     }
   }
 
   // --- 6. EXECUÇÃO EM BATCH ---
+
+  if (toDelete.length > 0) {
+    console.log(`Removendo ${toDelete.length} itens com tipo incorreto...`);
+    await Item.deleteDocuments(toDelete, { pack: pack.collection });
+  }
   
   if (toCreate.length > 0) {
     console.log(`Criando ${toCreate.length} novos itens...`);

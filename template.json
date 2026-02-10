@@ -1,6 +1,6 @@
 {
   "Actor": {
-    "types": ["character", "npc"],
+    "types": ["character", "npc", "inimigo"],
     "templates": {
       "base": {
         "biography": { "value": "" },
@@ -184,7 +184,9 @@
         },
         "dadosVida": { "value": 1, "max": 1, "lado": "1d8", "label": "Dados de Vida" },
         "dadosEnergia": { "value": 1, "max": 1, "lado": "1d6", "label": "Dados de Energia" },
-        "rd": { "value": 0, "special": "", "byType": {} },
+        "rd": { "value": 0, "irreducivel": 0, "special": "", "byType": {} },
+        "imunidades": { "byType": {} },
+        "vulnerabilidades": { "byType": {} },
         "morte": {
             "s1": false, "s2": false, "s3": false,
             "f1": false, "f2": false, "f3": false
@@ -248,10 +250,40 @@
       "detalhes": {
         "nivel": { "value": 1 }
       }
+    },
+    "inimigo": {
+      "templates": ["base"],
+      "detalhes": {
+        "nivel": { "value": 1 }
+      },
+      "nd": 1,
+      "bt": 2,
+      "patamar": "comum",
+      "origem": "humano",
+      "dificuldade_mesa": "intermediario",
+      "tamanho": "medio",
+      "atributos": {
+        "forca": { "value": 10, "label": "Força" },
+        "destreza": { "value": 10, "label": "Destreza" },
+        "constituicao": { "value": 10, "label": "Constituição" },
+        "inteligencia": { "value": 10, "label": "Inteligência" },
+        "sabedoria": { "value": 10, "label": "Sabedoria" },
+        "presenca": { "value": 10, "label": "Presença" }
+      },
+      "combate": {
+        "defesa": { "value": 10, "label": "Defesa", "bonusAdHoc": 0, "outrosBonus": 0, "bonusEquipManual": 0 },
+        "movimento": { "value": 9, "label": "Deslocamento", "base": 9, "bonusAdHoc": 0, "outrosBonus": 0, "emDominio": false },
+        "iniciativa": { "value": 0, "label": "Iniciativa", "atributoExtra": "nenhum", "usarTreinamento": false, "bonusFixo": 0, "bonusAdHoc": 0, "outrosBonus": 0 }
+      },
+      "percepcao": {
+        "atencaoBase": 10,
+        "atencaoBonus": 0,
+        "atencao": 10
+      }
     }
   },
   "Item": {
-    "types": ["item", "feature", "spell", "aptidao", "tecnica", "arma", "class", "habilidade", "uniforme"],
+    "types": ["item", "feature", "spell", "aptidao", "tecnica", "arma", "class", "habilidade", "uniforme", "acao-npc", "dote", "caracteristica"],
     "templates": {
       "base": {
         "descricao": { "value": "" },
@@ -292,6 +324,42 @@
       "custo": { "value": 0, "label": "Custo (PE)" },
       "acao": { "value": "Passiva", "label": "Ação" },
       "requisito": { "value": "", "label": "Requisito" }
+    }
+    ,
+    "acao-npc": {
+      "templates": ["base"],
+      "custoPe": { "value": 0, "label": "Custo (PE)" },
+      "treinamento": { "value": 2, "label": "Treinamento (BT)" },
+      "tipoAcerto": { "value": "atributo_bt", "label": "Tipo de Acerto (automatico|atributo_bt|cd|tr|tr_area)" },
+      "atributo": { "value": "forca", "label": "Atributo (forca/destreza/inteligencia/sabedoria/presenca)" },
+      "alcanceMax": { "valor": { "value": 1.5, "label": "Alcance Máx (valor)" }, "unidade": { "value": "m", "label": "Unidade" } },
+      "areaMax": { "valor": { "value": 0, "label": "Área Máx (valor)" }, "unidade": { "value": "m", "label": "Unidade" } },
+      "formulaDano": { "value": "1d6", "label": "Fórmula de Dano (ex: 4d10+3)" },
+      "danoMedio": { "value": 0, "label": "Dano Médio (estimado)" },
+      "aplicaCondicao": { "value": false, "label": "Aplica Condição" },
+      "condicao": { "value": "fraca", "label": "Nível da Condição (fraca|media|forte|extrema)" },
+      "condicaoUsaPe": { "value": false, "label": "Pagar PE para aplicar condição" },
+      "condicaoCustoPe": { "value": 0, "label": "Custo PE (se usar)" },
+      "segundaFase": { "value": false, "label": "Segunda Fase" }
+    },
+    "dote": {
+      "templates": ["base"],
+      "categoria": { "value": "geral", "label": "Categoria (geral|amaldiçoado)" },
+      "custoPe": { "value": 0, "label": "Custo (PE)" },
+      "acao": { "value": "Passiva", "label": "Ação" },
+      "equipado": { "value": true, "label": "Ativo" },
+      "efeito": { "value": "", "label": "Efeito (texto)" },
+      "changesJson": { "value": "", "label": "Changes JSON (avançado)" }
+    },
+    "caracteristica": {
+      "templates": ["base"],
+      "categoria": { "value": "caracteristica", "label": "Categoria (caracteristica|resistencia|imunidade|vulnerabilidade)" },
+      "danoTipo": { "value": "", "label": "Tipo de Dano (chave)" },
+      "valor": { "value": 0, "label": "Valor (ex: RD)" },
+      "multiplicador": { "value": 2, "label": "Multiplicador (vulnerabilidade)" },
+      "equipado": { "value": true, "label": "Ativo" },
+      "efeito": { "value": "", "label": "Efeito (texto)" },
+      "changesJson": { "value": "", "label": "Changes JSON (avançado)" }
     }
   }
 }

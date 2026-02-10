@@ -83,6 +83,16 @@
                         </div>
                     {{/if}}
                 </div>
+
+                <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
+                    <label>RD</label>
+                    <div class="status-inputs flexrow" style="gap: 6px; align-items:center; justify-content:center;">
+                        <input type="number" name="system.combate.rd.value" value="{{system.combate.rd.value}}" style="width:70px; text-align:center;" title="RD (reduzível)"/>
+                        <span style="opacity:0.7; font-size:12px;">+</span>
+                        <input type="number" name="system.combate.rd.irreducivel" value="{{system.combate.rd.irreducivel}}" style="width:70px; text-align:center;" title="RD irredutível"/>
+                    </div>
+                    <div style="margin-top:6px; font-size:11px; opacity:0.75; text-align:center;">reduzível + irredutível</div>
+                </div>
                 <div class="combat-card flexcol flex-group-center" style="grid-column: span 1;">
                     <label class="roll-initiative rollable" style="cursor: pointer; color: #9b4dca;">
                         <i class="fas fa-dice-d20"></i> INICIATIVA

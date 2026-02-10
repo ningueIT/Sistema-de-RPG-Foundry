@@ -1,0 +1,113 @@
+<div class="flexrow" style="justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px;">
+  <h3 class="jem-section-title" style="margin: 0;">Testes & Perícias (Inimigo)</h3>
+  <button type="button" data-action="auto-calcular-inimigo-tests">Auto-Calcular</button>
+</div>
+
+<div class="grid grid-2col pericias-top-grid" style="gap: 20px; margin-bottom: 20px;">
+  <div class="panel-group">
+    <h3 class="pericias-section-title">Perícias de Ataque e Táticas</h3>
+    <div class="flexcol" style="gap: 5px;">
+      <div class="pericia-row flexrow">
+        <select name="system.ataques.corpo.value" data-dtype="Number" class="pericia-select">
+          {{selectOptions niveisPericia selected=system.ataques.corpo.value localize=false}}
+        </select>
+        <a class="rollable pericia-label" data-roll-type="pericia" data-group="ataques" data-key="corpo">
+          <i class="fas fa-dice-d20"></i> Luta
+        </a>
+      </div>
+
+      <div class="pericia-row flexrow">
+        <select name="system.ataques.amaldicoado.value" data-dtype="Number" class="pericia-select">
+          {{selectOptions niveisPericia selected=system.ataques.amaldicoado.value localize=false}}
+        </select>
+        <a class="rollable pericia-label" data-roll-type="pericia" data-group="ataques" data-key="amaldicoado">
+          <i class="fas fa-dice-d20"></i> Feitiçaria
+        </a>
+      </div>
+
+      <div class="pericia-row flexrow">
+        <select name="system.ataques.distancia.value" data-dtype="Number" class="pericia-select">
+          {{selectOptions niveisPericia selected=system.ataques.distancia.value localize=false}}
+        </select>
+        <a class="rollable pericia-label" data-roll-type="pericia" data-group="ataques" data-key="distancia">
+          <i class="fas fa-dice-d20"></i> Pontaria
+        </a>
+      </div>
+
+      <div class="pericia-row flexrow">
+        <select name="system.pericias.furtividade.value" data-dtype="Number" class="pericia-select">
+          {{selectOptions niveisPericia selected=system.pericias.furtividade.value localize=false}}
+        </select>
+        <a class="rollable pericia-label" data-roll-type="pericia" data-group="pericias" data-key="furtividade">
+          <i class="fas fa-dice-d20"></i> Furtividade
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-group">
+    <h3 class="pericias-section-title">Testes de Resistência</h3>
+    <div class="flexcol" style="gap: 5px;">
+      <div class="pericia-row flexrow">
+        <select name="system.salvaguardas.fortitude.value" data-dtype="Number" class="pericia-select">
+          {{selectOptions niveisPericia selected=system.salvaguardas.fortitude.value localize=false}}
+        </select>
+        <a class="rollable pericia-label" data-roll-type="pericia" data-group="salvaguardas" data-key="fortitude">
+          <i class="fas fa-dice-d20"></i> Fortitude
+        </a>
+      </div>
+
+      <div class="pericia-row flexrow">
+        <select name="system.salvaguardas.reflexos.value" data-dtype="Number" class="pericia-select">
+          {{selectOptions niveisPericia selected=system.salvaguardas.reflexos.value localize=false}}
+        </select>
+        <a class="rollable pericia-label" data-roll-type="pericia" data-group="salvaguardas" data-key="reflexos">
+          <i class="fas fa-dice-d20"></i> Reflexos
+        </a>
+      </div>
+
+      <div class="pericia-row flexrow">
+        <select name="system.salvaguardas.vontade.value" data-dtype="Number" class="pericia-select">
+          {{selectOptions niveisPericia selected=system.salvaguardas.vontade.value localize=false}}
+        </select>
+        <a class="rollable pericia-label" data-roll-type="pericia" data-group="salvaguardas" data-key="vontade">
+          <i class="fas fa-dice-d20"></i> Vontade
+        </a>
+      </div>
+
+      <div class="pericia-row flexrow">
+        <select name="system.salvaguardas.astucia.value" data-dtype="Number" class="pericia-select">
+          {{selectOptions niveisPericia selected=system.salvaguardas.astucia.value localize=false}}
+        </select>
+        <a class="rollable pericia-label" data-roll-type="pericia" data-group="salvaguardas" data-key="astucia">
+          <i class="fas fa-dice-d20"></i> Astúcia
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3 class="pericias-section-title pericias-section-title--spaced">Perícias Gerais</h3>
+
+<div class="pericias-grid-4col">
+  {{#each system.pericias as |pericia key|}}
+    {{#unless (eq key "furtividade")}}
+      <div class="pericia-item flexrow">
+        <select name="system.pericias.{{key}}.value" data-dtype="Number" class="pericia-select">
+          {{selectOptions ../niveisPericia selected=pericia.value localize=false}}
+        </select>
+
+        <a class="rollable pericia-label" data-roll-type="pericia" data-group="pericias" data-key="{{key}}">
+          <i class="fas fa-dice-d20"></i>
+
+          <span class="atributo-tag">
+            {{pericia.atributoLabel}}
+            <span class="mod-valor">{{numberFormat pericia.atributoMod decimals=0 sign=true}}</span>
+          </span>
+
+          {{pericia.label}}
+        </a>
+      </div>
+    {{/unless}}
+  {{/each}}
+</div>

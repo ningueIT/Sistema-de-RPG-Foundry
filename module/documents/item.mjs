@@ -196,6 +196,108 @@ export class BoilerplateItem extends Item {
       return item.rollAttack();
     }
 
+    // Ação de NPC: cria pré-visualização e botão para executar (consome PE)
+    if (String(item.type) === 'acao-npc') {
+      const speaker = ChatMessage.getSpeaker({ actor: this.actor });
+      const rollMode = game.settings.get('core', 'rollMode');
+
+      const custoPe = Number(this.system?.custoPe?.value ?? this.system?.custoPe ?? 0) || 0;
+      const tipo = String(this.system?.tipoAcerto?.value ?? this.system?.tipoAcerto ?? 'atributo_bt');
+      const atributo = String(this.system?.atributo?.value ?? this.system?.atributo ?? 'forca');
+      const danoMedio = Number(this.system?.danoMedio?.value ?? this.system?.danoMedio ?? 0) || 0;
+      const segundaFase = !!(this.system?.segundaFase?.value ?? this.system?.segundaFase ?? false);
+      const treinamento = Number(this.system?.treinamento?.value ?? this.system?.treinamento ?? 2) || 2;
+      const alcanceMax = Number(this.system?.alcanceMax?.valor?.value ?? this.system?.alcanceMax ?? 0) || 0;
+      const areaMax = Number(this.system?.areaMax?.valor?.value ?? this.system?.areaMax ?? 0) || 0;
+      const formulaDano = String(this.system?.formulaDano?.value ?? this.system?.formulaDano ?? '');
+      const aplicaCondicao = !!(this.system?.aplicaCondicao?.value ?? this.system?.aplicaCondicao ?? false);
+      const condicao = String(this.system?.condicao?.value ?? this.system?.condicao ?? 'fraca');
+      const condUsaPe = !!(this.system?.condicaoUsaPe?.value ?? this.system?.condicaoUsaPe ?? false);
+      const condCustoPe = Number(this.system?.condicaoCustoPe?.value ?? this.system?.condicaoCustoPe ?? 0) || 0;
+
+      // Compute a quick preview
+      const actorData = this.actor?.system ?? {};
+      const attrVal = Number(actorData.atributos?.[atributo]?.value ?? 10);
+      const attrMod = Number(actorData.atributos?.[atributo]?.mod ?? Math.floor((attrVal - 10) / 2)) || 0;
+      const bt = Number(actorData.detalhes?.treinamento?.value ?? actorData.treinamento ?? actorData.bt ?? 0) || 0;
+
+      let preview = '';
+      if (tipo === 'automatico') preview = 'Acerto automático';
+      else if (tipo === 'cd') preview = 'Teste contra CD (o alvo rola contra sua CD)';
+      else if (tipo === 'tr') preview = `Teste de Resistência (individual) — dano reduzido em 1 ND`; 
+      else if (tipo === 'tr_area') preview = `Teste de Resistência (área) — dano reduzido pela metade`; 
+      else preview = `1d20 + ${attrMod} (atributo) + ${bt} (BT)`;
+
+      const condHtml = aplicaCondicao ? `<div>Aplica condição: <strong>${condicao}</strong> ${condUsaPe ? `(custa ${condCustoPe} PE)` : ''}</div>` : '';
+
+      const content = `
+        <div class="card chat-card skill-roll">
+          <div style="font-weight:700;">${this.name} — Ação de NPC</div>
+          <div style="margin-top:6px;">Tipo de acerto: <strong>${tipo}</strong></div>
+          <div>Preview: <strong>${preview}</strong></div>
+          <div style="margin-top:6px;">Treinamento (BT): <strong>${treinamento}</strong></div>
+          <div>Alcance Máx: <strong>${alcanceMax} m</strong> — Área Máx: <strong>${areaMax} m</strong></div>
+          ${formulaDano ? `<div>Fórmula de dano: <strong>${formulaDano}</strong></div>` : ''}
+          ${condHtml}
+          <div style="margin-top:6px;">Custo de PE: <strong>${custoPe}</strong></div>
+          <div style="margin-top:8px; display:flex; gap:8px;">
+            <button class="button npc-action-exec jem-btn jem-btn--confirm" data-item-uuid="${this.uuid}" data-actor-id="${this.actor?.id}" data-custo="${custoPe}">Executar Ação</button>
+          </div>
+          ${danoMedio ? `<div style="margin-top:8px;">Dano médio: <strong>${danoMedio}</strong></div>` : ''}
+        </div>`;
+
+      await ChatMessage.create({ speaker, rollMode, flavor: `[ação-npc] ${this.name}`, content, flags: { 'feiticeiros-e-maldicoes': { npcAction: true } } });
+      return null;
+    }
+
+    // Dotes: "usar" ao clicar
+    // - Passiva: alterna Ativo (equipado) para aplicar/remover efeitos passivos
+    // - Sem fórmula: posta um card no chat usando descrição/efeito (em vez de system.description)
+    if (String(item.type) === 'dote') {
+      const acao = String(this.system?.acao?.value ?? this.system?.acao ?? '').toLowerCase();
+      if (acao === 'passiva') {
+        const isObj = (this.system?.equipado && typeof this.system.equipado === 'object' && Object.prototype.hasOwnProperty.call(this.system.equipado, 'value'));
+        const equipped = Boolean(isObj ? this.system?.equipado?.value : this.system?.equipado);
+
+        try {
+          await this.update(isObj ? { 'system.equipado.value': !equipped } : { 'system.equipado': !equipped });
+          const label = !equipped ? 'ativado' : 'desativado';
+          ui?.notifications?.info?.(`Dote ${label}: ${this.name}`);
+        } catch (e) {
+          console.warn('Falha ao alternar dote passivo (equipado):', e);
+        }
+        return null;
+      }
+
+      // Se tiver fórmula, deixa cair no fluxo padrão para rolar.
+      if (!this.system?.formula) {
+        const speaker = ChatMessage.getSpeaker({ actor: this.actor });
+        const rollMode = game.settings.get('core', 'rollMode');
+        const custoPe = Number(this.system?.custoPe?.value ?? this.system?.custoPe ?? 0) || 0;
+        const acaoLabel = String(this.system?.acao?.value ?? this.system?.acao ?? '').trim();
+        const categoria = String(this.system?.categoria?.value ?? this.system?.categoria ?? '').trim();
+        const descricao = String(this.system?.descricao?.value ?? this.system?.descricao ?? this.system?.description ?? '').trim();
+        const efeito = String(this.system?.efeito?.value ?? this.system?.efeito ?? '').trim();
+
+        const meta = [
+          categoria ? `<span><strong>Categoria:</strong> ${categoria}</span>` : '',
+          acaoLabel ? `<span><strong>Ação:</strong> ${acaoLabel}</span>` : '',
+          (custoPe || custoPe === 0) ? `<span><strong>PE:</strong> ${custoPe}</span>` : ''
+        ].filter(Boolean).join(' — ');
+
+        const content = `
+          <div class="card chat-card skill-roll">
+            <div style="font-weight:700;">${this.name} — Dote</div>
+            ${meta ? `<div style="margin-top:6px; opacity:0.9;">${meta}</div>` : ''}
+            ${descricao ? `<div style="margin-top:8px;">${descricao}</div>` : ''}
+            ${efeito ? `<div style="margin-top:8px;"><strong>Efeito:</strong> ${efeito}</div>` : ''}
+          </div>`;
+
+        await ChatMessage.create({ speaker, rollMode, flavor: `[dote] ${this.name}`, content });
+        return null;
+      }
+    }
+
     // Initialize chat data.
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollMode = game.settings.get('core', 'rollMode');
@@ -214,6 +316,7 @@ export class BoilerplateItem extends Item {
     // Otherwise, create a roll and send a chat message from it.
     const rollData = this.getRollData();
     let formula = rollData.formula;
+    let afterAttackBonus = 0;
 
     try {
       if (this.actor && this.actor.getFlag) {
@@ -224,17 +327,7 @@ export class BoilerplateItem extends Item {
           try { await this.actor.unsetFlag(game.system.id, 'ultimaAcao.critico'); } catch(_){}
         }
 
-        // Kokusen: dobrar dados de dano (exceto d20)
-        const kok = await this.actor.getFlag(game.system.id, 'kokusen.pendingDoubleDamage');
-        if (kok) {
-          try {
-            formula = String(formula).replace(/(\b(\d*)d(?!20)(\d+)\b)/ig, (m, whole, count, faces) => {
-              const n = Number(count) || 1;
-              return `${n*2}d${faces}`;
-            });
-          } catch (e) { console.warn('Erro ao dobrar dados de dano (Kokusen):', e); }
-          try { await this.actor.unsetFlag(game.system.id, 'kokusen.pendingDoubleDamage'); } catch(_){}
-        }
+        // Kokusen: marcado no ator e consumido no rollDamage (1.5x e ignora RD)
 
         // Bônus de dano do sistema (persistente e temporário) para armas/técnicas
         // - flags.<systemId>.bonuses.itemDamage => sempre
@@ -247,6 +340,8 @@ export class BoilerplateItem extends Item {
 
             const temp = (await this.actor.getFlag(sysId, 'temp')) || {};
             const bonusTemp = Number(temp?.damageBonus ?? 0) || 0;
+            // Dano Após Ataque: aplicado depois do Kokusen (não entra na rolagem)
+            afterAttackBonus = Number(temp?.afterAttackDamage ?? temp?.damageAfterAttack ?? 0) || 0;
 
             const totalBonus = (bonusAlways + bonusTemp);
             if (totalBonus) {
@@ -256,9 +351,11 @@ export class BoilerplateItem extends Item {
               }
             }
 
-            if (bonusTemp) {
+            if (bonusTemp || afterAttackBonus) {
               const next = foundry.utils.deepClone(temp);
               next.damageBonus = 0;
+              if (next.afterAttackDamage != null) next.afterAttackDamage = 0;
+              if (next.damageAfterAttack != null) next.damageAfterAttack = 0;
               await this.actor.setFlag(sysId, 'temp', next);
             }
           }
@@ -301,27 +398,55 @@ export class BoilerplateItem extends Item {
     }
     // Construir cartão estilizado para o dano
     try {
-      const damageTotal = Number(roll.total) || 0;
+      const sysId = game?.system?.id ?? 'feiticeiros-e-maldicoes';
+      const baseTotal = Number(roll.total) || 0;
       const damageType = String(damageBlock?.type?.value ?? damageBlock?.type ?? '') || '';
       const formulaShort = Roll.cleanFormula(String(formula || ''), rollData);
+
+      // Kokusen: 1.5x no dano rolado (antes de Dano Após Ataque) e ignora RD
+      let isKokusen = false;
+      let ignoreRD = false;
+      let kokusenBonus = 0;
+      let finalTotal = baseTotal;
+      try {
+        const pending = await this.actor?.getFlag?.(sysId, 'kokusen.pending');
+        const legacy = await this.actor?.getFlag?.(sysId, 'kokusen.pendingDoubleDamage');
+        if (pending || legacy) {
+          isKokusen = true;
+          ignoreRD = true;
+          kokusenBonus = Math.floor(baseTotal / 2);
+          finalTotal = baseTotal + kokusenBonus;
+          try { await this.actor.unsetFlag(sysId, 'kokusen.pending'); } catch (_) {}
+          try { await this.actor.unsetFlag(sysId, 'kokusen.pendingDoubleDamage'); } catch (_) {}
+        }
+      } catch (e) {
+        console.warn('Erro ao verificar flag pendente de Kokusen:', e);
+      }
+
+      if (afterAttackBonus) finalTotal += Number(afterAttackBonus) || 0;
+
+      const extraInfo = isKokusen
+        ? `<div class="flavor-text" style="margin-top:6px;">Kokusen: ${baseTotal} + ${kokusenBonus} (metade)${afterAttackBonus ? ` + ${afterAttackBonus} (Após Ataque)` : ''} = <strong>${finalTotal}</strong> (ignora RD)</div>`
+        : (afterAttackBonus ? `<div class="flavor-text" style="margin-top:6px;">Dano Após Ataque: +${afterAttackBonus} → <strong>${finalTotal}</strong></div>` : '');
 
       const dmgContent = `
         <div class="card chat-card skill-roll">
           <div class="die" style="width:56px;height:56px;border-radius:8px;background:#111;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#fff">
-            <i class="fas fa-bolt"></i><span>${damageTotal}</span>
+            <i class="fas fa-bolt"></i><span>${finalTotal}</span>
           </div>
           <div class="skill-info">
             <div style="display:flex; align-items:center; gap:8px; justify-content:space-between;">
               <div style="font-weight:700; font-size:1rem">${item.name} — Dano</div>
-              <div style="font-weight:700; color:#fff; background:#6f42c1; padding:4px 8px; border-radius:6px;">${damageTotal}</div>
+              <div style="font-weight:700; color:#fff; background:#6f42c1; padding:4px 8px; border-radius:6px;">${finalTotal}</div>
             </div>
             <div style="margin-top:6px; font-size:0.9rem; color:#ddd;">
               <span style="background:#111; padding:3px 6px; border-radius:4px;">Fórmula: <code style="background:transparent; color:#fff;">${formulaShort}</code></span>
             </div>
+            ${extraInfo || ''}
             <div style="margin-top:8px; display:flex; gap:8px;">
-              <button class="button apply-damage" data-value="${damageTotal}" data-type="${damageType}" data-multiplier="1" data-soul="false" data-roller="${game.user?.id}">Causar Dano</button>
-              <button class="button apply-damage double" data-value="${damageTotal}" data-type="${damageType}" data-multiplier="2" data-soul="false" data-roller="${game.user?.id}">Causar Dano ×2</button>
-              <button class="button apply-damage" data-value="${damageTotal}" data-type="${damageType}" data-multiplier="0.5" data-soul="false" data-roller="${game.user?.id}">Causar Metade</button>
+              <button class="button apply-damage" data-value="${finalTotal}" data-type="${damageType}" data-multiplier="1" data-soul="false" data-ignore-rd="${ignoreRD}" data-roller="${game.user?.id}">Causar Dano</button>
+              <button class="button apply-damage double" data-value="${finalTotal}" data-type="${damageType}" data-multiplier="2" data-soul="false" data-ignore-rd="${ignoreRD}" data-roller="${game.user?.id}">Causar Dano ×2</button>
+              <button class="button apply-damage" data-value="${finalTotal}" data-type="${damageType}" data-multiplier="0.5" data-soul="false" data-ignore-rd="${ignoreRD}" data-roller="${game.user?.id}">Causar Metade</button>
             </div>
           </div>
         </div>`;
@@ -360,7 +485,7 @@ export class BoilerplateItem extends Item {
     const critMult = Number(attackBlock?.critico?.mult?.value ?? attackBlock?.critico?.mult ?? 2) || 2;
 
     const doRoll = async (mode) => {
-      let formula = `1d20cs>=${critThreshold}`;
+      let formula = `1d20`;
       if (mode === 'adv') formula = '2d20kh1';
       if (mode === 'dis') formula = '2d20kl1';
 
@@ -411,7 +536,41 @@ export class BoilerplateItem extends Item {
 
       const total = raw + attrMod + training + itemBonus - attackPenalty;
 
-      const isCritical = (usedD20 != null) ? (Number(usedD20) >= Number(critThreshold)) : false;
+      // Regra da casa: 20 natural NÃO é crítico. Ele pode virar Kokusen.
+      // Crítico ainda pode existir por outras fontes, mas não por um 20 natural.
+      const isCritical = false;
+
+      let kokusenTag = '';
+      try {
+        const sysId = game?.system?.id ?? 'feiticeiros-e-maldicoes';
+        const norm = (s) => String(s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+        const hasKokusenAbility = Boolean(
+          foundry.utils.getProperty(this.actor?.system, 'aptidoes.especiais.raioNegro') ||
+          this.actor?.items?.some(i => ['kokusen', 'raio negro'].includes(norm(i?.name)))
+        );
+
+        if (Number(usedD20) === 20) {
+          let kokusenTriggered = false;
+          let chanceD6 = null;
+
+          if (hasKokusenAbility) {
+            kokusenTriggered = true;
+          } else {
+            const rollD6 = await rollFormula('1d6', rollData, { asyncEval: true, toMessage: false });
+            chanceD6 = Number(rollD6.total || 0);
+            kokusenTriggered = (chanceD6 === 6);
+          }
+
+          if (kokusenTriggered) {
+            await this.actor.setFlag(sysId, 'kokusen.pending', true);
+            kokusenTag = '<span style="color:#111; background:#ffd700; padding:2px 6px; border-radius:6px; font-weight:800;">KOKUSEN</span>';
+          } else {
+            kokusenTag = `<span style="color:#bbb; font-weight:700;">20 natural${chanceD6 != null ? ` (d6: ${chanceD6})` : ''}</span>`;
+          }
+        }
+      } catch (e) {
+        console.warn('Erro ao processar chance de Kokusen no ataque:', e);
+      }
 
       const flavor = `Ataque — ${item.name}`;
       // Construir cartão estilizado parecido com skill-roll
@@ -426,7 +585,7 @@ export class BoilerplateItem extends Item {
             </div>
             <div style="margin-top:6px; font-size:0.9rem; color:#ddd; display:flex; gap:12px; align-items:center;">
               <span style="background:#111; padding:3px 6px; border-radius:4px;">Fórmula: <code style="background:transparent; color:#fff;">${formulaShort}</code></span>
-              ${isCritical ? '<span style="color:#ffd700; font-weight:700;">CRÍTICO</span>' : ''}
+              ${kokusenTag || ''}
             </div>
             <div style="margin-top:8px;">
               <button class="button roll-weapon-damage" data-actor-id="${this.actor?.id ?? ''}" data-item-id="${this.id}" data-item-uuid="${this.uuid ?? ''}" data-item-name="${this.name ?? ''}" data-critical="${isCritical}" data-crit-mult="${critMult}">Rolar Dano</button>
@@ -522,6 +681,9 @@ export class BoilerplateItem extends Item {
       }
     }
 
+    // 3) Kokusen é aplicado DEPOIS da rolagem (1.5x) e ignora RD.
+
+    let afterAttackBonus = 0;
     try {
       if (this.actor && this.actor.getFlag) {
         const sysId = game?.system?.id ?? 'feiticeiros-e-maldicoes';
@@ -530,15 +692,19 @@ export class BoilerplateItem extends Item {
           const bonusAlways = Number(bonuses?.itemDamage ?? 0) || 0;
           const temp = (await this.actor.getFlag(sysId, 'temp')) || {};
           const bonusTemp = Number(temp?.damageBonus ?? 0) || 0;
+          // Dano Após Ataque: aplicado depois de Kokusen (não entra na rolagem)
+          afterAttackBonus = Number(temp?.afterAttackDamage ?? temp?.damageAfterAttack ?? 0) || 0;
           const totalBonus = (bonusAlways + bonusTemp);
           if (totalBonus) {
             if (/\bd\d+\b/i.test(String(formula))) {
               formula = `${formula} + ${totalBonus}`;
             }
           }
-          if (bonusTemp) {
+          if (bonusTemp || afterAttackBonus) {
             const next = foundry.utils.deepClone(temp);
             next.damageBonus = 0;
+            if (next.afterAttackDamage != null) next.afterAttackDamage = 0;
+            if (next.damageAfterAttack != null) next.damageAfterAttack = 0;
             await this.actor.setFlag(sysId, 'temp', next);
           }
         }
@@ -556,19 +722,46 @@ export class BoilerplateItem extends Item {
     const message = await roll.toMessage({ speaker, rollMode, flavor: `[${item.type}] ${item.name} — Dano` });
 
     try {
-      const damageTotal = Number(roll.total) || 0;
+      const sysId = game?.system?.id ?? 'feiticeiros-e-maldicoes';
+      const baseTotal = Number(roll.total) || 0;
       const damageType = String(damageBlock?.type?.value ?? damageBlock?.type ?? '') || '';
       const isSoul = Boolean(damageBlock?.isSoulDamage?.value ?? damageBlock?.isSoulDamage ?? false);
 
+      // Kokusen: 1.5x no dano rolado (antes de Dano Após Ataque), ignora RD
+      let isKokusen = false;
+      let ignoreRD = false;
+      let kokusenBonus = 0;
+      let finalTotal = baseTotal;
+      try {
+        const pending = await this.actor?.getFlag?.(sysId, 'kokusen.pending');
+        const legacy = await this.actor?.getFlag?.(sysId, 'kokusen.pendingDoubleDamage');
+        if (pending || legacy) {
+          isKokusen = true;
+          ignoreRD = true;
+          kokusenBonus = Math.floor(baseTotal / 2);
+          finalTotal = baseTotal + kokusenBonus;
+          try { await this.actor.unsetFlag(sysId, 'kokusen.pending'); } catch (_) {}
+          try { await this.actor.unsetFlag(sysId, 'kokusen.pendingDoubleDamage'); } catch (_) {}
+        }
+      } catch (e) {
+        console.warn('Erro ao verificar flag pendente de Kokusen:', e);
+      }
+
+      if (afterAttackBonus) finalTotal += Number(afterAttackBonus) || 0;
+
+      const kokusenInfo = isKokusen
+        ? `<div class="flavor-text" style="margin-top:6px;">Kokusen: ${baseTotal} + ${kokusenBonus} (metade)${afterAttackBonus ? ` + ${afterAttackBonus} (Após Ataque)` : ''} = <strong>${finalTotal}</strong> (ignora RD)</div>`
+        : (afterAttackBonus ? `<div class="flavor-text" style="margin-top:6px;">Dano Após Ataque: +${afterAttackBonus} → <strong>${finalTotal}</strong></div>` : '');
+
       const buttonsHtml = `
         <div class="jem-chat-actions jem-chat-actions--damage" style="margin-top:6px; display:flex; gap:6px;">
-          <button class="button apply-damage" data-value="${damageTotal}" data-type="${damageType}" data-multiplier="1" data-soul="false" data-roller="${game.user?.id}">Causar Dano</button>
-          <button class="button apply-damage double" data-value="${damageTotal}" data-type="${damageType}" data-multiplier="2" data-soul="false" data-roller="${game.user?.id}">Causar Dano ×2</button>
-          <button class="button apply-damage" data-value="${damageTotal}" data-type="${damageType}" data-multiplier="1" data-soul="true" data-roller="${game.user?.id}">Causar Dano (Alma)</button>
-          <button class="button apply-damage" data-value="${damageTotal}" data-type="${damageType}" data-multiplier="0.5" data-soul="false" data-roller="${game.user?.id}">Causar Metade</button>
+          <button class="button apply-damage" data-value="${finalTotal}" data-type="${damageType}" data-multiplier="1" data-soul="false" data-ignore-rd="${ignoreRD}" data-roller="${game.user?.id}">Causar Dano</button>
+          <button class="button apply-damage double" data-value="${finalTotal}" data-type="${damageType}" data-multiplier="2" data-soul="false" data-ignore-rd="${ignoreRD}" data-roller="${game.user?.id}">Causar Dano ×2</button>
+          <button class="button apply-damage" data-value="${finalTotal}" data-type="${damageType}" data-multiplier="1" data-soul="true" data-ignore-rd="true" data-roller="${game.user?.id}">Causar Dano (Alma)</button>
+          <button class="button apply-damage" data-value="${finalTotal}" data-type="${damageType}" data-multiplier="0.5" data-soul="false" data-ignore-rd="${ignoreRD}" data-roller="${game.user?.id}">Causar Metade</button>
         </div>`;
 
-      const content = String(message.content || '') + buttonsHtml;
+      const content = String(message.content || '') + (kokusenInfo || '') + buttonsHtml;
       if (message && typeof message.update === 'function') {
         await message.update({ content });
       } else {

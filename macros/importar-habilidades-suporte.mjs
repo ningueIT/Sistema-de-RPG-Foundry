@@ -2,7 +2,7 @@
  * Macro: Importar Habilidades - Parte 5: SUPORTE
  * * Funcionalidades:
  * - Cria/Atualiza o Compêndio "Habilidades Amaldiçoadas".
- * - Organiza em pastas: Suporte > Nível.
+  * - Organiza em pastas: Suporte > (Habilidades / Habilidades Base) > Nível.
  * - Adiciona ícones temáticos (cura, buff, análise, proteção).
  * - Formata a descrição com parágrafos HTML.
  */
@@ -84,7 +84,67 @@
     { name: "Sustentação Mestre", nivel: 16, system: { categoria: "Suporte", custo: "", ativacao: "Passiva", requisitos: "Sustentação Avançada", duracao: "Permanente" }, description: `Pode manter três feitiços sustentados. Custo para sustentar é diminuído em 1.` },
 
     // Extra
-    { name: "Apoios Avançados (Lista)", nivel: 2, system: { categoria: "Suporte", custo: "", ativacao: "Especial", duracao: "Instantâneo" }, description: `Lista de efeitos: Curativo (Cura junto), Defensivo (+Defesa), Focado (Vantagem + Bônus), Ofensivo (Ataque extra), Estratégico (Aumenta CD).` }
+    { name: "Apoios Avançados", nivel: 2, system: { categoria: "Suporte", custo: "", ativacao: "Especial", duracao: "Instantâneo" }, description: `Após obter a habilidade “Apoio Avançado”, escolha um dos apoios abaixo para ser capaz de aplicar quando utilizar a ação Apoiar:\n\n• Apoio Curativo. Quando apoiar um aliado, você pode escolher gastar uma carga da habilidade Suporte em Combate para curar o aliado com ela como parte da ação.\n\n• Apoio Defensivo. Quando apoiar um aliado, você pode escolher aumentar a Defesa dele em um valor igual metade do seu bônus de treinamento até o começo do próximo turno.\n\n• Apoio Focado. Quando apoiar um aliado, você pode escolher, além da vantagem, conceder um bônus no teste que ele realizar igual a metade do seu modificador de Presença ou Sabedoria.\n\n• Apoio Ofensivo. Quando apoiar um aliado, você pode gastar 2 PE para realizar um ataque como parte da ação.\n\n• Apoio Estratégico. Ao utilizar a ação de apoio, você pode aumentar a CD do próximo teste que force TR do Aliado em um valor igual a metade do seu Bônus de Treinamento. [Pré-Requisito: Nível 6]\n\nVocê recebe acesso a um novo apoio avançado nos níveis 6 e 12.` }
+  ];
+
+  // --- 1b. HABILIDADES BASE (concedidas automaticamente por nível) ---
+  // Observação: "Teste de Resistência Mestre" pode ser compartilhada com outras classes.
+  // Se já existir no compêndio, evitamos sobrescrever/mover por organização.
+  const HABILIDADES_BASE = [
+    {
+      name: "Suporte em Combate",
+      nivel: 1,
+      system: { categoria: "Suporte", custo: "", ativacao: "Passiva", duracao: "Permanente", requisitos: "Nível 1 de Suporte" },
+      description: `Um suporte dispõe de um leque de capacidades que o permite auxiliar dentro do combate:\n\n• Você pode usar Apoiar como uma ação bônus.\n\n• Você pode, como uma ação bônus, curar uma criatura em alcance de toque em um valor igual a 2d6 + seu modificador de Presença ou Sabedoria, uma quantidade de vezes igual ao seu modificador de Presença ou Sabedoria, por descanso curto ou longo. No nível 4, essa cura se torna 2d12, no nível 8, se torna 3d12, no nível 12 se torna 6d8, no nível 16 se torna 6d10.`
+    },
+    {
+      name: "Presença Inspiradora",
+      nivel: 3,
+      system: { categoria: "Suporte", custo: "2 PE (+extra)", ativacao: "Especial", duracao: "Cena", requisitos: "Nível 3 de Suporte" },
+      description: `Sua presença inspira aqueles ao seu redor a tentarem seu máximo. Você pode pagar 2 pontos de energia amaldiçoada para fazer com que, durante uma cena, todo aliado dentro de 9 metros de você fique inspirado. Um aliado inspirado recebe um bônus de +1 em toda rolagem de perícia.\n\nAo utilizar esta habilidade, você pode gastar uma quantidade de PE adicional igual a metade do seu modificador de Presença, aumentando o bônus em +1 para cada PE gasto dessa maneira.`
+    },
+    {
+      name: "Versatilidade",
+      nivel: 5,
+      system: { categoria: "Suporte", custo: "1 PE", ativacao: "Especial", duracao: "Instantâneo", requisitos: "Nível 5 de Suporte" },
+      description: `Sempre que realizar uma rolagem com uma perícia na qual você não seja treinado, você pode pagar 1 ponto de energia amaldiçoada para considerar como se fosse treinado. Você pode utilizar esta habilidade uma quantidade de vezes igual ao seu modificador de Sabedoria, por descanso curto ou longo.`
+    },
+    {
+      name: "Energia Reversa",
+      nivel: 6,
+      system: { categoria: "Suporte", custo: "", ativacao: "Passiva", duracao: "Permanente", requisitos: "Nível 6 de Suporte" },
+      description: `No nível 6, você recebe a aptidão amaldiçoada “Energia Reversa”.`
+    },
+    {
+      name: "Liberação de Energia Reversa",
+      nivel: 8,
+      system: { categoria: "Suporte", custo: "", ativacao: "Passiva", duracao: "Permanente", requisitos: "Nível 8 de Suporte" },
+      description: `No nível 8, você recebe a aptidão amaldiçoada “Liberação de Energia Reversa”.`
+    },
+    {
+      name: "Teste de Resistência Mestre",
+      nivel: 9,
+      shared: true,
+      system: { categoria: "Suporte", custo: "", ativacao: "Passiva", duracao: "Permanente", requisitos: "Nível 9 de Suporte" },
+      description: `Você se torna treinado em um segundo teste de resistência e mestre no concedido pela sua especialização.`
+    },
+    {
+      name: "Medicina Infalível",
+      nivel: 10,
+      system: { categoria: "Suporte", custo: "", ativacao: "Passiva", duracao: "Permanente", requisitos: "Nível 10 de Suporte" },
+      description: `Você consegue dominar seus conhecimentos médicos e auxiliares ao ponto de elevá-los para um patamar superior. Uma quantidade de vezes igual a metade do seu nível de Suporte + bônus de treinamento, você pode, quando realizar uma rolagem para curar uma criatura, maximizar o valor de um dos dados dessa cura; você pode gastar vários usos para maximizar mais de um dado da mesma cura. Você recupera os usos após um descanso curto ou longo. Além disso, você soma o seu bônus de treinamento no total de toda cura que realizar.`
+    },
+    {
+      name: "Suporte Absoluto",
+      nivel: 20,
+      system: { categoria: "Suporte", custo: "", ativacao: "Passiva", duracao: "Permanente", requisitos: "Nível 20 de Suporte" },
+      description: `Você é o suporte absoluto que se pode ter em campo, mudando o rumo da batalha para todos seus aliados. Uma vez por rodada, você pode utilizar Apoiar como uma Ação Livre. Além disso, sua quantidade de usos da habilidade Suporte em Combate são dobrados e você soma seu modificador de atributo escolhido para CD de especialização em toda cura que realizar.`
+    }
+  ];
+
+  const ENTRIES = [
+    ...HABILIDADES_BASE.map(e => ({ ...e, _section: 'base' })),
+    ...APTIDOES.map(e => ({ ...e, _section: 'habilidades' }))
   ];
 
   // --- 2. CONFIGURAÇÃO E HELPERS ---
@@ -188,7 +248,7 @@
 
   function buildPassivePlaceholderEffect(label, icon) {
     return {
-      name: String(label ?? '').trim() || 'Aptidão Passiva',
+      name: String(label ?? '').trim() || 'Habilidade Passiva',
       icon: icon || ICON_FALLBACK,
       disabled: false,
       changes: [],
@@ -247,51 +307,59 @@
   }
 
   const rootFolder = await ensureFolder(PACK_LABEL);
-  
-  const levelsByCat = {};
-  for (const item of APTIDOES) {
-    const catName = item.system?.categoria || "Outros";
-    const lvl = item.nivel || 0;
-    
-    if (!levelsByCat[catName]) levelsByCat[catName] = new Set();
-    levelsByCat[catName].add(lvl);
+
+  // Estrutura: Habilidades Amaldiçoadas > Suporte > (Habilidades / Habilidades Base) > Nível X
+  const classFolder = await ensureFolder(CLASSE_BASE, rootFolder.id);
+  const habilidadesFolder = await ensureFolder('Habilidades', classFolder.id);
+  const baseFolder = await ensureFolder('Habilidades Base', classFolder.id);
+
+  const habilidadesLevels = Array.from(new Set(APTIDOES.map(e => e.nivel || 0))).sort((a, b) => a - b);
+  const baseLevels = Array.from(new Set(HABILIDADES_BASE.map(e => e.nivel || 0))).sort((a, b) => a - b);
+
+  const folderIdCache = {
+    habilidades: {},
+    base: {}
+  };
+
+  for (const lvl of habilidadesLevels) {
+    const lvlName = lvl > 0 ? `Nível ${lvl}` : 'Geral';
+    const lvlFolder = await ensureFolder(lvlName, habilidadesFolder.id);
+    folderIdCache.habilidades[lvl] = lvlFolder.id;
   }
 
-  const folderIdCache = {}; 
-  for (const [catName, levels] of Object.entries(levelsByCat)) {
-    const catFolder = await ensureFolder(catName, rootFolder.id);
-    for (const lvl of Array.from(levels).sort((a, b) => a - b)) {
-      const lvlName = lvl > 0 ? `Nível ${lvl}` : "Geral";
-      const lvlFolder = await ensureFolder(lvlName, catFolder.id);
-      folderIdCache[`${catName}-${lvl}`] = lvlFolder.id;
-    }
+  for (const lvl of baseLevels) {
+    const lvlName = lvl > 0 ? `Nível ${lvl}` : 'Geral';
+    const lvlFolder = await ensureFolder(lvlName, baseFolder.id);
+    folderIdCache.base[lvl] = lvlFolder.id;
   }
 
   // --- 5. PREPARAÇÃO DOS DADOS ---
 
   const toCreate = [];
   const toUpdate = [];
+  const toDelete = [];
 
-  for (const entry of APTIDOES) {
+  for (const entry of ENTRIES) {
+    const isBase = entry._section === 'base';
     const catName = entry.system?.categoria || "Outros";
     const lvl = entry.nivel || 0;
-    const folderId = folderIdCache[`${catName}-${lvl}`];
+    const folderId = isBase ? folderIdCache.base[lvl] : folderIdCache.habilidades[lvl];
 
     const descriptionHtml = formatDescription(entry.description);
     const icon = await resolveIcon(entry.img || guessIcon(entry.name));
 
     const acaoNorm = normalizeAcao(entry.system?.ativacao);
-    const aptidaoKey = `${APTIDAO_PREFIX}.${slugifyKey(entry.name)}`;
+    const habilidadeKey = `${APTIDAO_PREFIX}.${slugifyKey(entry.name)}`;
     const existingDoc = existingDocByName.get(entry.name.trim().toLowerCase());
     const existingHasEffects = (existingDoc?.effects?.size ?? (existingDoc?.effects?.contents?.length ?? 0)) > 0;
 
     const itemData = {
       name: entry.name,
-      type: "aptidao", 
+      type: "habilidade",
       img: icon,
       folder: folderId,
       flags: foundry.utils.mergeObject(existingDoc?.toObject?.()?.flags ?? {}, {
-        [SYSTEM_ID]: { aptidaoKey }
+        [SYSTEM_ID]: { habilidadeKey }
       }),
       system: {
         fonte: { value: PACK_LABEL },
@@ -304,7 +372,7 @@
         classe: { value: CLASSE_BASE, label: "Classe" },
         nivelMin: { value: lvl, label: "Nível mínimo (classe)" },
         
-        tipo: { value: "aptidao" }, 
+        tipo: { value: "habilidade" },
         categoria: { value: catName },
         ativacao: { value: entry.system?.ativacao || "" },
         duracao: { value: entry.system?.duracao || "" }
@@ -317,6 +385,14 @@
 
     const existingId = existingIdByName.get(entry.name.trim().toLowerCase());
     if (existingId) {
+      if (existingDoc?.type && existingDoc.type !== 'habilidade') {
+        toDelete.push(existingId);
+        toCreate.push(itemData);
+        continue;
+      }
+
+      if (entry.shared) continue;
+
       toUpdate.push({ _id: existingId, ...itemData });
     } else {
       toCreate.push(itemData);
@@ -324,6 +400,11 @@
   }
 
   // --- 6. EXECUÇÃO EM BATCH ---
+
+  if (toDelete.length > 0) {
+    console.log(`Removendo ${toDelete.length} itens com tipo incorreto...`);
+    await Item.deleteDocuments(toDelete, { pack: pack.collection });
+  }
   
   if (toCreate.length > 0) {
     console.log(`Criando ${toCreate.length} novos itens...`);

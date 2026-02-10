@@ -41,3 +41,37 @@
     </div>
 
 </div>
+
+{{#if (eq actor.type "inimigo")}}
+    <div class="inimigo-metrics" style="margin-bottom: 12px;">
+        <div class="inimigo-metric-card">
+            <label>ND</label>
+            <input type="number" name="system.nd" value="{{system.nd}}" min="{{system.limites.ndMin}}" max="20" data-dtype="Number"/>
+        </div>
+
+        <div class="inimigo-metric-card">
+            <label>BT</label>
+            <input type="number" value="{{system.bt}}" readonly disabled/>
+        </div>
+
+        <div class="inimigo-metric-card">
+            <label>Atenção</label>
+            <input type="number" value="{{system.percepcao.atencao}}" readonly disabled/>
+        </div>
+
+        <div class="inimigo-metric-card">
+            <label>Defesa</label>
+            <input type="number" value="{{system.combate.defesa.value}}" readonly disabled/>
+        </div>
+
+        <div class="inimigo-metric-card">
+            <label>Iniciativa</label>
+            <input type="number" value="{{system.combate.iniciativa.value}}" readonly disabled/>
+        </div>
+
+        <div class="inimigo-metric-card">
+            <label>Mov. base</label>
+            <input type="number" name="system.combate.movimento.base" value="{{system.combate.movimento.base}}" step="0.5" data-dtype="Number"/>
+        </div>
+    </div>
+{{/if}}

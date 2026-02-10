@@ -1,0 +1,168 @@
+/* Estilos específicos do diálogo de Level Up */
+
+.level-up-form {
+  .attr-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+
+    h3 {
+      margin: 0;
+      font-size: 1.05rem;
+      color: #d8b7ff;
+    }
+
+    .attr-meta {
+      margin: 0;
+      color: #bdbdbd;
+      font-size: 0.95rem;
+      text-align: right;
+      white-space: nowrap;
+
+      strong {
+        color: #fff;
+        font-weight: 900;
+      }
+    }
+  }
+
+  .grid.grid-2col {
+    gap: 10px;
+
+    .form-group {
+      background: linear-gradient(180deg, rgba(16, 16, 20, 0.6), rgba(10, 10, 12, 0.6));
+      border: 1px solid rgba(157, 78, 221, 0.08);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 110px;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+
+      &:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 14px 34px rgba(10, 8, 30, 0.14);
+        border-color: rgba(157, 78, 221, 0.14);
+      }
+
+      .resource-label {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #e9e1ff;
+        margin-bottom: 6px;
+        text-align: center;
+        display: block;
+        white-space: normal;
+        word-break: break-word;
+        hyphens: auto;
+        line-height: 1.05;
+        max-width: 100%;
+
+        .base {
+          font-weight: 700;
+          color: #cfc9e6;
+          font-size: 0.88rem;
+          margin-left: 6px;
+        }
+      }
+    }
+  }
+
+  .attr-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    .attr-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      border: 1px solid rgba(157, 78, 221, 0.08);
+      background: linear-gradient(180deg, #121218, #0b0b0d);
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+      font-weight: 800;
+      font-size: 18px;
+      line-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      box-sizing: border-box;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, border-color 0.12s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+        border-color: rgba(157, 78, 221, 0.16);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+
+    input[type='number'] {
+      width: 70px;
+      height: 40px;
+      box-sizing: border-box;
+      padding: 4px;
+      border-radius: 10px;
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1;
+      text-align: center;
+      vertical-align: middle;
+      display: inline-block;
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+      background: transparent !important;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .attr-header {
+      flex-direction: column;
+      align-items: flex-start;
+
+      .attr-meta {
+        text-align: left;
+        white-space: normal;
+      }
+    }
+
+    .grid.grid-2col {
+      grid-template-columns: 1fr;
+
+      .form-group {
+        min-height: 88px;
+        padding: 10px;
+      }
+    }
+
+    .attr-control {
+      gap: 6px;
+
+      .attr-btn {
+        width: 36px;
+        height: 40px;
+        font-size: 16px;
+        line-height: 40px;
+      }
+
+      input[type='number'] {
+        width: 70px;
+        height: 40px;
+        line-height: 1;
+        font-size: 16px;
+      }
+    }
+  }
+}

@@ -1,0 +1,74 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <button type="button" class="jem-sheet-close" title="Fechar" aria-label="Fechar">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}"/>
+
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Nome"/></h1>
+
+      <div class="item-meta grid grid-2col">
+        <div>
+          <label>Categoria</label>
+          <select name="system.categoria.value">
+            <option value="caracteristica" {{#if (eq system.categoria.value "caracteristica")}}selected{{/if}}>Característica</option>
+            <option value="resistencia" {{#if (eq system.categoria.value "resistencia")}}selected{{/if}}>Resistência (RD por tipo)</option>
+            <option value="imunidade" {{#if (eq system.categoria.value "imunidade")}}selected{{/if}}>Imunidade</option>
+            <option value="vulnerabilidade" {{#if (eq system.categoria.value "vulnerabilidade")}}selected{{/if}}>Vulnerabilidade</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Ativo (aplica efeito)</label>
+          <input type="checkbox" name="system.equipado.value" {{#if system.equipado.value}}checked{{/if}}/>
+        </div>
+
+        <div>
+          <label>Tipo de Dano (chave)</label>
+          <input type="text" name="system.danoTipo.value" value="{{system.danoTipo.value}}" placeholder="ex: corte, impacto, fogo"/>
+        </div>
+
+        <div>
+          <label>Valor (RD)</label>
+          <input type="number" name="system.valor.value" value="{{system.valor.value}}"/>
+        </div>
+
+        <div>
+          <label>Multiplicador (vulnerabilidade)</label>
+          <input type="number" step="0.1" name="system.multiplicador.value" value="{{system.multiplicador.value}}"/>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="sheet-body">
+    <div class="sheet-main grid grid-2col">
+      <fieldset>
+        <legend>Efeito (texto simples)</legend>
+        <div class="field">
+          <div class="hint">Opcional. Se preencher, o sistema tenta converter em ActiveEffect quando estiver ativo.</div>
+        </div>
+        <div class="field">
+          <textarea name="system.efeito.value" rows="6" placeholder="ex: rd fogo 5\nimunidade corte\nvulnerabilidade impacto x2">{{system.efeito.value}}</textarea>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Changes JSON (avançado)</legend>
+        <div class="field">
+          <div class="hint">Opcional. Deve ser um array JSON de changes do ActiveEffect.</div>
+          <textarea name="system.changesJson.value" rows="6" placeholder='[{"key":"system.combate.rd.byType.fogo","mode":2,"value":"5","priority":20}]'>{{system.changesJson.value}}</textarea>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="sheet-footer">
+      <h3 class="item-section-title">Descrição</h3>
+      <div class="editor-container">
+        {{editor system.descricao.value target="system.descricao.value" engine="prosemirror" button=true owner=owner editable=editable}}
+      </div>
+    </div>
+  </section>
+</form>

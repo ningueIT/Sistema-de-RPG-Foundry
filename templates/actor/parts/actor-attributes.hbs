@@ -9,7 +9,13 @@
 
         <div class="atributo-base flexrow flex-group-center">
             <span class="small-label">Valor:</span>
-            <input type="number" name="system.atributos.{{key}}.value" value="{{atributo.value}}"/>
+                        {{#if (eq ../actor.type "inimigo")}}
+                            <input type="number" name="system.atributos.{{key}}.value" value="{{atributo.value}}" min="8" max="{{../system.limites.atributoMax}}" data-dtype="Number"/>
+                        {{else if (eq ../actor.type "npc")}}
+                            <input type="number" name="system.atributos.{{key}}.value" value="{{atributo.value}}" min="8" max="{{../system.limites.atributoMax}}" data-dtype="Number"/>
+                        {{else}}
+                            <input type="number" name="system.atributos.{{key}}.value" value="{{atributo.value}}" data-dtype="Number"/>
+                        {{/if}}
         </div>
     </div>
     {{/each}}

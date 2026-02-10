@@ -2,14 +2,33 @@
   {{!-- HEADER (Fixo): Nome do Ator/Classe e Nível de Destino --}}
   <header class="sheet-header header-fields">
     <div>
-      <h2>Ascensão: Nível {{levelToShow}} ({{levelStep}}/{{totalLevelSteps}}) — Passo {{step}}/{{totalSteps}}</h2>
-      <div class="muted">{{classId}} &bull; Nível {{currentLevel}} &rarr; {{nextLevel}}</div>
+      <h2>Ascensão: Nível {{totalLevelToShow}} ({{levelStep}}/{{totalLevelSteps}}) — Passo {{step}}/{{totalSteps}}</h2>
+      <div class="muted">
+        {{classCfg.label}} ({{levelTrack}}) &bull;
+        Classe {{currentClassLevel}} &rarr; {{classLevelToShow}} &bull;
+        Total {{currentTotalLevel}} &rarr; {{nextLevel}}
+      </div>
     </div>
   </header>
 
   {{!-- PASSO 1: VISUALIZAÇÃO DE GANHOS --}}
   {{#if isStepPreview}}
     <div class="step-content">
+      {{#if canChooseTrack}}
+        <section class="form-group">
+          <h3>Classe a Subir</h3>
+          <p class="muted">Escolha qual trilha de classe receberá este nível.</p>
+          <div class="grid grid-1col">
+            {{#each trackOptions}}
+              <label class="resource-label">
+                <input type="radio" name="levelTrack" value="{{this.id}}" {{#if this.checked}}checked{{/if}} />
+                {{this.label}}
+              </label>
+            {{/each}}
+          </div>
+        </section>
+      {{/if}}
+
       <section class="form-group">
         <h3>Ganhos de Atributos</h3>
         <div class="grid grid-2col">
@@ -17,6 +36,14 @@
           <div class="resource-label">PE Máximo: <strong>+{{epGain}}</strong></div>
         </div>
         <div class="muted">Habilidades disponíveis: <strong>{{progressionHabilidades}}</strong> · Aptidões disponíveis: <strong>{{progressionAptidoes}}</strong></div>
+        {{#if commonGains}}
+          <div class="muted" style="margin-top:6px;">
+            Ganhos comuns: 
+            {{#each commonGains}}
+              <strong>{{this}}</strong>{{#unless @last}} · {{/unless}}
+            {{/each}}
+          </div>
+        {{/if}}
       </section>
       
       <div class="form-buttons">
@@ -24,6 +51,86 @@
         <button type="button" class="button primary" data-action="next">
           Próximo <i class="fas fa-arrow-right"></i>
         </button>
+      </div>
+    </div>
+  {{/if}}
+
+  {{!-- PASSO: HABILIDADES FIXAS DE CLASSE (apenas se houver itens fixos para este nível da classe) --}}
+  {{#if isStepClassFixed}}
+    <div class="step-content">
+      <section class="form-group">
+        <h3>Habilidades Fixas da Classe</h3>
+        <p class="muted">As seguintes habilidades são concedidas automaticamente por sua Classe neste nível.</p>
+        <div class="drop-list grid">
+          {{#each classFixedItems}}
+            <div class="item-card origin-card">
+              <img src="{{this.img}}" alt="{{this.name}}"/>
+              <div class="item-name">{{this.name}}</div>
+              <div class="muted">Tipo: {{this.type}}{{#if this.fixedLevel}} · Nível {{this.fixedLevel}}{{/if}}</div>
+              {{#if this.unresolved}}
+                <div class="muted">(Não encontrado no compêndio — veja o console)</div>
+              {{/if}}
+            </div>
+          {{else}}
+            <p class="muted">Nenhuma habilidade fixa de classe para este nível.</p>
+          {{/each}}
+        </div>
+      </section>
+
+      <div class="form-buttons">
+        <button type="button" class="button" data-action="back"><i class="fas fa-arrow-left"></i> Voltar</button>
+        <button type="button" class="button primary" data-action="next">Próximo <i class="fas fa-arrow-right"></i></button>
+      </div>
+    </div>
+  {{/if}}
+
+  {{!-- PASSO: PONTOS DE ATRIBUTO (níveis 4/8/12/16/20) --}}
+  {{#if isStepAttributes}}
+    <div class="step-content">
+      <section class="form-group">
+        <div class="grid grid-2col" style="gap:10px;">
+          {{#each atributoList}}
+            <div class="form-group">
+              <label class="resource-label">{{this.label}} <span class="base">({{this.base}})</span></label>
+              <div class="attr-control">
+                <button type="button" class="attr-btn" data-action="attr-dec" data-key="{{this.key}}">-</button>
+                <input type="number" min="0" max="{{../attributePoints}}" value="{{this.added}}" data-action="attr-change" data-key="{{this.key}}" />
+                <button type="button" class="attr-btn" data-action="attr-inc" data-key="{{this.key}}">+</button>
+              </div>
+            </div>
+          {{/each}}
+        </div>
+      </section>
+
+      <div class="form-buttons">
+        <button type="button" class="button" data-action="back"><i class="fas fa-arrow-left"></i> Voltar</button>
+        <button type="button" class="button primary" data-action="next">Próximo <i class="fas fa-arrow-right"></i></button>
+      </div>
+    </div>
+  {{/if}}
+
+  {{!-- PASSO: MAESTRIA EM PERÍCIA (nível 10) --}}
+  {{#if isStepMastery}}
+    <div class="step-content">
+      <section class="form-group">
+        <h3>Maestria em Perícia</h3>
+        <p class="muted">No 10º nível, escolha 1 perícia para se tornar <strong>Mestre</strong>.</p>
+        <div class="form-group">
+          <label class="resource-label">Perícia</label>
+          <select name="masterySkill">
+            <option value="">— Selecione —</option>
+            {{#each periciaOptions}}
+              <option value="{{this.key}}" {{#if this.selected}}selected{{/if}}>
+                {{this.label}}{{#if this.isMaster}} (já é Mestre){{/if}}
+              </option>
+            {{/each}}
+          </select>
+        </div>
+      </section>
+
+      <div class="form-buttons">
+        <button type="button" class="button" data-action="back"><i class="fas fa-arrow-left"></i> Voltar</button>
+        <button type="button" class="button primary" data-action="next">Próximo <i class="fas fa-arrow-right"></i></button>
       </div>
     </div>
   {{/if}}
@@ -115,9 +222,15 @@
 
       <div class="form-buttons">
         <button type="button" class="button" data-action="back"><i class="fas fa-arrow-left"></i> Voltar</button>
-        <button type="submit" class="button primary">
-          <i class="fas fa-check"></i> Concluir Ascensão
-        </button>
+        {{#if isFinalLevelStep}}
+          <button type="submit" class="button primary">
+            <i class="fas fa-check"></i> Concluir Ascensão
+          </button>
+        {{else}}
+          <button type="button" class="button primary" data-action="next-level">
+            Próximo Nível <i class="fas fa-arrow-right"></i>
+          </button>
+        {{/if}}
       </div>
     </div>
   {{/if}}

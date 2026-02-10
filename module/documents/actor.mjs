@@ -1,5 +1,7 @@
 import LevelUpDialog from "../apps/level-up-dialog.mjs";
 import { FEITICEIROS } from "../helpers/config.mjs";
+import { NPC_CONSTANTS } from "../helpers/constants.mjs";
+import { SIZE_MOVEMENT, DEFENSE_LIMITS, REGEN_TABLE } from "../helpers/constants.mjs";
 
 /**
  * Extend the base Actor document by defining a custom roll data structure which is ideal for the Simple system.
@@ -140,25 +142,23 @@ export class BoilerplateActor extends Actor {
     // ----------------------------------------------------
     // 4. PV/PE MÁXIMOS (CÁLCULO AUTOMÁTICO POR CLASSE)
     // ----------------------------------------------------
-    // PV: nível 1 = dado cheio + Mod CON; níveis seguintes = fixo médio + Mod CON.
-    // PE: fixo por nível; classes conjuradoras somam atributo-chave apenas 1 vez.
+    // Guia v2.5.2 (resumo):
+    // - PV nível 1: PV Inicial + Mod CON
+    // - PV níveis subsequentes: PV fixo por nível + Mod CON (o dado é referência, usamos o fixo)
+    // - PE: PE por nível (não soma atributo extra aqui)
     const CLASS_RULES = {
-      "Lutador": { pvDieMax: 10, pvFixed: 6, pePerLevel: 4, caster: false },
-      "Especialista em Combate": { pvDieMax: 10, pvFixed: 6, pePerLevel: 4, caster: false },
-      "Especialista em Técnica": { pvDieMax: 8, pvFixed: 5, pePerLevel: 6, caster: true },
-      "Controlador": { pvDieMax: 8, pvFixed: 5, pePerLevel: 5, caster: true },
-      "Suporte": { pvDieMax: 8, pvFixed: 5, pePerLevel: 5, caster: true },
-      "Restringido": { pvDieMax: 12, pvFixed: 7, pePerLevel: 0, caster: false }
+      "Lutador": { pvInitial: 16, pvFixed: 7, pePerLevel: 4 },
+      "Especialista em Combate": { pvInitial: 12, pvFixed: 6, pePerLevel: 4 },
+      "Especialista em Técnica": { pvInitial: 8, pvFixed: 4, pePerLevel: 6 },
+      "Controlador": { pvInitial: 10, pvFixed: 5, pePerLevel: 5 },
+      "Suporte": { pvInitial: 10, pvFixed: 5, pePerLevel: 5 },
+      "Restringido": { pvInitial: 12, pvFixed: 7, pePerLevel: 0 }
     };
 
     const classePrincipal = system.detalhes?.classe?.value;
     const classeSecundaria = system.detalhes?.multiclasse?.value;
 
     const conMod = system.atributos?.constituicao?.mod ?? 0;
-    const intMod = system.atributos?.inteligencia?.mod ?? 0;
-    const sabMod = system.atributos?.sabedoria?.mod ?? 0;
-    const atributoChaveMod = Math.max(intMod, sabMod);
-
     const entradasClasse = [];
     if (nivelPrincipal > 0 && classePrincipal) entradasClasse.push({ nome: classePrincipal, niveis: nivelPrincipal });
     if (nivelSecundario > 0 && classeSecundaria && classeSecundaria !== "Nenhuma") {
@@ -170,30 +170,23 @@ export class BoilerplateActor extends Actor {
 
       let pvMax = 0;
       let peMax = 0;
-      let temConjurador = false;
 
       for (const entry of entradasClasse) {
-        const rules = CLASS_RULES[entry.nome] ?? { pvDieMax: 8, pvFixed: 5, pePerLevel: 4, caster: false };
+        const rules = CLASS_RULES[entry.nome] ?? { pvInitial: 10, pvFixed: 5, pePerLevel: 4 };
 
         // Energia por nível
         peMax += (entry.niveis ?? 0) * (rules.pePerLevel ?? 0);
-        if (rules.caster && (entry.niveis ?? 0) > 0) temConjurador = true;
 
         // Vida por nível
         if (entry.nome === startingClassName) {
           // nível 1 do personagem
-          pvMax += (rules.pvDieMax ?? 0) + conMod;
+          pvMax += (rules.pvInitial ?? 0) + conMod;
           const restante = Math.max(0, (entry.niveis ?? 0) - 1);
           pvMax += restante * ((rules.pvFixed ?? 0) + conMod);
         } else {
           // níveis obtidos depois (multiclasse)
           pvMax += (entry.niveis ?? 0) * ((rules.pvFixed ?? 0) + conMod);
         }
-      }
-
-      // Conjuradores: soma atributo-chave uma única vez no total de PE.
-      if (temConjurador && peMax > 0) {
-        peMax += atributoChaveMod;
       }
 
       // Restringido: não ganha PE.
@@ -652,10 +645,492 @@ export class BoilerplateActor extends Actor {
    * Prepare NPC type specific data.
    */
   _prepareNpcData(actorData) {
-    if (actorData.type !== 'npc') return;
+    if (actorData.type !== 'npc' && actorData.type !== 'inimigo') return;
 
     // Make modifications to data here.
     const system = actorData.system;
+
+    // Garantias de estrutura
+    system.nd = Number(system.nd ?? system.detallhes?.nd ?? 1) || 1;
+    system.nd = Math.max(1, Math.min(20, system.nd));
+    system.patamar = String(system.patamar ?? 'comum');
+    system.origem = String(system.origem ?? 'humano');
+    system.dificuldade_mesa = String(system.dificuldade_mesa ?? 'intermediario');
+
+    // Regras de ND mínimo por patamar (Desafio/Calamidade: ND >= 3)
+    // Também expomos no `system.limites` para a ficha usar como min no input.
+    const pat0 = String(system.patamar || 'comum').toLowerCase();
+    const ndMin = (pat0 === 'desafio' || pat0 === 'calamidade') ? 3 : 1;
+    if (Number(system.nd || 1) < ndMin) system.nd = ndMin;
+
+    // Bônus de Treinamento (BT) baseado em ND
+    const nd = Number(system.nd) || 1;
+    let bt = 2;
+    if (nd <= 4) bt = 2;
+    else if (nd <= 8) bt = 3;
+    else if (nd <= 12) bt = 4;
+    else if (nd <= 16) bt = 5;
+    else bt = 6;
+    system.bt = bt;
+
+    // Atributos: aplica limites por patamar e calcula modificadores
+    system.atributos = system.atributos || {};
+    // Garante chaves mínimas (senão a ficha fica sem inputs e o cálculo não roda)
+    for (const k of ['forca', 'destreza', 'constituicao', 'inteligencia', 'sabedoria', 'presenca']) {
+      system.atributos[k] = system.atributos[k] || { value: 10, label: k.toUpperCase() };
+      if (typeof system.atributos[k].value === 'undefined' || system.atributos[k].value === null) system.atributos[k].value = 10;
+    }
+    const pat = (String(system.patamar || 'comum')).toLowerCase();
+    const ndVal = Number(system.nd || 1) || 1;
+    const btVal = Number(system.bt || 2) || 2;
+
+    // calcula limite máximo por patamar
+    let computeAttrMax = (patKey) => {
+      if (patKey === 'lacaio') return 20; // 20 + ND com limite 20 -> sempre 20
+      if (patKey === 'capanga') return Math.min(24, 20 + ndVal);
+      if (patKey === 'comum') return Math.min(26, 20 + ndVal + btVal);
+      if (patKey === 'desafio') return Math.min(30, 25 + (2 * ndVal) + (2 * btVal));
+      if (patKey === 'calamidade') return Math.min(32, 25 + (2 * ndVal) + (2 * btVal));
+      return 26;
+    };
+
+    const attrMax = computeAttrMax(pat);
+
+    // Exporta limites (derivado) para a ficha aplicar min/max nos inputs.
+    system.limites = system.limites || {};
+    system.limites.atributoMin = 8;
+    system.limites.atributoMax = attrMax;
+    system.limites.ndMin = ndMin;
+
+    for (const [key, atributo] of Object.entries(system.atributos)) {
+      // garante estrutura mínima
+      if (typeof atributo.value === 'undefined' || atributo.value === null) atributo.value = 10;
+      // permite reduzir para mínimo 8
+      const raw = Number(atributo.value) || 10;
+      const clamped = Math.max(8, Math.min(raw, attrMax));
+      atributo.value = clamped;
+      // calculo do modificador: (valor - 10) / 2 arredondado para baixo
+      atributo.mod = Math.floor((Number(atributo.value) - 10) / 2);
+    }
+
+    // Multiplicador de vida baseado em ND; escala 2..6 conforme ND
+    const mult = Math.min(6, 2 + Math.floor((nd - 1) / 4));
+    system.multiplicadores = system.multiplicadores || {};
+    system.multiplicadores.vida = { multiplicador: mult };
+
+    // Calcula PV/PE conforme patamar
+    system.recursos = system.recursos || {};
+    system.recursos.hp = system.recursos.hp || { value: 0, max: 0 };
+    system.recursos.energia = system.recursos.energia || { value: 0, max: 0 };
+
+    const con = Number(system.atributos?.constituicao?.value ?? 10) || 10;
+    const conMod = Number(system.atributos?.constituicao?.mod ?? Math.floor((con - 10) / 2)) || 0;
+
+    let hpMax = 0;
+    const p = pat;
+    if (p === 'lacaio' || p === 'lacaís' || p === 'lacaí') {
+      hpMax = 10 + (con * 2);
+    } else {
+      const basePerNd = NPC_CONSTANTS.VITALS_BASE_PER_ND[p] ?? NPC_CONSTANTS.VITALS_BASE_PER_ND.comum;
+      hpMax = (basePerNd * nd) + (con * mult);
+    }
+
+    // Ajusta e aplica
+    system.recursos.hp.max = Math.max(0, Math.floor(hpMax));
+    if (typeof system.recursos.hp.value === 'undefined' || system.recursos.hp.value === null) system.recursos.hp.value = system.recursos.hp.max;
+
+    // Energia (PE): placeholder inicial: escala com ND (2 * ND) + conMod
+    const peMax = Math.max(0, Math.floor((2 * nd) + conMod));
+    system.recursos.energia.max = peMax;
+    if (typeof system.recursos.energia.value === 'undefined' || system.recursos.energia.value === null) system.recursos.energia.value = peMax;
+
+    // Barras: percentuais
+    try {
+      for (const resource of Object.values(system.recursos ?? {})) {
+        if (!resource) continue;
+        const max = Number(resource.max ?? 0) || 0;
+        const val = Number(resource.value ?? 0) || 0;
+        resource.percent = (max > 0)
+          ? Math.max(0, Math.min(100, Math.round((val / max) * 100)))
+          : 0;
+      }
+    } catch (e) { /* ignore */ }
+
+    // Defesa (regras por patamar/dificuldade/ND)
+    // - Lacaio/Capanga: 10 + Mod DEX
+    // - Comum: base (iniciante 11 / intermediário 13 / experiente 15) + Mod DEX + ND (cada ND +1)
+    // - Desafio/Calamidade (ND >= 3):
+    //    * iniciante: ND3 = 10 + Mod DEX; cada ND +1
+    //    * intermediário: ND3 = 18 + Mod DEX; cada ND +1
+    //    * experiente: ND3 = 23 + Mod DEX; cada ND +1
+    const desMod = Number(system.atributos?.destreza?.mod ?? 0) || 0;
+    system.combate = system.combate || {};
+    system.combate.defesa = system.combate.defesa || {};
+    const dificuldadeKey = String(system.dificuldade_mesa || 'intermediario').toLowerCase();
+    const ndNum = Number(system.nd || 1) || 1;
+
+    const baseComumByDiff = {
+      // chaves atuais da ficha
+      facil: 11,
+      fácil: 11,
+      intermediario: 13,
+      intermediário: 13,
+      dificil: 15,
+      difícil: 15,
+      // compatibilidade com nomenclatura anterior
+      iniciante: 11,
+      experiente: 15,
+    };
+
+    const baseDesafioNd3ByDiff = {
+      // chaves atuais da ficha
+      facil: 10,
+      fácil: 10,
+      intermediario: 18,
+      intermediário: 18,
+      dificil: 23,
+      difícil: 23,
+      // compatibilidade com nomenclatura anterior
+      iniciante: 10,
+      experiente: 23,
+    };
+
+    let defesaBase = 10;
+    let defesaNdBonus = 0;
+    if (pat === 'lacaio' || pat === 'capanga') {
+      defesaBase = 10;
+      defesaNdBonus = 0;
+    } else if (pat === 'comum') {
+      defesaBase = Number(baseComumByDiff[dificuldadeKey] ?? 13);
+      defesaNdBonus = ndNum;
+    } else if (pat === 'desafio' || pat === 'calamidade') {
+      defesaBase = Number(baseDesafioNd3ByDiff[dificuldadeKey] ?? 18);
+      defesaNdBonus = Math.max(0, ndNum - 3);
+    } else {
+      // fallback conservador
+      defesaBase = 10;
+      defesaNdBonus = 0;
+    }
+
+    system.combate.defesa.value = defesaBase + desMod + defesaNdBonus;
+
+    // Iniciativa: Lacaio: DES_Mod; Outros: ND + (DES_Mod / 2)
+    if (p === 'lacaio') {
+      system.combate.iniciativa = system.combate.iniciativa || {};
+      system.combate.iniciativa.value = desMod;
+    } else {
+      system.combate.iniciativa = system.combate.iniciativa || {};
+      system.combate.iniciativa.value = Number(nd) + Math.floor(desMod / 2);
+    }
+
+    // Atenção: base (padrão 10) + SAB_Mod + BT + Bônus de patamar
+    const sabMod = Number(system.atributos?.sabedoria?.mod ?? 0) || 0;
+    const bonusPatamar = NPC_CONSTANTS.ATTENTION_BONUS[pat] ?? 0;
+    system.percepcao = system.percepcao || {};
+    const atencaoBase = Number(system.percepcao?.atencaoBase ?? 10) || 10;
+    const atencaoBonusExtra = Number(system.percepcao?.atencaoBonus ?? 0) || 0;
+    system.percepcao.atencao = atencaoBase + sabMod + Number(system.bt || 0) + bonusPatamar + atencaoBonusExtra;
+
+    // Movimento: aplica deslocamento base de acordo com tamanho, se não informado
+    system.combate = system.combate || {};
+    const sizeKey = String(system.tamanho || 'medio').toLowerCase();
+    const movDefault = SIZE_MOVEMENT[sizeKey] ?? SIZE_MOVEMENT.medio;
+    system.combate.movimento = system.combate.movimento || {};
+    // `movimento.base` é o valor exibido/editável na ficha.
+    // Para NPC/inimigo, o sistema aplica multiplicadores por ND em alguns patamares.
+    // Se multiplicarmos e regravarmos em `base` toda preparação, o valor explode.
+    // Mantemos uma fonte estável em `baseUnscaled` e derivamos `base` a partir dela.
+    system.combate.movimento.base = Number(system.combate.movimento.base ?? movDefault);
+    system.combate.movimento.baseUnscaled = Number(system.combate.movimento.baseUnscaled ?? system.combate.movimento.base ?? movDefault);
+    try {
+      const ndNum = Number(system.nd || 1) || 1;
+      const patMov = String(system.patamar || 'comum').toLowerCase();
+      const aplicaMult = (patMov === 'capanga' || patMov === 'comum' || patMov === 'desafio' || patMov === 'calamidade');
+      let movMult = 1;
+      if (aplicaMult) {
+        if (ndNum >= 17) movMult = 3;
+        else if (ndNum >= 9) movMult = 2;
+        else if (ndNum >= 5) movMult = 1.5;
+      }
+      const baseMov = Number(system.combate.movimento.baseUnscaled ?? movDefault) || movDefault;
+      system.combate.movimento.base = Math.round(baseMov * movMult * 10) / 10;
+      system.combate.movimento.ndMult = movMult;
+    } catch (e) { /* ignore */ }
+
+    // Limites de imunidades/resistências/vulnerabilidades por patamar
+    try {
+      const limits = DEFENSE_LIMITS[pat] || DEFENSE_LIMITS.comum;
+      system._limits = system._limits || {};
+      system._limits.imunidadeMax = limits.imunidades;
+      system._limits.resistenciaMax = limits.resistencias;
+      system._limits.vulnerabilidadeMax = limits.vulnerabilidades;
+      system._limits.condicoesImunidadeMax = limits.condicoesImunidades;
+    } catch (e) { /* ignore */ }
+
+    // Regras específicas por Patamar
+    if (pat === 'lacaio') {
+      // Limites rígidos
+      for (const [k, a] of Object.entries(system.atributos)) {
+        a.value = Math.min(20, Math.max(8, Number(a.value) || 10));
+        a.mod = Math.floor((Number(a.value) - 10) / 2);
+      }
+      // Lacaios não recebem RD irredutível, vida temporária por ataque, vantagens, resistências ou imunidades
+      system._limits.imunidadeMax = 0;
+      system._limits.resistenciaMax = 0;
+      system._limits.vulnerabilidadeMax = 0;
+      system._limits.condicoesImunidadeMax = 0;
+      // Atenção usa apenas bônus de percepção
+      const perc = Number(system.pericias?.percepcao?.value ?? 0) || 0;
+      const atencaoBase = Number(system.percepcao?.atencaoBase ?? 10) || 10;
+      const atencaoBonusExtra = Number(system.percepcao?.atencaoBonus ?? 0) || 0;
+      system.percepcao.atencao = atencaoBase + (Number(system.atributos?.sabedoria?.mod ?? 0) || 0) + atencaoBonusExtra;
+      // Iniciativa: apenas mod Destreza
+      system.combate.iniciativa = { value: Number(system.atributos?.destreza?.mod ?? 0) || 0 };
+      // Vida: 10 + (CON * 2)
+      const conv = Number(system.atributos?.constituicao?.value ?? 10) || 10;
+      system.recursos.hp.max = Math.max(0, 10 + (conv * 2));
+      if (typeof system.recursos.hp.value === 'undefined' || system.recursos.hp.value === null) system.recursos.hp.value = system.recursos.hp.max;
+      // Lacaios não recebem vida temporária por ataque
+      system._hasTemporaryPerAttack = false;
+    }
+
+    if (pat === 'capanga') {
+      // Atributos máximos 24
+      for (const [k, a] of Object.entries(system.atributos)) {
+        a.value = Math.min(24, Math.max(8, Number(a.value) || 10));
+        a.mod = Math.floor((Number(a.value) - 10) / 2);
+      }
+      // Atenção: já tem bonusPatamar de +5
+      // Iniciativa: ND + floor(DES_Mod/2)
+      const desMod = Number(system.atributos?.destreza?.mod ?? 0) || 0;
+      system.combate.iniciativa = { value: Number(system.nd || 1) + Math.floor(desMod / 2) };
+
+      // Capangas não recebem RD irredutível nem imunidades/resistências por padrão
+      system._limits.imunidadeMax = 0;
+      system._limits.resistenciaMax = 0;
+      system._limits.vulnerabilidadeMax = 0;
+    }
+
+    if (pat === 'comum') {
+      // Atributos máximos 26 (já aplicados globalmente), mas reforça limites
+      for (const [k, a] of Object.entries(system.atributos)) {
+        a.value = Math.min(26, Math.max(8, Number(a.value) || 10));
+        a.mod = Math.floor((Number(a.value) - 10) / 2);
+      }
+
+      // Atenção: Percepção + 10 (já aplicado via bonusPatamar mas garante)
+      const sabMod = Number(system.atributos?.sabedoria?.mod ?? 0) || 0;
+      const atencaoBase = Number(system.percepcao?.atencaoBase ?? 10) || 10;
+      const atencaoBonusExtra = Number(system.percepcao?.atencaoBonus ?? 0) || 0;
+      system.percepcao.atencao = atencaoBase + sabMod + Number(system.bt || 0) + NPC_CONSTANTS.ATTENTION_BONUS.comum + atencaoBonusExtra;
+
+      // Iniciativa: ND + floor(DES_Mod/2)
+      const desMod = Number(system.atributos?.destreza?.mod ?? 0) || 0;
+      system.combate.iniciativa = { value: Number(system.nd || 1) + Math.floor(desMod / 2) };
+
+      // PV: usa a fórmula basePerNd * ND + CON * multiplicador (multiplicador 2..6 conforme ND)
+      const conVal = Number(system.atributos?.constituicao?.value ?? 10) || 10;
+      const ndNum = Number(system.nd || 1) || 1;
+      const multLife = Math.min(6, 2 + Math.floor((ndNum - 1) / 4));
+      const basePerNd = NPC_CONSTANTS.VITALS_BASE_PER_ND.comum || 60;
+      const hpCalc = (basePerNd * ndNum) + (conVal * multLife);
+      system.recursos.hp.max = Math.max(0, Math.floor(hpCalc));
+      if (typeof system.recursos.hp.value === 'undefined' || system.recursos.hp.value === null) system.recursos.hp.value = system.recursos.hp.max;
+
+      // PE: approximated (keep previous placeholder): 2 * ND + conMod
+      const conMod = Math.floor((conVal - 10) / 2);
+      const peGuess = Math.max(0, Math.floor((2 * ndNum) + conMod));
+      system.recursos.energia.max = peGuess;
+      if (typeof system.recursos.energia.value === 'undefined' || system.recursos.energia.value === null) system.recursos.energia.value = peGuess;
+
+      // Valores por ND (com base nas tabelas do Grimório)
+      const rdIrredByND = [0,0,0,0,0,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10];
+      const tempHpByND = [0,0,0,0,0,0,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6];
+      const condImmunByND = [0,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,5,5,5,5];
+      const advantageByND = [0,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,5,5,5,5];
+      const resistByND = [0,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3];
+      const immByND = [0,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2];
+
+      const ndIndex = Math.max(1, Math.min(20, ndNum));
+      system._specials = system._specials || {};
+      system._specials.rdIrreducivel = Number(rdIrredByND[ndIndex] || 0) || 0;
+      system._specials.vidaTempPorAtaque = Number(tempHpByND[ndIndex] || 0) || 0;
+      system._limits.imunidadeMax = Number(immByND[ndIndex] || 0) || 0;
+      system._limits.resistenciaMax = Number(resistByND[ndIndex] || 0) || 0;
+      system._limits.vulnerabilidadeMax = Number(condImmunByND[ndIndex] || 0) || 0;
+      system._specials.vantagemCondição = Number(advantageByND[ndIndex] || 0) || 0;
+    }
+
+    if (pat === 'desafio') {
+      // Atributos máximos 30
+      for (const [k, a] of Object.entries(system.atributos)) {
+        a.value = Math.min(30, Math.max(8, Number(a.value) || 10));
+        a.mod = Math.floor((Number(a.value) - 10) / 2);
+      }
+
+      // Atenção: Percepção + 15
+      const sabMod = Number(system.atributos?.sabedoria?.mod ?? 0) || 0;
+      const atencaoBase = Number(system.percepcao?.atencaoBase ?? 10) || 10;
+      const atencaoBonusExtra = Number(system.percepcao?.atencaoBonus ?? 0) || 0;
+      system.percepcao.atencao = atencaoBase + sabMod + Number(system.bt || 0) + NPC_CONSTANTS.ATTENTION_BONUS.desafio + atencaoBonusExtra;
+
+      // Iniciativa: ND + floor(DES_Mod/2)
+      const desMod = Number(system.atributos?.destreza?.mod ?? 0) || 0;
+      const ndNum = Number(system.nd || 1) || 1;
+      system.combate.iniciativa = { value: ndNum + Math.floor(desMod / 2) };
+
+      // PV: usa a fórmula basePerNd * ND + CON * multiplicador (multiplicador 2..6 conforme ND)
+      const conVal = Number(system.atributos?.constituicao?.value ?? 10) || 10;
+      const multLife = Math.min(6, 2 + Math.floor((ndNum - 1) / 4));
+      const basePerNd = NPC_CONSTANTS.VITALS_BASE_PER_ND.desafio || 90;
+      const hpCalc = (basePerNd * ndNum) + (conVal * multLife);
+      system.recursos.hp.max = Math.max(0, Math.floor(hpCalc));
+      if (typeof system.recursos.hp.value === 'undefined' || system.recursos.hp.value === null) system.recursos.hp.value = system.recursos.hp.max;
+
+      // PE: aproximação (usamos 3 * ND + conMod como palpite)
+      const conMod = Math.floor((conVal - 10) / 2);
+      const peGuess = Math.max(0, Math.floor((3 * ndNum) + conMod));
+      system.recursos.energia.max = peGuess;
+      if (typeof system.recursos.energia.value === 'undefined' || system.recursos.energia.value === null) system.recursos.energia.value = peGuess;
+
+      // Tabelas específicas por ND (copiadas do Grimório — Desafio)
+      const rdIrredByND = [0,0,0,0,0,0,0,0,5,6,7,8,9,10,11,12,15,15,16,18,18];
+      const tempHpByND = [0,0,0,0,0,0,5,5,5,5,6,6,6,8,8,8,8,10,10,10,10];
+      const condImmunByND = [0,0,0,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,5,5];
+      const advantageByND = [0,0,0,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,5,5];
+      const resistByND = [0,0,0,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3];
+      const immByND = [0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+
+      const ndIndex = Math.max(1, Math.min(20, ndNum));
+      system._specials = system._specials || {};
+      system._specials.rdIrreducivel = Number(rdIrredByND[ndIndex] || 0) || 0;
+      system._specials.vidaTempPorAtaque = Number(tempHpByND[ndIndex] || 0) || 0;
+      system._limits.imunidadeMax = Number(immByND[ndIndex] || 0) || 0;
+      system._limits.resistenciaMax = Number(resistByND[ndIndex] || 0) || 0;
+      system._limits.vulnerabilidadeMax = Number(condImmunByND[ndIndex] || 0) || 0;
+      system._specials.vantagemCondição = Number(advantageByND[ndIndex] || 0) || 0;
+    }
+
+    if (pat === 'calamidade') {
+      // Atributos máximos 32
+      for (const [k, a] of Object.entries(system.atributos)) {
+        a.value = Math.min(32, Math.max(8, Number(a.value) || 10));
+        a.mod = Math.floor((Number(a.value) - 10) / 2);
+      }
+
+      const ndNum = Number(system.nd || 1) || 1;
+      // Atenção: +15 até ND19, +20 a partir de ND20
+      const sabMod = Number(system.atributos?.sabedoria?.mod ?? 0) || 0;
+      const atencaoBase = Number(system.percepcao?.atencaoBase ?? 10) || 10;
+      const atencaoBonusExtra = Number(system.percepcao?.atencaoBonus ?? 0) || 0;
+      const attentionBonus = (ndNum >= 20) ? 20 : 15;
+      system.percepcao.atencao = atencaoBase + sabMod + Number(system.bt || 0) + attentionBonus + atencaoBonusExtra;
+
+      // Iniciativa: ND + floor(DES.mod/2) com cap em 20 + floor(DES.mod/2)
+      const desMod = Number(system.atributos?.destreza?.mod ?? 0) || 0;
+      const iniRaw = ndNum + Math.floor(desMod / 2);
+      const iniCap = 20 + Math.floor(desMod / 2);
+      system.combate.iniciativa = { value: Math.min(iniRaw, iniCap) };
+
+      // PV: basePerNd * ND + CON * 3 (conforme tabela de Calamidade)
+      const conVal = Number(system.atributos?.constituicao?.value ?? 10) || 10;
+      const basePerNd = NPC_CONSTANTS.VITALS_BASE_PER_ND.calamidade || 180;
+      const hpCalc = (basePerNd * ndNum) + (conVal * 3);
+      system.recursos.hp.max = Math.max(0, Math.floor(hpCalc));
+      if (typeof system.recursos.hp.value === 'undefined' || system.recursos.hp.value === null) system.recursos.hp.value = system.recursos.hp.max;
+
+      // PE: aproximação (4 * ND + ConMod)
+      const conMod = Math.floor((conVal - 10) / 2);
+      const peGuess = Math.max(0, Math.floor((4 * ndNum) + conMod));
+      system.recursos.energia.max = peGuess;
+      if (typeof system.recursos.energia.value === 'undefined' || system.recursos.energia.value === null) system.recursos.energia.value = peGuess;
+
+      // Preencher tabelas específicas por ND (valores aproximados com base no Grimório)
+      const rdIrredByND = [0,0,0,0,0,0,0,0,0,0,0,5,6,7,8,9,10,11,12,15,15,16,18,22,26,30,34,36,38,40,40];
+      const tempHpByND = [0,0,0,0,0,0,0,0,5,5,5,5,6,6,6,8,8,8,8,10,10,10,10,10,15,15,15,15,15,15,15];
+      const immByND = [0,0,0,0,0,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5,5,5,5];
+      const resistByND = [0,0,0,0,0,2,2,2,2,2,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3];
+      const condImmunByND = immByND;
+      const advantageByND = [0,0,0,0,0,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,6,6,6,6,6,6,6,6,6,6,6];
+
+      const ndIndex = Math.max(1, Math.min(30, ndNum));
+      system._specials = system._specials || {};
+      system._specials.rdIrreducivel = Number(rdIrredByND[ndIndex] || 0) || 0;
+      system._specials.vidaTempPorAtaque = Number(tempHpByND[ndIndex] || 0) || 0;
+      system._limits.imunidadeMax = Number(immByND[ndIndex] || 0) || 0;
+      system._limits.resistenciaMax = Number(resistByND[ndIndex] || 0) || 0;
+      system._limits.vulnerabilidadeMax = Number(condImmunByND[ndIndex] || 0) || 0;
+      system._specials.vantagemCondição = Number(advantageByND[ndIndex] || 0) || 0;
+    }
+
+    // Marca que o actor tem as multiplicadores calculadas
+    system._npcCalculated = true;
+
+    // -----------------------------
+    // LÓGICA DE ORIGEM (imunidades / flags / skills automáticas)
+    // -----------------------------
+    const origemKey = String(system.origem || 'humano').toLowerCase();
+    system.origemEffects = system.origemEffects || {};
+
+    // helpers
+    const getRegenMultiplier = (patamar, btVal) => {
+      try {
+        const t = REGEN_TABLE[patamar] ?? REGEN_TABLE.comum;
+        return t[String(btVal)] ?? null;
+      } catch (e) { return null; }
+    };
+
+    if (origemKey === 'espirito' || origemKey === 'espírito' || origemKey === 'espirito_amaldicoado') {
+      // Espíritos Amaldiçoados
+      system.origemEffects.imunidades = ['queda', 'doencas', 'venenos', 'nao_respira', 'objetos_sem_energia'];
+      system.origemEffects.vulnerabilidades = ['energia_reversa'];
+      // Regeneração: custos em PE e quantidade baseada em tabela
+      system.origemEffects.regeneracao = {
+        enabled: true,
+        custos: { cura: 4, ferida_interna: 8, regenerar_membro: 10 }
+      };
+      const btVal = Number(system.bt || 2);
+      const multRegen = getRegenMultiplier(p, btVal);
+      system.origemEffects.regeneracao.multiplicadorModCon = multRegen; // null => não recebe
+      system.origemEffects.restricoes = {
+        semEnergiaReversa: true,
+        naoPodeReceberBonusComida: true,
+        equipamentosLimitados: true // apenas armas, armaduras e escudos
+      };
+      // opção: Aumento de Energia (não aplicado automaticamente); marca disponibilidade
+      system.origemEffects.canAumentoEnergia = (p !== 'lacaio');
+    }
+
+    if (origemKey === 'corpo_amaldicoado' || origemKey === 'corpo_amaldiacado') {
+      system.origemEffects.imunidades = ['venenos', 'nao_respira'];
+      system.origemEffects.flags = { segundaFaseAvailable: true };
+      // Regra: pode ter segunda fase; não respirar
+    }
+
+    if (origemKey === 'restrito_fisico' || origemKey === 'restrito (fisico)') {
+      system.origemEffects.flags = { arsenalVivo: true };
+      if ((Number(system.nd) || 0) >= 10) {
+        system.origemEffects.imunidades = (system.origemEffects.imunidades || []).concat(['acerto_garantido_dominios']);
+      }
+    }
+
+    if (origemKey === 'restrito_corpo' || origemKey === 'restrito (corpo)') {
+      // Dobra PE máximo
+      try {
+        if (system.recursos && typeof system.recursos.energia?.max === 'number') {
+          system.recursos.energia.max = Math.floor((system.recursos.energia.max || 0) * 2);
+          // também mantém o value dentro do limite
+          system.recursos.energia.value = Math.min(system.recursos.energia.value || 0, system.recursos.energia.max);
+        }
+      } catch (e) { /* ignore */ }
+      system.origemEffects.flags = { alcanceIrrestrito: true };
+    }
+
+    // Feiticeiro/humano: sem efeitos especiais por padrão, mas mantemos a estrutura
+    if (origemKey === 'feiticeiro' || origemKey === 'humano') {
+      system.origemEffects.imunidades = system.origemEffects.imunidades || [];
+      system.origemEffects.flags = system.origemEffects.flags || {};
+    }
   }
 
   /**
@@ -700,7 +1175,7 @@ export class BoilerplateActor extends Actor {
   }
 
   _getNpcRollData(data) {
-    if (this.type !== 'npc') return;
+    if (this.type !== 'npc' && this.type !== 'inimigo') return;
 
     // Process additional NPC data here.
   }
@@ -716,9 +1191,25 @@ export class BoilerplateActor extends Actor {
       const detalhes = this.system?.detalhes ?? {};
       const nivelPrincipal = Number(detalhes?.niveis?.principal?.value ?? 0) || 0;
       const nivelSecundario = Number(detalhes?.niveis?.secundario?.value ?? 0) || 0;
-      this._preUpdateLevelSnapshot = { principal: nivelPrincipal, secundario: nivelSecundario, total: nivelPrincipal + nivelSecundario };
+      const classePrincipalRaw = (typeof detalhes?.classe === 'object') ? detalhes?.classe?.value : detalhes?.classe;
+      const classeSecundariaRaw = (typeof detalhes?.multiclasse === 'object') ? detalhes?.multiclasse?.value : detalhes?.multiclasse;
+      const hpMax = Number(this.system?.recursos?.hp?.max ?? 0) || 0;
+      const epMax = Number(this.system?.recursos?.energia?.max ?? 0) || 0;
+      const hpVal = Number(this.system?.recursos?.hp?.value ?? 0) || 0;
+      const epVal = Number(this.system?.recursos?.energia?.value ?? 0) || 0;
+      this._preUpdateLevelSnapshot = {
+        principal: nivelPrincipal,
+        secundario: nivelSecundario,
+        total: nivelPrincipal + nivelSecundario,
+        classePrincipal: classePrincipalRaw,
+        classeSecundaria: classeSecundariaRaw,
+        hpMax,
+        epMax,
+        hpVal,
+        epVal
+      };
     } catch (e) {
-      this._preUpdateLevelSnapshot = { principal: 0, secundario: 0, total: 0 };
+      this._preUpdateLevelSnapshot = { principal: 0, secundario: 0, total: 0, classePrincipal: null, classeSecundaria: null, hpMax: 0, epMax: 0, hpVal: 0, epVal: 0 };
     }
     return super._preUpdate?.(changed, options, userId);
   }
@@ -730,15 +1221,329 @@ export class BoilerplateActor extends Actor {
     await super._onUpdate?.(changed, options, userId);
 
     // Detect whether level fields were changed.
-    const prev = this._preUpdateLevelSnapshot ?? { total: 0 };
+    const prev = this._preUpdateLevelSnapshot ?? { principal: 0, secundario: 0, total: 0 };
     const detalhes = this.system?.detalhes ?? {};
     const nivelPrincipal = Number(detalhes?.niveis?.principal?.value ?? 0) || 0;
     const nivelSecundario = Number(detalhes?.niveis?.secundario?.value ?? 0) || 0;
     const totalNow = nivelPrincipal + nivelSecundario;
 
-    if (totalNow <= prev.total) return; // no level gain
+    const gained = Math.max(0, totalNow - prev.total);
+    const deltaPrincipal = Math.max(0, nivelPrincipal - (Number(prev.principal ?? 0) || 0));
+    const deltaSecundario = Math.max(0, nivelSecundario - (Number(prev.secundario ?? 0) || 0));
 
-    const gained = totalNow - prev.total;
+    const shouldOpenDialog = !(options?.skipLevelUpDialog);
+
+    const normalizeKey = (s) => String(s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+    const classesCfg = FEITICEIROS?.classes ?? {};
+    const resolveClassCfg = (raw) => {
+      if (!raw) return null;
+      if (classesCfg && classesCfg[raw]) return { id: raw, cfg: classesCfg[raw] };
+      const target = normalizeKey(raw);
+      for (const [k, v] of Object.entries(classesCfg)) {
+        if (normalizeKey(k) === target) return { id: k, cfg: v };
+        if (normalizeKey(v?.label) === target) return { id: k, cfg: v };
+      }
+      return null;
+    };
+
+    const systemId = game?.system?.id || 'feiticeiros-e-maldicoes';
+    const progressionFlagKey = 'progression';
+    const makeGrantKey = (track, classId, level, nameOrId) => {
+      const n = String(nameOrId ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+      return `classFixed:${track}:${classId}:${Number(level) || 0}:${n}`;
+    };
+
+    const classePrincipalRaw = (typeof detalhes?.classe === 'object') ? detalhes?.classe?.value : detalhes?.classe;
+    const classeSecundariaRaw = (typeof detalhes?.multiclasse === 'object') ? detalhes?.multiclasse?.value : detalhes?.multiclasse;
+    const prevClassePrincipalRaw = (typeof prev?.classePrincipal === 'object') ? prev?.classePrincipal?.value : prev?.classePrincipal;
+    const prevClasseSecundariaRaw = (typeof prev?.classeSecundaria === 'object') ? prev?.classeSecundaria?.value : prev?.classeSecundaria;
+
+    const principalChanged = normalizeKey(prevClassePrincipalRaw) !== normalizeKey(classePrincipalRaw);
+    const secundarioChanged = normalizeKey(prevClasseSecundariaRaw) !== normalizeKey(classeSecundariaRaw);
+
+    // Se não houve ganho de nível e não houve troca de classe, não há nada a fazer aqui.
+    if (gained <= 0 && !principalChanged && !secundarioChanged) return;
+
+    const packIndexCache = new Map(); // packKey -> index[]
+    const packDocCache = new Map(); // packKey|id -> doc
+
+    const fixSystemIconPath = (img) => {
+      const s = String(img || '').trim();
+      if (!s) return s;
+      if (s.startsWith('systems/') || s.startsWith('/systems/')) return s;
+      if (s.startsWith('icons/equipment/') || s.startsWith('icons/weapons/') || s.startsWith('icons/axes/')) {
+        const sysId = game?.system?.id || 'feiticeiros-e-maldicoes';
+        return `/systems/${sysId}/${s}`;
+      }
+      return s;
+    };
+
+    const getPack = (packKey) => {
+      if (!packKey) return null;
+      return game.packs.get(packKey)
+        || game.packs.get(`world.${packKey}`)
+        || game.packs.get(String(packKey).replace(/^world\./, ''))
+        || null;
+    };
+
+    const getPackIndex = async (packKey) => {
+      const k = String(packKey);
+      if (packIndexCache.has(k)) return packIndexCache.get(k);
+      const pack = getPack(k);
+      if (!pack) {
+        packIndexCache.set(k, []);
+        return [];
+      }
+      const idx = await pack.getIndex();
+      packIndexCache.set(k, idx);
+      return idx;
+    };
+
+    const getPackDocument = async (packKey, id) => {
+      const cacheKey = `${packKey}|${id}`;
+      if (packDocCache.has(cacheKey)) return packDocCache.get(cacheKey);
+      const pack = getPack(packKey);
+      if (!pack) return null;
+      const doc = await pack.getDocument(id).catch(() => null);
+      packDocCache.set(cacheKey, doc);
+      return doc;
+    };
+
+    const resolveEntryToItemObject = async (entry) => {
+      // string => UUID
+      if (typeof entry === 'string') {
+        const resolved = await fromUuid(entry).catch(() => null);
+        const obj = resolved?.toObject ? resolved.toObject() : (resolved?.object?.toObject ? resolved.object.toObject() : null);
+        if (obj && typeof obj === 'object') obj.img = fixSystemIconPath(obj.img);
+        return obj || null;
+      }
+
+      if (!entry || typeof entry !== 'object') return null;
+
+      // {pack,name}
+      if (entry.pack && entry.name) {
+        const packKey = String(entry.pack);
+        const pack = getPack(packKey);
+        if (!pack) {
+          try {
+            console.warn('[FEITICEIROS] Progressão | compêndio não encontrado', {
+              actor: { id: this.id, name: this.name },
+              pack: packKey,
+              name: entry.name
+            });
+          } catch (_) { /* ignore */ }
+          return null;
+        }
+
+        const idx = await getPackIndex(packKey);
+        const targetName = normalizeKey(entry.name);
+        const found = idx.find(i => normalizeKey(i?.name) === targetName);
+        if (!found) {
+          try {
+            console.warn('[FEITICEIROS] Progressão | item não encontrado no compêndio', {
+              actor: { id: this.id, name: this.name },
+              pack: packKey,
+              name: entry.name
+            });
+          } catch (_) { /* ignore */ }
+          return null;
+        }
+
+        const doc = await getPackDocument(packKey, found._id);
+        const obj = doc?.toObject ? doc.toObject() : (doc?.object?.toObject ? doc.object.toObject() : null);
+        if (obj && typeof obj === 'object') obj.img = fixSystemIconPath(obj.img);
+        return obj || null;
+      }
+
+      // raw item-like object
+      if (entry.name && entry.type) {
+        const obj = foundry.utils.duplicate(entry);
+        if (obj && typeof obj === 'object') obj.img = fixSystemIconPath(obj.img);
+        return obj;
+      }
+      return null;
+    };
+
+    const collectFixedForClassUpTo = (classCfg, maxLevel) => {
+      const out = [];
+      const M = Math.max(0, Number(maxLevel) || 0);
+      for (let lvl = 1; lvl <= M; lvl++) {
+        const p = classCfg?.progression?.[String(lvl)] ?? {};
+        const fixed = Array.isArray(p?.fixed) ? p.fixed : [];
+        for (const entry of fixed) out.push({ entry, level: lvl });
+      }
+      return out;
+    };
+
+    const getProgressionFlag = (item) => item?.getFlag?.(systemId, progressionFlagKey) ?? null;
+
+    const reconcileFixedForTrack = async ({ track, prevClassRaw, newClassRaw, prevLevel, newLevel }) => {
+      const prevResolved = resolveClassCfg(prevClassRaw);
+      const newResolved = resolveClassCfg(newClassRaw);
+      const prevClassId = prevResolved?.id;
+      const prevClassCfg = prevResolved?.cfg;
+      const newClassId = newResolved?.id;
+      const newClassCfg = newResolved?.cfg;
+      const classChanged = normalizeKey(prevClassRaw) !== normalizeKey(newClassRaw);
+
+      if (!newClassCfg || !newClassId) return;
+
+      const desired = collectFixedForClassUpTo(newClassCfg, newLevel);
+      const desiredNames = new Set();
+      const desiredNameType = new Set();
+      const desiredResolvedObjs = [];
+
+      for (const d of desired) {
+        const obj = await resolveEntryToItemObject(d.entry);
+        if (!obj?.name || !obj?.type) continue;
+        desiredResolvedObjs.push({ obj, level: d.level, entry: d.entry });
+        desiredNames.add(obj.name);
+        desiredNameType.add(`${obj.name}|${obj.type}`);
+      }
+
+      // Remover itens fixos da classe anterior quando houver troca.
+      if (classChanged && prevClassCfg && prevClassId) {
+        const old = collectFixedForClassUpTo(prevClassCfg, prevLevel);
+        const oldResolved = [];
+        const oldNameType = new Set();
+
+        for (const o of old) {
+          const obj = await resolveEntryToItemObject(o.entry);
+          if (!obj?.name || !obj?.type) continue;
+          oldResolved.push({ obj, level: o.level });
+          oldNameType.add(`${obj.name}|${obj.type}`);
+        }
+
+        const idsToDelete = [];
+        const deleteSummary = [];
+        for (const item of this.items) {
+          if (item?.type !== 'habilidade') continue;
+          const flag = getProgressionFlag(item);
+          const nameType = `${item.name}|${item.type}`;
+
+          // Se o item é um fixo antigo e NÃO faz parte dos fixos desejados da classe atual, remove.
+          const isOldByName = oldNameType.has(nameType);
+          const isDesiredNow = desiredNameType.has(nameType);
+
+          const isOldByFlag = !!(flag && flag.kind === 'classFixed' && flag.track === track && flag.classId === prevClassId);
+          if ((isOldByFlag || isOldByName) && !isDesiredNow) {
+            idsToDelete.push(item.id);
+            deleteSummary.push({ id: item.id, name: item.name, type: item.type });
+          }
+        }
+
+        if (idsToDelete.length) {
+          try {
+            console.log('[FEITICEIROS] Progressão | removendo habilidades fixas (troca de classe)', {
+              actor: { id: this.id, name: this.name },
+              track,
+              from: { classId: prevClassId, classRaw: prevClassRaw, level: prevLevel },
+              to: { classId: newClassId, classRaw: newClassRaw, level: newLevel },
+              count: idsToDelete.length,
+              items: deleteSummary
+            });
+          } catch (_) { /* ignore */ }
+          try { await this.deleteEmbeddedDocuments('Item', idsToDelete); } catch (e) { console.warn('Falha ao remover habilidades fixas da classe anterior', e); }
+        }
+      }
+
+      // Conceder itens fixos desejados que estiverem faltando.
+      const toCreate = [];
+      const createSummary = [];
+      const markedSummary = [];
+      for (const d of desiredResolvedObjs) {
+        const exists = this.items.find(i => i.name === d.obj.name && i.type === d.obj.type);
+        if (exists) {
+          // Se for um item que já existe, mas sem flag, tenta “migrar” marcando como fixo.
+          const flag = getProgressionFlag(exists);
+          if (!flag) {
+            try {
+              await exists.setFlag(systemId, progressionFlagKey, {
+                kind: 'classFixed',
+                track,
+                classId: newClassId,
+                level: d.level,
+                key: makeGrantKey(track, newClassId, d.level, d.obj.name)
+              });
+              markedSummary.push({ id: exists.id, name: exists.name, type: exists.type, level: d.level });
+            } catch (e) { /* non-fatal */ }
+          }
+          continue;
+        }
+
+        const copy = foundry.utils.duplicate(d.obj);
+        delete copy._id; delete copy.id;
+        copy.flags = copy.flags || {};
+        copy.flags[systemId] = copy.flags[systemId] || {};
+        copy.flags[systemId][progressionFlagKey] = {
+          kind: 'classFixed',
+          track,
+          classId: newClassId,
+          level: d.level,
+          key: makeGrantKey(track, newClassId, d.level, d.obj.name)
+        };
+        toCreate.push(copy);
+        createSummary.push({ name: copy.name, type: copy.type, level: d.level });
+      }
+
+      if (markedSummary.length) {
+        try {
+          console.log('[FEITICEIROS] Progressão | marcando habilidade existente como fixa', {
+            actor: { id: this.id, name: this.name },
+            track,
+            classId: newClassId,
+            count: markedSummary.length,
+            items: markedSummary
+          });
+        } catch (_) { /* ignore */ }
+      }
+
+      if (toCreate.length) {
+        try {
+          console.log('[FEITICEIROS] Progressão | concedendo habilidades fixas (automático)', {
+            actor: { id: this.id, name: this.name },
+            track,
+            classId: newClassId,
+            classRaw: newClassRaw,
+            newLevel,
+            count: toCreate.length,
+            items: createSummary
+          });
+        } catch (_) { /* ignore */ }
+        try {
+          const createdDocs = await this.createEmbeddedDocuments('Item', toCreate);
+          try {
+            const createdSummary = (createdDocs ?? []).map(d => ({ id: d.id, name: d.name, type: d.type }));
+            console.log('[FEITICEIROS] Progressão | habilidades fixas criadas', {
+              actor: { id: this.id, name: this.name },
+              track,
+              classId: newClassId,
+              count: createdSummary.length,
+              items: createdSummary
+            });
+          } catch (_) { /* ignore */ }
+        } catch (e) {
+          console.warn('Falha ao criar habilidades fixas', e);
+        }
+      }
+
+      // Pós-checagem: garantir que todas as desejadas existem agora.
+      try {
+        const missingNow = [];
+        for (const d of desiredResolvedObjs) {
+          const has = this.items.some(i => i.name === d.obj.name && i.type === d.obj.type);
+          if (!has) missingNow.push({ name: d.obj.name, type: d.obj.type, level: d.level });
+        }
+        if (missingNow.length) {
+          console.warn('[FEITICEIROS] Progressão | ainda faltando habilidades fixas após reconciliar', {
+            actor: { id: this.id, name: this.name },
+            track,
+            classId: newClassId,
+            missing: missingNow
+          });
+        }
+      } catch (_) { /* ignore */ }
+    };
 
     // DV/DE: ao ganhar níveis, aumenta o limite e já ganha os novos dados (não gastos ainda).
     try {
@@ -756,175 +1561,165 @@ export class BoilerplateActor extends Actor {
           'system.combate.dadosVida.value': Math.min(newMax, Math.max(0, curDV + delta)),
           'system.combate.dadosEnergia.value': Math.min(newMax, Math.max(0, curDE + delta)),
         };
-        await this.update(updates);
+        await this.update(updates, { skipLevelUpDialog: true, skipProgressionReconcile: true });
       }
     } catch (e) {
       console.warn('Falha ao aplicar ganho de DV/DE por nível:', e);
     }
 
-    // Resolve class configuration (robust lookup: try raw key, then normalized matching)
-    const classData = detalhes?.classe;
-    const classIdRaw = (typeof classData === 'object') ? classData?.value : classData;
-    const normalizeKey = (s) => String(s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
-    const classesCfg = FEITICEIROS?.classes ?? {};
-    let classCfg = null;
-    if (classIdRaw && classesCfg && classesCfg[classIdRaw]) classCfg = classesCfg[classIdRaw];
-    if (!classCfg && classIdRaw) {
-      const target = normalizeKey(classIdRaw);
-      for (const k of Object.keys(classesCfg)) {
-        if (normalizeKey(k) === target) { classCfg = classesCfg[k]; break; }
+    // Reconciliação de habilidades fixas (classe) por trilha.
+    // - Ao subir nível: garante que o ator tenha todas as fixas até o nível atual da classe.
+    // - Ao trocar classe: remove as fixas antigas dessa trilha e concede as novas.
+    if (!options?.skipProgressionReconcile) {
+      try {
+        if (deltaPrincipal > 0 || principalChanged) {
+          await reconcileFixedForTrack({
+            track: 'principal',
+            prevClassRaw: prevClassePrincipalRaw,
+            newClassRaw: classePrincipalRaw,
+            prevLevel: Number(prev.principal) || 0,
+            newLevel: nivelPrincipal
+          });
+        }
+        if (deltaSecundario > 0 || secundarioChanged) {
+          await reconcileFixedForTrack({
+            track: 'secundario',
+            prevClassRaw: prevClasseSecundariaRaw,
+            newClassRaw: classeSecundariaRaw,
+            prevLevel: Number(prev.secundario) || 0,
+            newLevel: nivelSecundario
+          });
+        }
+      } catch (e) {
+        console.warn('Falha ao reconciliar habilidades fixas por classe', e);
       }
     }
-    if (!classCfg) return;
 
-    // Aggregate resource gains
-    let totalHpGain = 0;
-    let totalEpGain = 0;
-    const toCreate = [];
-    for (let i = 1; i <= gained; i++) {
-      const levelReached = prev.total + i;
-      totalHpGain += Number(classCfg?.hp?.perLevel ?? 0);
-      totalEpGain += Number(classCfg?.ep?.perLevel ?? 0);
+    const fixedToCreate = []; // itens fixos não-relacionados a classe (ex.: origem)
 
-      const progression = classCfg?.progression?.[String(levelReached)] ?? {};
-      // Apply training bonus if provided in progression for this level
-      if (progression?.bTreinamento != null) {
-        try {
-          await this.update({ 'system.detalhes.treinamento.value': Number(progression.bTreinamento) });
-        } catch (e) { /* non-fatal */ }
+    const openDialogs = []; // array of { track, classId, startTotal, startClass, gained }
+
+    const processTrack = async (track, delta, classRaw, startClassLevel) => {
+      if (!delta || delta <= 0) return;
+      const resolved = resolveClassCfg(classRaw);
+      if (!resolved?.cfg) return;
+      const classCfg = resolved.cfg;
+      const classId = resolved.id;
+
+      let needsDialog = false;
+
+      for (let i = 1; i <= delta; i++) {
+        const classLevelReached = (Number(startClassLevel) || 0) + i;
+        const progression = classCfg?.progression?.[String(classLevelReached)] ?? {};
+
+        // Apply training bonus if provided in progression for this class level
+        if (progression?.bTreinamento != null) {
+          try {
+            await this.update({ 'system.detalhes.treinamento.value': Number(progression.bTreinamento) });
+          } catch (e) { /* non-fatal */ }
+        }
+
+        const featureCount = Number(progression?.features ?? 0);
+        const aptitudeCount = Number(progression?.aptitudes ?? 0);
+        if (featureCount > 0 || aptitudeCount > 0) needsDialog = true;
       }
 
-      // Collect fixed items (if present) to create after resource updates
-      const fixed = Array.isArray(progression?.fixed) ? progression.fixed : [];
-      for (const entry of fixed) {
-        // entry may be a UUID string (compendium) or an item-like object
-        if (!entry) continue;
-        toCreate.push(entry);
+      if (needsDialog && this.isOwner && shouldOpenDialog) {
+        openDialogs.push({ track, classId, startTotal: Number(prev.total) || 0, startClass: Number(startClassLevel) || 0, gained: delta });
       }
+    };
 
-      // -- Origem: Maldição (variante) --
-      try {
-        const origemVal = this.system?.detalhes?.origem?.value ?? this.system?.detalhes?.origem;
-        const maldRace = this.system?.detalhes?.racaMaldicao?.value ?? this.system?.detalhes?.racaMaldicao;
-        if (String(origemVal) === 'Maldição' && maldRace) {
-          const originCfg = FEITICEIROS?.origins?.maldicao ?? {};
-          const variantCfg = originCfg[String(maldRace)] || originCfg[maldRace] || originCfg[String(maldRace)?.toString?.()] || null;
-          const originProg = variantCfg?.progression?.[String(levelReached)] ?? {};
+    await processTrack('principal', deltaPrincipal, classePrincipalRaw, prev.principal);
+    await processTrack('secundario', deltaSecundario, classeSecundariaRaw, prev.secundario);
+
+    // -- Origem: Maldição (variante) -- progride pelo nível TOTAL do personagem
+    try {
+      const origemVal = this.system?.detalhes?.origem?.value ?? this.system?.detalhes?.origem;
+      const maldRace = this.system?.detalhes?.racaMaldicao?.value ?? this.system?.detalhes?.racaMaldicao;
+      if (String(origemVal) === 'Maldição' && maldRace) {
+        const originCfg = FEITICEIROS?.origins?.maldicao ?? {};
+        const variantCfg = originCfg[String(maldRace)] || originCfg[maldRace] || originCfg[String(maldRace)?.toString?.()] || null;
+        for (let i = 1; i <= gained; i++) {
+          const levelTotalReached = (Number(prev.total) || 0) + i;
+          const originProg = variantCfg?.progression?.[String(levelTotalReached)] ?? {};
           const originFixed = Array.isArray(originProg?.fixed) ? originProg.fixed : [];
           for (const entry of originFixed) {
             if (!entry) continue;
-            toCreate.push(entry);
+            fixedToCreate.push(entry);
           }
         }
-      } catch (e) { /* non-fatal */ }
-    }
-
-    // Apply HP/EP increases to current values (not to max; max is derived elsewhere)
-    try {
-      const sys = this.system ?? {};
-      const curHpVal = Number(sys.recursos?.hp?.value ?? 0) || 0;
-      const curHpMax = Number(sys.recursos?.hp?.max ?? 0) || 0;
-      const curEpVal = Number(sys.recursos?.energia?.value ?? 0) || 0;
-      const curEpMax = Number(sys.recursos?.energia?.max ?? 0) || 0;
-
-      const updates = {};
-      if (totalHpGain) {
-        // If a max exists (>0) cap to it, otherwise apply raw gain
-        let newHp;
-        if (curHpMax > 0) newHp = Math.min(curHpVal + totalHpGain, curHpMax);
-        else newHp = curHpVal + totalHpGain;
-        updates['system.recursos.hp.value'] = newHp;
       }
-      if (totalEpGain) {
-        let newEp;
-        if (curEpMax > 0) newEp = Math.min(curEpVal + totalEpGain, curEpMax);
-        else newEp = curEpVal + totalEpGain;
-        updates['system.recursos.energia.value'] = newEp;
-      }
+    } catch (e) { /* non-fatal */ }
 
-      if (Object.keys(updates).length) await this.update(updates);
-    } catch (e) {
-      console.warn('Failed to apply per-level resource increases:', e);
-    }
-
-    // Create fixed progression items, avoiding duplicates by name+type
-    if (toCreate.length) {
+    // Criar itens fixos de origem (e outras fontes não-classe), evitando duplicatas por nome+tipo.
+    if (fixedToCreate.length) {
       const created = [];
-      for (const entry of toCreate) {
+      const createdSummary = [];
+      for (const entry of fixedToCreate) {
         try {
-          // If entry is a string, attempt to resolve UUID (compendium)
-          if (typeof entry === 'string') {
-            // Try to resolve a UUID to an Item
-            const resolved = await fromUuid(entry).catch(() => null);
-            const itemObj = resolved?.toObject ? resolved.toObject() : (resolved?.object?.toObject ? resolved.object.toObject() : null);
-            if (itemObj) {
-              // Skip if already has same name+type
-              const exists = this.items.find(i => i.name === itemObj.name && i.type === itemObj.type);
-              if (!exists) {
-                const copy = duplicate(itemObj);
-                delete copy._id; delete copy.id;
-                created.push(copy);
-              }
-            }
-          }
-          // If entry is an object that references a compendium pack by name, try to resolve it
-          else if (typeof entry === 'object') {
-            // If the entry points to a pack, try to fetch the item from the compendium by name
-            if (entry.pack && entry.name) {
-              try {
-                const pack = game.packs.get(entry.pack) || game.packs.get(`world.${entry.pack}`) || game.packs.get(entry.pack.replace(/^world\./, ''));
-                if (pack) {
-                  const idx = await pack.getIndex();
-                  const found = idx.find(i => i.name === entry.name);
-                  if (found) {
-                    const doc = await pack.getDocument(found._id).catch(() => null);
-                    const itemObj = doc?.toObject ? doc.toObject() : (doc?.object?.toObject ? doc.object.toObject() : null);
-                    if (itemObj) {
-                      const exists = this.items.find(i => i.name === itemObj.name && i.type === itemObj.type);
-                      if (!exists) {
-                        const copy = duplicate(itemObj);
-                        delete copy._id; delete copy.id;
-                        created.push(copy);
-                        continue;
-                      }
-                    }
-                  }
-                }
-              } catch (e) { /* ignore and fall back to raw object */ }
-            }
-
-            // Fallback: treat entry as an item-like object
-            const name = entry.name ?? entry?.system?.name ?? '';
-            const type = entry.type ?? entry?.system?.type ?? '';
-            const exists = this.items.find(i => i.name === name && i.type === type);
-            if (!exists) {
-              const copy = duplicate(entry);
-              delete copy._id; delete copy.id;
-              created.push(copy);
-            }
-          }
+          const itemObj = await resolveEntryToItemObject(entry);
+          if (!itemObj?.name || !itemObj?.type) continue;
+          const exists = this.items.find(i => i.name === itemObj.name && i.type === itemObj.type);
+          if (exists) continue;
+          const copy = foundry.utils.duplicate(itemObj);
+          delete copy._id; delete copy.id;
+          created.push(copy);
+          createdSummary.push({ name: copy.name, type: copy.type });
         } catch (e) {
-          console.warn('Skipping fixed progression entry due to error', e);
+          console.warn('Skipping fixed (non-class) progression entry due to error', e);
         }
       }
       if (created.length) {
-        try { await this.createEmbeddedDocuments('Item', created); } catch (e) { console.warn('Failed to create fixed progression items', e); }
+        try {
+          console.log('[FEITICEIROS] Progressão | concedendo itens fixos (origem/outros, automático)', {
+            actor: { id: this.id, name: this.name },
+            count: created.length,
+            items: createdSummary
+          });
+        } catch (_) { /* ignore */ }
+        try { await this.createEmbeddedDocuments('Item', created); } catch (e) { console.warn('Failed to create fixed progression items (non-class)', e); }
       }
     }
 
-    // If there are selectable progression slots (features/aptitudes) for the next level, open the LevelUpDialog for the owner
+    // Apply HP/EP increases to current values using delta of max (inclui CON/ajustes por classe).
     try {
-      const nextLevel = prev.total + 1;
-      const progressionNext = classCfg?.progression?.[String(nextLevel)] ?? {};
-      const featureCount = Number(progressionNext?.features ?? 0);
-      const aptitudeCount = Number(progressionNext?.aptitudes ?? 0);
-      if ((featureCount > 0 || aptitudeCount > 0) && this.isOwner) {
-        // Open dialog so the player can choose remaining options.
-        // Pass start level and number of levels gained so dialog can handle multiple levels sequentially.
-        const dlg = new LevelUpDialog(this, { startLevel: prev.total, gained, classId });
-        dlg.render(true);
-      }
-    } catch (e) { /* non-fatal */ }
+      const sys = this.system ?? {};
+      const prevHpMax = Number(prev.hpMax ?? 0) || 0;
+      const prevEpMax = Number(prev.epMax ?? 0) || 0;
+      const prevHpVal = Number(prev.hpVal ?? Number(sys.recursos?.hp?.value ?? 0)) || 0;
+      const prevEpVal = Number(prev.epVal ?? Number(sys.recursos?.energia?.value ?? 0)) || 0;
+
+      const newHpMax = Number(sys.recursos?.hp?.max ?? 0) || 0;
+      const newEpMax = Number(sys.recursos?.energia?.max ?? 0) || 0;
+
+      const deltaHp = Math.max(0, newHpMax - prevHpMax);
+      const deltaEp = Math.max(0, newEpMax - prevEpMax);
+
+      const updates = {};
+      if (deltaHp > 0) updates['system.recursos.hp.value'] = Math.min(prevHpVal + deltaHp, newHpMax);
+      if (deltaEp > 0) updates['system.recursos.energia.value'] = Math.min(prevEpVal + deltaEp, newEpMax);
+
+      if (Object.keys(updates).length) await this.update(updates, { skipLevelUpDialog: true, skipProgressionReconcile: true });
+    } catch (e) {
+      console.warn('Failed to apply resource delta on level gain:', e);
+    }
+
+    // Open selection dialog(s) when there are selectable progression slots (features/aptitudes)
+    if (openDialogs.length && this.isOwner && shouldOpenDialog) {
+      try {
+        // Abrir 1 diálogo por trilha que subiu (caso raro: ambos no mesmo update)
+        for (const d of openDialogs) {
+          const dlg = new LevelUpDialog(this, {
+            startTotalLevel: d.startTotal,
+            startClassLevel: d.startClass,
+            gained: d.gained,
+            classId: d.classId,
+            track: d.track
+          });
+          dlg.render(true);
+        }
+      } catch (e) { /* non-fatal */ }
+    }
   }
 
   /**
@@ -939,16 +1734,29 @@ export class BoilerplateActor extends Actor {
    * @param {boolean} [isSoul=false] - Se true, aplica na integridade (ignora RD por padrão)
    * @returns {Promise<object>} - Informação do que foi aplicado: { applied, mitigated, resource, newValue }
    */
-  async applyDamage(amount, type = 'generic', isSoul = false) {
+  async applyDamage(amount, type = 'generic', isSoul = false, options = {}) {
     const system = this.system || {};
     const raw = Number(amount) || 0;
 
-    // Busca RD geral
+    const ignoreRD = Boolean(options?.ignoreRD ?? options?.ignoreRd ?? false);
+
+    // Imunidades / vulnerabilidades (por tipo)
+    const immuneByType = system.combate?.imunidades?.byType ?? {};
+    const vulnByType = system.combate?.vulnerabilidades?.byType ?? {};
+
+    const isImmune = !ignoreRD && !isSoul && type && Boolean(immuneByType?.[type]);
+
+    // RD
+    // - `rd.irreducivel`: sempre aplica (não pode ser ignorada por ignoreRD)
+    // - `rd.value`: RD geral (pode ser ignorada)
+    // - `rd.byType[type]`: RD por tipo (substitui a geral; pode ser ignorada)
+    const rdIrreducivel = Number(system.combate?.rd?.irreducivel ?? 0) || 0;
     const rdGeneral = Number(system.combate?.rd?.value ?? 0) || 0;
-    // Busca RD por tipo se existir (substitui a geral)
     const rdByType = system.combate?.rd?.byType ?? {};
     const rdTypeVal = (type && rdByType && rdByType[type] != null) ? Number(rdByType[type]) : null;
-    const rd = (rdTypeVal != null) ? rdTypeVal : rdGeneral;
+
+    const rdReducivel = ignoreRD ? 0 : ((rdTypeVal != null) ? rdTypeVal : rdGeneral);
+    const rdTotal = Math.max(0, rdIrreducivel) + Math.max(0, rdReducivel);
 
     if (isSoul) {
       // Dano na Alma geralmente ignora RD e afeta integridade
@@ -959,16 +1767,30 @@ export class BoilerplateActor extends Actor {
       return { applied, mitigated: 0, resource: 'integridade', newValue: newVal };
     }
 
-    // Dano normal: subtrai RD
-    const mitigated = Math.min(rd, raw);
-    const finalDamage = Math.max(0, raw - rd);
+    // Dano normal: subtrai RD (ou zera por imunidade)
+    if (isImmune) {
+      const curHp = Number(system.recursos?.hp?.value ?? 0) || 0;
+      // não altera HP; reporta como tudo mitigado por imunidade
+      return { applied: 0, mitigated: raw, resource: 'hp', newValue: curHp, immune: true, type };
+    }
+
+    const mitigated = Math.min(rdTotal, raw);
+    let finalDamage = Math.max(0, raw - mitigated);
+
+    // Vulnerabilidade: aplica multiplicador após RD
+    if (!isSoul && !ignoreRD && type && vulnByType && vulnByType[type] != null) {
+      const mult = Number(vulnByType[type]) || 1;
+      if (Number.isFinite(mult) && mult > 0) {
+        finalDamage = Math.round(finalDamage * mult);
+      }
+    }
 
     const curHp = Number(system.recursos?.hp?.value ?? 0) || 0;
     const newHp = Math.max(0, curHp - finalDamage);
     const applied = Math.min(finalDamage, curHp);
 
     await this.update({ 'system.recursos.hp.value': newHp });
-    return { applied, mitigated, resource: 'hp', newValue: newHp, rdApplied: rd };
+    return { applied, mitigated, resource: 'hp', newValue: newHp, rdApplied: rdTotal, rdIrreducivel, rdReducivel, ignoreRD };
   }
 
   async longRest() {

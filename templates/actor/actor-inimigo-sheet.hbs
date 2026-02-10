@@ -1,0 +1,211 @@
+<form class="{{cssClass}} inimigo-sheet" autocomplete="off">
+
+  <header class="sheet-header inimigo-header">
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="64" width="64"/>
+
+    <div class="header-fields">
+      <h1 class="charname">
+        <input name="name" type="text" value="{{actor.name}}" placeholder="Nome do Inimigo"/>
+      </h1>
+
+      <div class="inimigo-header-grid">
+        <div class="resource flex-group-center">
+          <label>Patamar</label>
+          <select name="system.patamar">
+            {{selectOptions listasInimigo.patamares selected=system.patamar}}
+          </select>
+        </div>
+
+        <div class="resource flex-group-center">
+          <label>Origem</label>
+          <select name="system.origem">
+            {{selectOptions listasInimigo.origens selected=system.origem}}
+          </select>
+        </div>
+
+        <div class="resource flex-group-center">
+          <label>Dificuldade</label>
+          <select name="system.dificuldade_mesa">
+            {{selectOptions listasInimigo.dificuldades selected=system.dificuldade_mesa}}
+          </select>
+        </div>
+
+        <div class="resource flex-group-center">
+          <label>Tamanho</label>
+          <select name="system.tamanho">
+            {{selectOptions listasInimigo.tamanhos selected=system.tamanho}}
+          </select>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="atributos">Status</a>
+    <a class="item" data-tab="pericias">Perícias</a>
+    <a class="item" data-tab="aptidao">Aptidão</a>
+    <a class="item" data-tab="tracos">Traços</a>
+    <a class="item" data-tab="itens">Ações e Dotes</a>
+  </nav>
+  <hr>
+
+  <section class="sheet-body">
+
+    <div class="tab atributos" data-group="primary" data-tab="atributos">
+      {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-status.hbs"}}
+
+      {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-attacks.hbs"}}
+
+      <h3 class="jem-section-title">Atributos</h3>
+      {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-attributes.hbs"}}
+    </div>
+
+    <div class="tab pericias" data-group="primary" data-tab="pericias">
+      {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/inimigo-pericias-fixas.hbs"}}
+    </div>
+
+    <div class="tab aptidao" data-group="primary" data-tab="aptidao">
+      {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/inimigo-aptidoes.hbs"}}
+    </div>
+
+    <div class="tab tracos" data-group="primary" data-tab="tracos">
+      <div style="display:flex; gap:10px; margin-bottom: 10px; flex-wrap: wrap;">
+        <button type="button" class="item-create" data-type="caracteristica">Adicionar Característica/Resistência/Imunidade</button>
+      </div>
+
+      <h3 class="jem-section-title">Resistências</h3>
+      {{#if caracteristicas.resistencias.length}}
+        <ol class="items-list jem-items-list">
+          {{#each caracteristicas.resistencias as |item|}}
+            <li class="item flexrow jem-item-row" data-item-id="{{item._id}}">
+              <div class="item-name flexrow">
+                <img class="item-image" src="{{item.img}}" title="{{item.name}}" width="24" height="24"/>
+                <h4 class="jem-item-name">{{item.name}}</h4>
+                <span style="opacity:0.85; font-size:12px; margin-left:8px;">({{item.system.danoTipo.value}}: {{item.system.valor.value}})</span>
+              </div>
+              <div class="item-controls flexrow jem-item-controls">
+                <button type="button" class="item-control item-edit" title="Editar"><i class="fas fa-edit"></i></button>
+                <button type="button" class="item-control item-delete" title="Remover"><i class="fas fa-trash"></i></button>
+              </div>
+            </li>
+          {{/each}}
+        </ol>
+      {{else}}
+        <p class="jem-empty">Nenhuma resistência ainda.</p>
+      {{/if}}
+
+      <h3 class="jem-section-title" style="margin-top: 14px;">Imunidades</h3>
+      {{#if caracteristicas.imunidades.length}}
+        <ol class="items-list jem-items-list">
+          {{#each caracteristicas.imunidades as |item|}}
+            <li class="item flexrow jem-item-row" data-item-id="{{item._id}}">
+              <div class="item-name flexrow">
+                <img class="item-image" src="{{item.img}}" title="{{item.name}}" width="24" height="24"/>
+                <h4 class="jem-item-name">{{item.name}}</h4>
+                <span style="opacity:0.85; font-size:12px; margin-left:8px;">({{item.system.danoTipo.value}})</span>
+              </div>
+              <div class="item-controls flexrow jem-item-controls">
+                <button type="button" class="item-control item-edit" title="Editar"><i class="fas fa-edit"></i></button>
+                <button type="button" class="item-control item-delete" title="Remover"><i class="fas fa-trash"></i></button>
+              </div>
+            </li>
+          {{/each}}
+        </ol>
+      {{else}}
+        <p class="jem-empty">Nenhuma imunidade ainda.</p>
+      {{/if}}
+
+      <h3 class="jem-section-title" style="margin-top: 14px;">Vulnerabilidades</h3>
+      {{#if caracteristicas.vulnerabilidades.length}}
+        <ol class="items-list jem-items-list">
+          {{#each caracteristicas.vulnerabilidades as |item|}}
+            <li class="item flexrow jem-item-row" data-item-id="{{item._id}}">
+              <div class="item-name flexrow">
+                <img class="item-image" src="{{item.img}}" title="{{item.name}}" width="24" height="24"/>
+                <h4 class="jem-item-name">{{item.name}}</h4>
+                <span style="opacity:0.85; font-size:12px; margin-left:8px;">({{item.system.danoTipo.value}} ×{{item.system.multiplicador.value}})</span>
+              </div>
+              <div class="item-controls flexrow jem-item-controls">
+                <button type="button" class="item-control item-edit" title="Editar"><i class="fas fa-edit"></i></button>
+                <button type="button" class="item-control item-delete" title="Remover"><i class="fas fa-trash"></i></button>
+              </div>
+            </li>
+          {{/each}}
+        </ol>
+      {{else}}
+        <p class="jem-empty">Nenhuma vulnerabilidade ainda.</p>
+      {{/if}}
+
+      <h3 class="jem-section-title" style="margin-top: 14px;">Características</h3>
+      {{#if caracteristicas.caracteristicas.length}}
+        <ol class="items-list jem-items-list">
+          {{#each caracteristicas.caracteristicas as |item|}}
+            <li class="item flexrow jem-item-row" data-item-id="{{item._id}}">
+              <div class="item-name flexrow">
+                <img class="item-image" src="{{item.img}}" title="{{item.name}}" width="24" height="24"/>
+                <h4 class="jem-item-name">{{item.name}}</h4>
+              </div>
+              <div class="item-controls flexrow jem-item-controls">
+                <button type="button" class="item-control item-edit" title="Editar"><i class="fas fa-edit"></i></button>
+                <button type="button" class="item-control item-delete" title="Remover"><i class="fas fa-trash"></i></button>
+              </div>
+            </li>
+          {{/each}}
+        </ol>
+      {{else}}
+        <p class="jem-empty">Nenhuma característica ainda.</p>
+      {{/if}}
+    </div>
+
+    <div class="tab itens" data-group="primary" data-tab="itens">
+      <div style="display:flex; gap:10px; margin-bottom: 10px; flex-wrap: wrap;">
+        <button type="button" class="item-create" data-type="acao-npc">Adicionar Ação (NPC)</button>
+        <button type="button" class="item-create" data-type="dote">Adicionar Dote</button>
+        <button type="button" class="item-create" data-type="caracteristica">Adicionar Característica</button>
+      </div>
+
+      <h3 class="jem-section-title">Ações (NPC)</h3>
+      {{#if acoesNpc.length}}
+        <ol class="items-list jem-items-list">
+          {{#each acoesNpc as |item|}}
+            <li class="item flexrow jem-item-row" data-item-id="{{item._id}}">
+              <div class="item-name flexrow">
+                <img class="item-image" src="{{item.img}}" title="{{item.name}}" width="24" height="24"/>
+                <h4 class="jem-item-name">{{item.name}}</h4>
+              </div>
+              <div class="item-controls flexrow jem-item-controls">
+                <button type="button" class="item-control item-edit" title="Editar"><i class="fas fa-edit"></i></button>
+                <button type="button" class="item-control item-delete" title="Remover"><i class="fas fa-trash"></i></button>
+              </div>
+            </li>
+          {{/each}}
+        </ol>
+      {{else}}
+        <p class="jem-empty">Nenhuma ação ainda.</p>
+      {{/if}}
+
+      <h3 class="jem-section-title" style="margin-top: 14px;">Dotes</h3>
+      {{#if dotes.length}}
+        <ol class="items-list jem-items-list">
+          {{#each dotes as |item|}}
+            <li class="item flexrow jem-item-row" data-item-id="{{item._id}}">
+              <div class="item-name flexrow">
+                <img class="item-image" src="{{item.img}}" title="{{item.name}}" width="24" height="24"/>
+                <h4 class="jem-item-name item-roll" title="Usar">{{item.name}}</h4>
+              </div>
+              <div class="item-controls flexrow jem-item-controls">
+                <button type="button" class="item-control item-roll" title="Usar"><i class="fas fa-dice"></i></button>
+                <button type="button" class="item-control item-edit" title="Editar"><i class="fas fa-edit"></i></button>
+                <button type="button" class="item-control item-delete" title="Remover"><i class="fas fa-trash"></i></button>
+              </div>
+            </li>
+          {{/each}}
+        </ol>
+      {{else}}
+        <p class="jem-empty">Nenhum dote ainda.</p>
+      {{/if}}
+    </div>
+
+  </section>
+
+</form>

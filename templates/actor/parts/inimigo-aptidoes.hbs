@@ -1,0 +1,62 @@
+<div class="flexrow" style="justify-content: space-between; align-items: center; gap: 10px;">
+  <h3 class="aptidoes-title" style="margin: 0;">Níveis de Aptidão</h3>
+  <button type="button" data-action="auto-calcular-inimigo-aptidoes">Pontos (ND/2)</button>
+</div>
+
+{{#if system.aptidaoPontos}}
+  <div style="margin: 6px 0 10px; opacity: 0.9; font-size: 12px;">
+    Pontos: <b>{{system.aptidaoPontos.ganhos.value}}</b> ganhos • <b>{{system.aptidaoPontos.gastos.value}}</b> gastos • <b>{{system.aptidaoPontos.restantes.value}}</b> restantes
+  </div>
+{{/if}}
+
+<div class="condition-group aptidao-niveis-card">
+  <div class="condition-header mental">Aptidão</div>
+  <div class="aptidao-niveis-body">
+    <div class="aptidao-niveis-grid">
+      <div class="aptidao-nivel-row">
+        <div class="aptidao-nivel-label">{{system.aptidaoNiveis.aura.label}}</div>
+        <div class="aptidao-nivel-controls">
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-dec" data-key="aura">-</button>
+          <span class="aptidao-nivel-value">{{system.aptidaoNiveis.aura.value}}</span>
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-inc" data-key="aura">+</button>
+        </div>
+      </div>
+
+      <div class="aptidao-nivel-row">
+        <div class="aptidao-nivel-label">{{system.aptidaoNiveis.controleELeitura.label}}</div>
+        <div class="aptidao-nivel-controls">
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-dec" data-key="controleELeitura">-</button>
+          <span class="aptidao-nivel-value">{{system.aptidaoNiveis.controleELeitura.value}}</span>
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-inc" data-key="controleELeitura">+</button>
+        </div>
+      </div>
+
+      <div class="aptidao-nivel-row">
+        <div class="aptidao-nivel-label">{{system.aptidaoNiveis.barreiras.label}}</div>
+        <div class="aptidao-nivel-controls">
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-dec" data-key="barreiras">-</button>
+          <span class="aptidao-nivel-value">{{system.aptidaoNiveis.barreiras.value}}</span>
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-inc" data-key="barreiras">+</button>
+        </div>
+      </div>
+
+      <div class="aptidao-nivel-row">
+        <div class="aptidao-nivel-label">{{system.aptidaoNiveis.dominio.label}}</div>
+        <div class="aptidao-nivel-controls">
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-dec" data-key="dominio">-</button>
+          <span class="aptidao-nivel-value">{{system.aptidaoNiveis.dominio.value}}</span>
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-inc" data-key="dominio">+</button>
+        </div>
+      </div>
+
+      <div class="aptidao-nivel-row">
+        <div class="aptidao-nivel-label">{{system.aptidaoNiveis.energiaReversa.label}}</div>
+        <div class="aptidao-nivel-controls">
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-dec" data-key="energiaReversa">-</button>
+          <span class="aptidao-nivel-value">{{system.aptidaoNiveis.energiaReversa.value}}</span>
+          <button type="button" class="aptidao-nivel-btn" data-action="aptidao-nivel-inc" data-key="energiaReversa">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

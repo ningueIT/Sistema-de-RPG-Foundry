@@ -1,0 +1,110 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <button type="button" class="jem-sheet-close" title="Fechar" aria-label="Fechar">
+      <i class="fas fa-times"></i>
+    </button>
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}"/>
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Nome da Ação"/></h1>
+      <div class="item-meta grid grid-2col">
+        <div>
+          <label>Fonte</label>
+          <input type="text" name="system.fonte.value" value="{{system.fonte.value}}" placeholder="Ex: Grimório"/>
+        </div>
+        <div>
+          <label>Custo (PE)</label>
+          <input type="number" name="system.custoPe.value" value="{{system.custoPe.value}}"/>
+        </div>
+        <div>
+          <label>Treinamento (BT)</label>
+          <input type="number" name="system.treinamento.value" value="{{system.treinamento.value}}" min="2" max="6"/>
+        </div>
+        <div>
+          <label>Segunda Fase</label>
+          <input type="checkbox" name="system.segundaFase.value" {{#if system.segundaFase.value}}checked{{/if}}/>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="sheet-body">
+    <div class="sheet-main grid grid-2col">
+      <fieldset class="attack-fieldset">
+        <legend>Parâmetros</legend>
+        <div class="weapon-attributes grid grid-2col">
+          <div class="field">
+            <label>Tipo de Acerto</label>
+            <select name="system.tipoAcerto.value">
+              <option value="automatico" {{#if (eq system.tipoAcerto.value "automatico")}}selected{{/if}}>Automático</option>
+              <option value="atributo_bt" {{#if (eq system.tipoAcerto.value "atributo_bt")}}selected{{/if}}>Teste de Acerto (Atributo+BT)</option>
+              <option value="cd" {{#if (eq system.tipoAcerto.value "cd")}}selected{{/if}}>Teste contra CD</option>
+              <option value="tr" {{#if (eq system.tipoAcerto.value "tr")}}selected{{/if}}>TR (Individual)</option>
+              <option value="tr_area" {{#if (eq system.tipoAcerto.value "tr_area")}}selected{{/if}}>TR (Área)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Atributo</label>
+            <select name="system.atributo.value">
+              <option value="forca" {{#if (eq system.atributo.value "forca")}}selected{{/if}}>Força</option>
+              <option value="destreza" {{#if (eq system.atributo.value "destreza")}}selected{{/if}}>Destreza</option>
+              <option value="constituicao" {{#if (eq system.atributo.value "constituicao")}}selected{{/if}}>Constituição</option>
+              <option value="inteligencia" {{#if (eq system.atributo.value "inteligencia")}}selected{{/if}}>Inteligência</option>
+              <option value="sabedoria" {{#if (eq system.atributo.value "sabedoria")}}selected{{/if}}>Sabedoria</option>
+              <option value="presenca" {{#if (eq system.atributo.value "presenca")}}selected{{/if}}>Presença</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Alcance Máx (m)</label>
+            <input type="number" step="0.1" name="system.alcanceMax.valor.value" value="{{system.alcanceMax.valor.value}}"/>
+          </div>
+          <div class="field">
+            <label>Área Máx (m)</label>
+            <input type="number" step="0.1" name="system.areaMax.valor.value" value="{{system.areaMax.valor.value}}"/>
+          </div>
+          <div class="field">
+            <label>Fórmula de Dano</label>
+            <input type="text" name="system.formulaDano.value" value="{{system.formulaDano.value}}" placeholder="ex: 4d10+19"/>
+          </div>
+          <div class="field">
+            <label>Dano Médio (estimado)</label>
+            <input type="number" name="system.danoMedio.value" value="{{system.danoMedio.value}}"/>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="damage-fieldset">
+        <legend>Condição (opcional)</legend>
+        <div class="weapon-attributes grid grid-2col">
+          <div class="field">
+            <label>Aplica condição</label>
+            <input type="checkbox" name="system.aplicaCondicao.value" {{#if system.aplicaCondicao.value}}checked{{/if}}/>
+          </div>
+          <div class="field">
+            <label>Nível</label>
+            <select name="system.condicao.value">
+              <option value="fraca" {{#if (eq system.condicao.value "fraca")}}selected{{/if}}>Fraca</option>
+              <option value="media" {{#if (eq system.condicao.value "media")}}selected{{/if}}>Média</option>
+              <option value="forte" {{#if (eq system.condicao.value "forte")}}selected{{/if}}>Forte</option>
+              <option value="extrema" {{#if (eq system.condicao.value "extrema")}}selected{{/if}}>Extrema</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Pagar PE para aplicar</label>
+            <input type="checkbox" name="system.condicaoUsaPe.value" {{#if system.condicaoUsaPe.value}}checked{{/if}}/>
+          </div>
+          <div class="field">
+            <label>Custo PE (se pagar)</label>
+            <input type="number" name="system.condicaoCustoPe.value" value="{{system.condicaoCustoPe.value}}"/>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="sheet-footer">
+      <h3 class="item-section-title">Descrição</h3>
+      <div class="editor-container">
+        {{editor system.descricao.value target="system.descricao.value" engine="prosemirror" button=true owner=owner editable=editable}}
+      </div>
+    </div>
+  </section>
+</form>

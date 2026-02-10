@@ -33,6 +33,9 @@ export class BoilerplateItemSheet extends ItemSheet {
     // Return a specialized sheet for class items.
     if (this.item?.type === 'class') return `${path}/item-class-sheet.hbs`;
     if (this.item?.type === 'uniforme') return `${path}/item-uniform-sheet.hbs`;
+    if (this.item?.type === 'acao-npc') return `${path}/item-acao-npc-sheet.hbs`;
+    if (this.item?.type === 'dote') return `${path}/item-dote-sheet.hbs`;
+    if (this.item?.type === 'caracteristica') return `${path}/item-caracteristica-sheet.hbs`;
 
     // Fallback to the generic sheet for other item types.
     return `${path}/item-sheet.hbs`;

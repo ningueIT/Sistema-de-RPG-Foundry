@@ -139,7 +139,7 @@ export default class LevelUpWizard extends FormApplication {
 
     // Cria os itens selecionados (clonados)
     const toCreate = Object.values(this.itemsToCreate).map(i => {
-      const copy = duplicate(i);
+          const copy = foundry.utils.duplicate(i);
       // Remover ids para criar novo
       delete copy._id;
       delete copy.id;
