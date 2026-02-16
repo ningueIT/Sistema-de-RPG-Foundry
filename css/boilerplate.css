@@ -2515,6 +2515,119 @@ input[type=number]::-webkit-inner-spin-button {
     letter-spacing: 0.7px;
 }
 
+/* ============================================================
+   ABA TREINAMENTO (ATOR)
+   - Ajusta combat-cards para checkboxes/inputs pequenos
+   - Evita herdar o estilo “input gigante” usado em Defesa/CD/etc
+   ============================================================ */
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .jem-section-title {
+    margin-top: 0;
+    border-bottom: 1px solid rgba(155,77,202,0.22);
+    color: #f0eefe;
+    font-size: 14px;
+    letter-spacing: 0.7px;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .combat-card {
+    text-align: left;
+}
+
+/* No treinamento, labels são “chips” de etapa, não títulos */
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .combat-card label {
+    font-weight: 600;
+    color: var(--jem-text);
+    font-size: 12px;
+    letter-spacing: 0.2px;
+    margin-bottom: 0;
+    text-transform: none;
+}
+
+/* Checkboxes: tamanho natural e cor do tema */
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .combat-card input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: var(--jem-accent);
+}
+
+/* Inputs de texto/número do treinamento (arma/perícia/extra) */
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .combat-card input[type="text"],
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .combat-card input[type="number"] {
+    height: 32px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    padding: 6px 10px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.22));
+    border: 1px solid rgba(155,77,202,0.16);
+    border-radius: var(--jem-radius-sm);
+}
+
+/* Estado desabilitado: mais discreto (trava de pontos/etapas) */
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .combat-card input:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .combat-card input[type="text"]:disabled,
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .combat-card input[type="number"]:disabled {
+    opacity: 0.7;
+}
+
+/* Espaçamento entre etapas mais compacto e consistente */
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .combat-card > div {
+    gap: 10px;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .combat-card strong {
+    color: #f0eefe;
+    letter-spacing: 0.3px;
+}
+
+/* Layout das etapas: uma embaixo da outra */
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .jem-train-stages {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .jem-train-stage {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--jem-radius-sm);
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.16));
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .jem-train-stage:hover {
+    border-color: rgba(155,77,202,0.22);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.28);
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .jem-train-stage__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .jem-train-stage__title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.feiticeiros-e-maldicoes.sheet.actor .tab.treinamento .jem-train-stage__desc {
+    font-size: 12px;
+    color: var(--jem-text-muted);
+    line-height: 1.25;
+    white-space: pre-line;
+}
+
 .feiticeiros-e-maldicoes.sheet.actor .tab.itens .jem-items-list,
 .feiticeiros-e-maldicoes.sheet.actor .tab.aptidoes .jem-items-list,
 .feiticeiros-e-maldicoes.sheet.actor .tab.passivas .jem-items-list {
@@ -3774,3 +3887,227 @@ body .ultima-acao select.ultima-acao-select option {
 .uniform-card { color: #fff; }
 .uniform-card small { color: #cfcfcf; }
 .uniform-empty { color: #bfbfbf; }
+
+/* ============================================================
+     JEM SKILLCHECK - ESTILO "JUJUTSU UI" (ATUALIZADO)
+     ============================================================ */
+.jem-skillcheck {
+    /* --- Configurações de Tamanho --- */
+    --jem-size: 220px;       /* Tamanho total do dial */
+    --jem-ring-width: 24px;  /* Espessura do anel */
+  
+    /* --- Variáveis Lógicas (Mantidas do JS) --- */
+    --jem-zone-angle: 0;
+    --jem-success-width: 40;
+    --jem-great-width: 14;
+    --jem-needle-angle: 0;
+
+    /* --- Paleta Integrada com o Tema --- */
+    --jem-sc-bg: #0b0b0b;
+    --jem-sc-ring: #161616;
+    --jem-sc-border: rgba(155, 77, 202, 0.3); /* Roxo sutil na borda */
+  
+    /* Cores das Zonas com Glow */
+    --jem-sc-success: rgba(155, 77, 202, 0.5); 
+    --jem-sc-success-strong: #9b4dca;         /* Roxo Jujutsu Puro */
+  
+    --jem-sc-great: rgba(255, 215, 0, 0.6);
+    --jem-sc-great-strong: #ffd700;           /* Dourado Ouro */
+  
+    --jem-sc-text: #ffffff;
+    color: var(--jem-sc-text);
+  
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: "Roboto", sans-serif;
+}
+
+.jem-skillcheck__wrap {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+}
+
+/* O Disco Principal */
+.jem-skillcheck__dial {
+    position: relative;
+    width: var(--jem-size);
+    height: var(--jem-size);
+    border-radius: 50%;
+  
+    /* Fundo escuro com textura radial */
+    background: radial-gradient(circle at center, #1a1a1a, #000);
+  
+    /* Borda externa com brilho sutil roxo */
+    border: 1px solid var(--jem-sc-border);
+    box-shadow: 
+        0 0 15px rgba(0, 0, 0, 0.8),
+        0 0 5px rgba(155, 77, 202, 0.1); /* Glow externo fraco */
+    
+    overflow: hidden;
+    z-index: 1;
+}
+
+.jem-skillcheck__band {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    /* mix-blend-mode ajuda as cores a "somarem" luz */
+    mix-blend-mode: screen; 
+}
+
+/* Faixa de SUCESSO (Roxo) */
+.jem-skillcheck__band--success {
+    background: conic-gradient(
+        from -90deg, 
+        transparent 0deg, 
+        transparent calc((var(--jem-zone-angle) - var(--jem-success-width) / 2) * 1deg), 
+    
+        var(--jem-sc-success) calc((var(--jem-zone-angle) - var(--jem-success-width) / 2) * 1deg), 
+        var(--jem-sc-success-strong) calc(var(--jem-zone-angle) * 1deg), 
+        var(--jem-sc-success) calc((var(--jem-zone-angle) + var(--jem-success-width) / 2) * 1deg), 
+    
+        transparent calc((var(--jem-zone-angle) + var(--jem-success-width) / 2) * 1deg), 
+        transparent 360deg
+    );
+    /* Suaviza levemente as bordas pixeladas do conic-gradient */
+    filter: blur(0.5px); 
+}
+
+/* Faixa de GREAT (Dourado) - Fica visualmente "acima" */
+.jem-skillcheck__band--great {
+    z-index: 2;
+    background: conic-gradient(
+        from -90deg, 
+        transparent 0deg, 
+        transparent calc((var(--jem-zone-angle) - var(--jem-great-width) / 2) * 1deg), 
+    
+        var(--jem-sc-great) calc((var(--jem-zone-angle) - var(--jem-great-width) / 2) * 1deg), 
+        var(--jem-sc-great-strong) calc(var(--jem-zone-angle) * 1deg), 
+        var(--jem-sc-great) calc((var(--jem-zone-angle) + var(--jem-great-width) / 2) * 1deg), 
+    
+        transparent calc((var(--jem-zone-angle) + var(--jem-great-width) / 2) * 1deg), 
+        transparent 360deg
+    );
+    /* Faz o dourado brilhar */
+    filter: drop-shadow(0 0 4px var(--jem-sc-great-strong));
+}
+
+/* O "Buraco" central que cria o anel */
+.jem-skillcheck__hole {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    /* Cálculo automático baseado no tamanho e largura do anel */
+    width: calc(var(--jem-size) - (var(--jem-ring-width) * 2));
+    height: calc(var(--jem-size) - (var(--jem-ring-width) * 2));
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  
+    background: var(--jem-sc-ring);
+    z-index: 3;
+  
+    /* Efeito de profundidade: Sombra interna forte */
+    box-shadow: 
+        inset 0 0 20px rgba(0,0,0,0.9),
+        0 0 0 1px rgba(255,255,255,0.05); /* Borda fina interna */
+    
+    /* Flex para centralizar ícones/texto no futuro se quiser */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ícone ou Texto decorativo no centro (opcional) */
+.jem-skillcheck__hole::after {
+    content: "CHECK";
+    color: rgba(255,255,255,0.1);
+    font-weight: 900;
+    font-size: 1.5rem;
+    letter-spacing: 2px;
+}
+
+/* Marcador da Zona Alvo (O triângulo estático) */
+.jem-skillcheck__marker {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 16px;
+    height: 20px;
+    z-index: 4;
+  
+    /* Triângulo usando clip-path é mais suave que bordas */
+    background: #e0e0e0;
+    clip-path: polygon(50% 100%, 0 0, 100% 0);
+  
+    transform-origin: 50% 100%;
+    /* Posiciona no topo interno do anel + rota com a zona */
+    transform: translate(-50%, calc(-1 * var(--jem-size) / 2 + 2px)) rotate(calc(var(--jem-zone-angle) * 1deg));
+  
+    opacity: 0.9;
+    filter: drop-shadow(0 0 2px rgba(255,255,255,0.5));
+}
+
+/* A Agulha (Ponteiro) */
+.jem-skillcheck__needle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 4px; /* Mais grossa para visibilidade */
+    height: calc(var(--jem-size) / 2 - 6px); /* Quase toca a borda */
+  
+    /* Gradiente para parecer energia/laser */
+    background: linear-gradient(to top, transparent 10%, #fff 50%, #ffeb3b 100%);
+    border-radius: 2px;
+  
+    transform-origin: 50% 100%;
+    transform: translate(-50%, -100%) rotate(calc(var(--jem-needle-angle) * 1deg));
+    z-index: 10;
+  
+    /* Glow na ponta da agulha */
+    filter: drop-shadow(0 0 4px rgba(255, 235, 59, 0.8));
+  
+    /* Transição suave (remova se o JS atualizar a cada frame muito rápido) */
+    /* transition: transform 0.05s linear; */
+    pointer-events: none;
+}
+
+/* O eixo central da agulha */
+.jem-skillcheck__center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    z-index: 11;
+    border: 2px solid #111;
+}
+
+/* Textos de Ajuda e Resultado */
+.jem-skillcheck__hint {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.jem-skillcheck__result {
+    margin-top: 4px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    min-height: 1.4em; /* Evita pulo de layout */
+}
+
+/* Cores de Resultado */
+.jem-skillcheck__result.success { color: #d69dfc; text-shadow: 0 0 8px #9b4dca; }
+.jem-skillcheck__result.great { color: #ffe066; text-shadow: 0 0 10px #ffd700; }
+.jem-skillcheck__result.fail { color: #ff5252; text-shadow: 0 0 8px #c03939; }

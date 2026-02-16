@@ -15,6 +15,7 @@ export const preloadHandlebarsTemplates = async function () {
     "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-caracteristicas.hbs",
     "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-skills.hbs",
     "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-aptidoes.hbs",
+    "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-treinamento.hbs",
     "systems/feiticeiros-e-maldicoes/templates/actor/parts/inimigo-aptidoes.hbs",
     "systems/feiticeiros-e-maldicoes/templates/actor/parts/inimigo-pericias-fixas.hbs",
     "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-itens.hbs",

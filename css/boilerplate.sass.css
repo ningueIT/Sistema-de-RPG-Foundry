@@ -1,0 +1,829 @@
+@charset "UTF-8";
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
+/* Global styles */
+.window-app {
+  font-family: "Roboto", sans-serif;
+}
+
+.rollable:hover, .rollable:focus {
+  color: #000;
+  text-shadow: 0 0 10px red;
+  cursor: pointer;
+}
+
+.grid,
+.grid-2col {
+  display: grid;
+  grid-column: span 2/span 2;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 10px 0;
+  padding: 0;
+}
+
+.grid-3col {
+  grid-column: span 3/span 3;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.grid-4col {
+  grid-column: span 4/span 4;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.grid-5col {
+  grid-column: span 5/span 5;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.grid-6col {
+  grid-column: span 6/span 6;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.grid-7col {
+  grid-column: span 7/span 7;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.grid-8col {
+  grid-column: span 8/span 8;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+
+.grid-9col {
+  grid-column: span 9/span 9;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+}
+
+.grid-10col {
+  grid-column: span 10/span 10;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+}
+
+.grid-11col {
+  grid-column: span 11/span 11;
+  grid-template-columns: repeat(11, minmax(0, 1fr));
+}
+
+.grid-12col {
+  grid-column: span 12/span 12;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.grid-start-2 {
+  grid-column-start: 2;
+}
+
+.grid-start-3 {
+  grid-column-start: 3;
+}
+
+.grid-start-4 {
+  grid-column-start: 4;
+}
+
+.grid-start-5 {
+  grid-column-start: 5;
+}
+
+.grid-start-6 {
+  grid-column-start: 6;
+}
+
+.grid-start-7 {
+  grid-column-start: 7;
+}
+
+.grid-start-8 {
+  grid-column-start: 8;
+}
+
+.grid-start-9 {
+  grid-column-start: 9;
+}
+
+.grid-start-10 {
+  grid-column-start: 10;
+}
+
+.grid-start-11 {
+  grid-column-start: 11;
+}
+
+.grid-start-12 {
+  grid-column-start: 12;
+}
+
+.grid-span-2 {
+  grid-column-end: span 2;
+}
+
+.grid-span-3 {
+  grid-column-end: span 3;
+}
+
+.grid-span-4 {
+  grid-column-end: span 4;
+}
+
+.grid-span-5 {
+  grid-column-end: span 5;
+}
+
+.grid-span-6 {
+  grid-column-end: span 6;
+}
+
+.grid-span-7 {
+  grid-column-end: span 7;
+}
+
+.grid-span-8 {
+  grid-column-end: span 8;
+}
+
+.grid-span-9 {
+  grid-column-end: span 9;
+}
+
+.grid-span-10 {
+  grid-column-end: span 10;
+}
+
+.grid-span-11 {
+  grid-column-end: span 11;
+}
+
+.grid-span-12 {
+  grid-column-end: span 12;
+}
+
+.flex-group-center,
+.flex-group-left,
+.flex-group-right {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.flex-group-left {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.flex-group-right {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.flexshrink {
+  flex: 0;
+}
+
+.flex-between {
+  justify-content: space-between;
+}
+
+.flexlarge {
+  flex: 2;
+}
+
+.align-left {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.align-right {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.align-center {
+  justify-content: center;
+  text-align: center;
+}
+
+/* Styles limited to boilerplate sheets */
+.boilerplate {
+  /* Estilos para o Dialog de Level Up */
+}
+.boilerplate .item-form {
+  font-family: "Roboto", sans-serif;
+}
+.boilerplate .sheet-header {
+  flex: 0 auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+.boilerplate .sheet-header .profile-img {
+  flex: 0 0 100px;
+  height: 100px;
+  margin-right: 10px;
+}
+.boilerplate .sheet-header .header-fields {
+  flex: 1;
+}
+.boilerplate .sheet-header h1.charname {
+  height: 50px;
+  padding: 0px;
+  margin: 5px 0;
+  border-bottom: 0;
+}
+.boilerplate .sheet-header h1.charname input {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+.boilerplate .sheet-tabs {
+  flex: 0;
+}
+.boilerplate .sheet-body,
+.boilerplate .sheet-body .tab,
+.boilerplate .sheet-body .tab .editor {
+  height: 100%;
+}
+.boilerplate .tox .tox-editor-container {
+  background: #fff;
+}
+.boilerplate .tox .tox-edit-area {
+  padding: 0 8px;
+}
+.boilerplate .level-up-form .sheet-header {
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--color-border-light-2);
+  padding-bottom: 0.5rem;
+}
+.boilerplate .level-up-form .sheet-header h2 {
+  margin: 0;
+  border: none;
+}
+.boilerplate .level-up-form .sheet-header .muted {
+  color: var(--color-text-light-5);
+  font-size: 0.9em;
+}
+.boilerplate .level-up-form .drop-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+.boilerplate .level-up-form .drop-zone {
+  background: rgba(0, 0, 0, 0.05);
+  border: 2px dashed var(--color-border-light-2);
+  border-radius: 5px;
+  padding: 8px;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s;
+  cursor: pointer;
+}
+.boilerplate .level-up-form .drop-zone.drag-over {
+  background: rgba(0, 255, 0, 0.1);
+  border-color: var(--color-text-hyperlink);
+}
+.boilerplate .level-up-form .drop-zone .placeholder {
+  color: var(--color-text-light-6);
+  font-style: italic;
+  font-size: 0.9em;
+  pointer-events: none;
+}
+.boilerplate .level-up-form .drop-zone .item-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.boilerplate .level-up-form .drop-zone .item-card img {
+  background: #000;
+  border: 1px solid #333;
+}
+.boilerplate .level-up-form .drop-zone .item-card .item-name {
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.boilerplate .level-up-form .form-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  border-top: 1px solid var(--color-border-light-2);
+  padding-top: 1rem;
+}
+.boilerplate .resource-label {
+  font-weight: bold;
+}
+.boilerplate .items-header {
+  height: 28px;
+  margin: 2px 0;
+  padding: 0;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.05);
+  border: 2px groove #eeede0;
+  font-weight: bold;
+}
+.boilerplate .items-header > * {
+  font-size: 14px;
+  text-align: center;
+}
+.boilerplate .items-header .item-name {
+  font-weight: bold;
+  padding-left: 5px;
+  text-align: left;
+  display: flex;
+}
+.boilerplate .items-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  color: #444;
+}
+.boilerplate .items-list .item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.boilerplate .items-list .item-name {
+  flex: 2;
+  margin: 0;
+  overflow: hidden;
+  font-size: 13px;
+  text-align: left;
+  align-items: center;
+  display: flex;
+}
+.boilerplate .items-list .item-name h3, .boilerplate .items-list .item-name h4 {
+  margin: 0;
+  white-space: nowrap;
+  overflow-x: hidden;
+}
+.boilerplate .items-list .item-controls {
+  display: flex;
+  flex: 0 0 100px;
+  justify-content: flex-end;
+}
+.boilerplate .items-list .item-controls a {
+  font-size: 12px;
+  text-align: center;
+  margin: 0 6px;
+}
+.boilerplate .items-list .item {
+  align-items: center;
+  padding: 0 2px;
+  border-bottom: 1px solid #c9c7b8;
+}
+.boilerplate .items-list .item:last-child {
+  border-bottom: none;
+}
+.boilerplate .items-list .item .item-name {
+  color: #191813;
+}
+.boilerplate .items-list .item .item-name .item-image {
+  flex: 0 0 30px;
+  height: 30px;
+  background-size: 30px;
+  border: none;
+  margin-right: 5px;
+}
+.boilerplate .items-list .item-prop {
+  text-align: center;
+  border-left: 1px solid #c9c7b8;
+  border-right: 1px solid #c9c7b8;
+  font-size: 12px;
+}
+.boilerplate .items-list .items-header {
+  height: 28px;
+  margin: 2px 0;
+  padding: 0;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.05);
+  border: 2px groove #eeede0;
+  font-weight: bold;
+}
+.boilerplate .items-list .items-header > * {
+  font-size: 12px;
+  text-align: center;
+}
+.boilerplate .items-list .items-header .item-name {
+  padding-left: 5px;
+  text-align: left;
+}
+.boilerplate .item-formula {
+  flex: 0 0 200px;
+  padding: 0 8px;
+}
+.boilerplate .items-table,
+.boilerplate .jem-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 13px;
+}
+.boilerplate .items-table thead th,
+.boilerplate .jem-items-table thead th {
+  text-align: left;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid #c9c7b8;
+  font-weight: 700;
+}
+.boilerplate .items-table tbody td,
+.boilerplate .jem-items-table tbody td {
+  padding: 8px 10px;
+  vertical-align: middle;
+  border-bottom: 1px solid #c9c7b8;
+  color: #444;
+}
+.boilerplate .items-table .item-name,
+.boilerplate .jem-items-table .item-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.boilerplate .items-table .item-name .item-image,
+.boilerplate .jem-items-table .item-name .item-image {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background-size: cover;
+}
+.boilerplate .items-table .jem-item-col--photo,
+.boilerplate .jem-items-table .jem-item-col--photo {
+  width: 48px;
+  padding: 4px 8px;
+}
+.boilerplate .items-table .jem-item-col--photo .item-image,
+.boilerplate .jem-items-table .jem-item-col--photo .item-image {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+}
+.boilerplate .items-table .jem-item-col--name,
+.boilerplate .jem-items-table .jem-item-col--name {
+  font-weight: 700;
+}
+.boilerplate .items-table .jem-item-col--name .jem-item-name,
+.boilerplate .jem-items-table .jem-item-col--name .jem-item-name {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.boilerplate .items-table .jem-item-col--remove,
+.boilerplate .jem-items-table .jem-item-col--remove {
+  width: 72px;
+  text-align: center;
+}
+.boilerplate .items-table .jem-item-col--remove .item-delete,
+.boilerplate .jem-items-table .jem-item-col--remove .item-delete {
+  background: transparent;
+  border: 1px solid #c9c7b8;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: #191813;
+}
+.boilerplate .items-table .item-use-btn,
+.boilerplate .jem-items-table .item-use-btn {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid #c9c7b8;
+  background: transparent;
+  color: #191813;
+  transition: background 0.12s, color 0.12s, transform 0.08s;
+}
+.boilerplate .items-table .item-use-btn:hover,
+.boilerplate .jem-items-table .item-use-btn:hover {
+  background: #b5b3a4;
+  transform: translateY(-1px);
+}
+.boilerplate .items-table .jem-item-name.item-use,
+.boilerplate .jem-items-table .jem-item-name.item-use {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+}
+.boilerplate .items-table .item-controls .item-control,
+.boilerplate .jem-items-table .item-controls .item-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 28px;
+  margin-left: 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.08s;
+}
+.boilerplate .items-table .item-controls .item-control i,
+.boilerplate .jem-items-table .item-controls .item-control i {
+  margin: 0;
+}
+.boilerplate .items-table .item-controls .item-control:hover,
+.boilerplate .jem-items-table .item-controls .item-control:hover {
+  background: rgba(155, 77, 202, 0.12);
+  transform: translateY(-1px);
+}
+.boilerplate .items-table .item-use-btn,
+.boilerplate .jem-items-table .item-use-btn {
+  background: #191813;
+  color: #fff;
+  border-color: transparent;
+}
+.boilerplate .items-table .item-use-btn:hover,
+.boilerplate .jem-items-table .item-use-btn:hover {
+  opacity: 0.95;
+}
+.boilerplate .items-table .jem-empty td,
+.boilerplate .jem-items-table .jem-empty td {
+  text-align: center;
+  color: #b5b3a4;
+  padding: 14px;
+}
+.boilerplate .effects .item .effect-source,
+.boilerplate .effects .item .effect-duration,
+.boilerplate .effects .item .effect-controls {
+  text-align: center;
+  border-left: 1px solid #c9c7b8;
+  border-right: 1px solid #c9c7b8;
+  font-size: 12px;
+}
+.boilerplate .effects .item .effect-controls {
+  border: none;
+}
+
+/* App-specific styles */
+/* Estilos específicos do diálogo de Level Up */
+.level-up-form .attr-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.level-up-form .attr-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #d8b7ff;
+}
+.level-up-form .attr-header .attr-meta {
+  margin: 0;
+  color: #bdbdbd;
+  font-size: 0.95rem;
+  text-align: right;
+  white-space: nowrap;
+}
+.level-up-form .attr-header .attr-meta strong {
+  color: #fff;
+  font-weight: 900;
+}
+.level-up-form .grid.grid-2col {
+  gap: 10px;
+}
+.level-up-form .grid.grid-2col .form-group {
+  background: linear-gradient(180deg, rgba(16, 16, 20, 0.6), rgba(10, 10, 12, 0.6));
+  border: 1px solid rgba(157, 78, 221, 0.08);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+.level-up-form .grid.grid-2col .form-group:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 34px rgba(10, 8, 30, 0.14);
+  border-color: rgba(157, 78, 221, 0.14);
+}
+.level-up-form .grid.grid-2col .form-group .resource-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #e9e1ff;
+  margin-bottom: 6px;
+  text-align: center;
+  display: block;
+  white-space: normal;
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.05;
+  max-width: 100%;
+}
+.level-up-form .grid.grid-2col .form-group .resource-label .base {
+  font-weight: 700;
+  color: #cfc9e6;
+  font-size: 0.88rem;
+  margin-left: 6px;
+}
+.level-up-form .attr-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.level-up-form .attr-control .attr-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid rgba(157, 78, 221, 0.08);
+  background: linear-gradient(180deg, #121218, #0b0b0d);
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  box-sizing: border-box;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, border-color 0.12s ease;
+}
+.level-up-form .attr-control .attr-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+  border-color: rgba(157, 78, 221, 0.16);
+}
+.level-up-form .attr-control .attr-btn:active {
+  transform: translateY(0);
+}
+.level-up-form .attr-control input[type=number] {
+  width: 70px;
+  height: 40px;
+  box-sizing: border-box;
+  padding: 4px;
+  border-radius: 10px;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  vertical-align: middle;
+  display: inline-block;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: transparent !important;
+}
+@media (max-width: 720px) {
+  .level-up-form .attr-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .level-up-form .attr-header .attr-meta {
+    text-align: left;
+    white-space: normal;
+  }
+  .level-up-form .grid.grid-2col {
+    grid-template-columns: 1fr;
+  }
+  .level-up-form .grid.grid-2col .form-group {
+    min-height: 88px;
+    padding: 10px;
+  }
+  .level-up-form .attr-control {
+    gap: 6px;
+  }
+  .level-up-form .attr-control .attr-btn {
+    width: 36px;
+    height: 40px;
+    font-size: 16px;
+    line-height: 40px;
+  }
+  .level-up-form .attr-control input[type=number] {
+    width: 70px;
+    height: 40px;
+    line-height: 1;
+    font-size: 16px;
+  }
+}
+
+.jem-skillcheck {
+  /* Variáveis usadas pelo dial CSS */
+  --jem-zone-angle: 0;
+  --jem-success-width: 40;
+  --jem-great-width: 14;
+  --jem-needle-angle: 0;
+  /* Paleta existente do sistema (dialog já é escuro) */
+  --jem-sc-bg: #0f0f0f;
+  --jem-sc-ring: #121212;
+  --jem-sc-border: #444;
+  --jem-sc-success: rgba(155, 77, 202, 0.38); /* roxo do tema */
+  --jem-sc-success-strong: rgba(155, 77, 202, 0.70);
+  --jem-sc-great: rgba(255, 215, 0, 0.55); /* dourado já usado no CSS */
+  --jem-sc-great-strong: rgba(255, 215, 0, 0.85);
+  --jem-sc-text: #ffffff;
+  color: var(--jem-sc-text);
+}
+
+.jem-skillcheck__wrap {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.jem-skillcheck__dial {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  border: 1px solid rgba(155, 77, 202, 0.18);
+  border-radius: 50%;
+  background: linear-gradient(180deg, #111, #0b0b0b);
+  overflow: hidden;
+}
+
+.jem-skillcheck__band {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+/* Faixa de sucesso: bem visível */
+.jem-skillcheck__band--success {
+  background: conic-gradient(from -90deg, transparent 0deg, transparent calc((var(--jem-zone-angle) - var(--jem-success-width) / 2) * 1deg), var(--jem-sc-success) calc((var(--jem-zone-angle) - var(--jem-success-width) / 2) * 1deg), var(--jem-sc-success-strong) calc(var(--jem-zone-angle) * 1deg), var(--jem-sc-success) calc((var(--jem-zone-angle) + var(--jem-success-width) / 2) * 1deg), transparent calc((var(--jem-zone-angle) + var(--jem-success-width) / 2) * 1deg), transparent 360deg);
+}
+
+/* Faixa de GREAT: menor e mais "forte" */
+.jem-skillcheck__band--great {
+  background: conic-gradient(from -90deg, transparent 0deg, transparent calc((var(--jem-zone-angle) - var(--jem-great-width) / 2) * 1deg), var(--jem-sc-great) calc((var(--jem-zone-angle) - var(--jem-great-width) / 2) * 1deg), var(--jem-sc-great-strong) calc(var(--jem-zone-angle) * 1deg), var(--jem-sc-great) calc((var(--jem-zone-angle) + var(--jem-great-width) / 2) * 1deg), transparent calc((var(--jem-zone-angle) + var(--jem-great-width) / 2) * 1deg), transparent 360deg);
+}
+
+/* Furo para virar um anel e destacar melhor a faixa */
+.jem-skillcheck__hole {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--jem-sc-ring);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Marcador da zona (triângulo no aro) */
+.jem-skillcheck__marker {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 14px solid rgba(255, 255, 255, 0.85);
+  transform-origin: 50% 100%;
+  transform: translate(-50%, -100%) rotate(0deg);
+}
+
+.jem-skillcheck__needle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 90px;
+  background: rgba(255, 255, 255, 0.9);
+  transform-origin: 50% 100%;
+  transform: translate(-50%, -100%) rotate(calc(var(--jem-needle-angle) * 1deg));
+}
+
+.jem-skillcheck__center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  transform: translate(-50%, -50%);
+}
+
+.jem-skillcheck__hint {
+  margin-top: 6px;
+}
+
+.jem-skillcheck__result {
+  margin-top: 6px;
+  font-weight: 700;
+}

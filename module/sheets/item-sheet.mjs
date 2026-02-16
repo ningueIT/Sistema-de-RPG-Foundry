@@ -36,6 +36,7 @@ export class BoilerplateItemSheet extends ItemSheet {
     if (this.item?.type === 'acao-npc') return `${path}/item-acao-npc-sheet.hbs`;
     if (this.item?.type === 'dote') return `${path}/item-dote-sheet.hbs`;
     if (this.item?.type === 'caracteristica') return `${path}/item-caracteristica-sheet.hbs`;
+    if (this.item?.type === 'dominio') return `${path}/item-dominio-sheet.hbs`;
 
     // Fallback to the generic sheet for other item types.
     return `${path}/item-sheet.hbs`;

@@ -1,0 +1,138 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}" draggable="true" data-uuid="{{item.uuid}}" />
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Domínio"/></h1>
+      <div class="item-meta grid grid-2col">
+        <div>
+          <label>Fonte</label>
+          <input type="text" name="system.fonte.value" value="{{system.fonte.value}}" placeholder="Ex: Livro / Mestre"/>
+        </div>
+        <div>
+          <label>Ativo</label>
+          <input type="checkbox" name="system.dominio.ativo.value" {{#if system.dominio.ativo.value}}checked{{/if}} />
+        </div>
+      </div>
+    </div>
+    <a class="header-button control close" role="button" title="Fechar">
+      <i class="fas fa-times"></i>&nbsp;Close
+    </a>
+  </header>
+
+  <nav class='sheet-tabs tabs' data-group='primary'>
+    <a class='item' data-tab='descricao'>Descrição</a>
+    <a class='item' data-tab='config'>Configuração</a>
+  </nav>
+
+  <section class='sheet-body'>
+    <div class='tab' data-group='primary' data-tab='descricao'>
+      <div class="editor-container">
+        {{editor system.descricao.value target="system.descricao.value" engine="prosemirror" button=true owner=owner editable=editable}}
+      </div>
+    </div>
+
+    <div class='tab attributes' data-group='primary' data-tab='config'>
+      <h3 class="item-section-title">Tabelas do Domínio</h3>
+
+      <div class="field">
+        <label>Tipo</label>
+        <select name="system.dominio.tipo.value">
+          <option value="incompleta" {{#if (eq system.dominio.tipo.value "incompleta")}}selected{{/if}}>Incompleta</option>
+          <option value="completa" {{#if (eq system.dominio.tipo.value "completa")}}selected{{/if}}>Completa</option>
+          <option value="sem_barreiras" {{#if (eq system.dominio.tipo.value "sem_barreiras")}}selected{{/if}}>Sem Barreiras</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Amplificação Técnica</label>
+        <select name="system.dominio.config.amplificacaoTecnica.value">
+          <option value="0" {{#if (eq system.dominio.config.amplificacaoTecnica.value 0)}}selected{{/if}}>Nenhuma</option>
+          <option value="1" {{#if (eq system.dominio.config.amplificacaoTecnica.value 1)}}selected{{/if}}>Nível 1</option>
+          <option value="2" {{#if (eq system.dominio.config.amplificacaoTecnica.value 2)}}selected{{/if}}>Nível 2</option>
+          <option value="3" {{#if (eq system.dominio.config.amplificacaoTecnica.value 3)}}selected{{/if}}>Nível 3</option>
+          <option value="4" {{#if (eq system.dominio.config.amplificacaoTecnica.value 4)}}selected{{/if}}>Nível 4</option>
+          <option value="5" {{#if (eq system.dominio.config.amplificacaoTecnica.value 5)}}selected{{/if}}>Nível 5</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Amplificação Corporal</label>
+        <select name="system.dominio.config.amplificacaoCorporal.value">
+          <option value="0" {{#if (eq system.dominio.config.amplificacaoCorporal.value 0)}}selected{{/if}}>Nenhuma</option>
+          <option value="1" {{#if (eq system.dominio.config.amplificacaoCorporal.value 1)}}selected{{/if}}>Nível 1</option>
+          <option value="2" {{#if (eq system.dominio.config.amplificacaoCorporal.value 2)}}selected{{/if}}>Nível 2</option>
+          <option value="3" {{#if (eq system.dominio.config.amplificacaoCorporal.value 3)}}selected{{/if}}>Nível 3</option>
+          <option value="4" {{#if (eq system.dominio.config.amplificacaoCorporal.value 4)}}selected{{/if}}>Nível 4</option>
+          <option value="5" {{#if (eq system.dominio.config.amplificacaoCorporal.value 5)}}selected{{/if}}>Nível 5</option>
+        </select>
+      </div>
+
+      <hr style="border-color: #5d1b7e;">
+
+      <h3 class="item-section-title">Efeito Ambiental</h3>
+
+      <div class="field">
+        <label>Tipo</label>
+        <select name="system.dominio.config.efeitoAmbiental.value">
+          <option value="nenhum" {{#if (eq system.dominio.config.efeitoAmbiental.value "nenhum")}}selected{{/if}}>Nenhum</option>
+          <option value="dano" {{#if (eq system.dominio.config.efeitoAmbiental.value "dano")}}selected{{/if}}>Dano</option>
+          <option value="lentidao" {{#if (eq system.dominio.config.efeitoAmbiental.value "lentidao")}}selected{{/if}}>Lentidão</option>
+          <option value="condicao" {{#if (eq system.dominio.config.efeitoAmbiental.value "condicao")}}selected{{/if}}>Condição (com TR)</option>
+        </select>
+      </div>
+
+      <div class="grid grid-2col" style="gap: 10px;">
+        <div class="field">
+          <label>TR (se aplicável)</label>
+          <select name="system.dominio.config.ambientalSave.value">
+            <option value="fortitude" {{#if (eq system.dominio.config.ambientalSave.value "fortitude")}}selected{{/if}}>Fortitude</option>
+            <option value="reflexos" {{#if (eq system.dominio.config.ambientalSave.value "reflexos")}}selected{{/if}}>Reflexos</option>
+            <option value="vontade" {{#if (eq system.dominio.config.ambientalSave.value "vontade")}}selected{{/if}}>Vontade</option>
+            <option value="astucia" {{#if (eq system.dominio.config.ambientalSave.value "astucia")}}selected{{/if}}>Astúcia</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Bônus CD (se aplicável)</label>
+          <input type="number" name="system.dominio.config.ambientalDcBonus.value" value="{{system.dominio.config.ambientalDcBonus.value}}" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Condição (em falha, se aplicável)</label>
+        <select name="system.dominio.config.ambientalCondicao.value">
+          <option value="abalado" {{#if (eq system.dominio.config.ambientalCondicao.value "abalado")}}selected{{/if}}>Abalado</option>
+          <option value="amedrontado" {{#if (eq system.dominio.config.ambientalCondicao.value "amedrontado")}}selected{{/if}}>Amedrontado</option>
+          <option value="confuso" {{#if (eq system.dominio.config.ambientalCondicao.value "confuso")}}selected{{/if}}>Confuso</option>
+          <option value="desorientado" {{#if (eq system.dominio.config.ambientalCondicao.value "desorientado")}}selected{{/if}}>Desorientado</option>
+          <option value="enjoado" {{#if (eq system.dominio.config.ambientalCondicao.value "enjoado")}}selected{{/if}}>Enjoado</option>
+          <option value="exposto" {{#if (eq system.dominio.config.ambientalCondicao.value "exposto")}}selected{{/if}}>Exposto</option>
+          <option value="agarrado" {{#if (eq system.dominio.config.ambientalCondicao.value "agarrado")}}selected{{/if}}>Agarrado</option>
+          <option value="caido" {{#if (eq system.dominio.config.ambientalCondicao.value "caido")}}selected{{/if}}>Caído</option>
+          <option value="atordoado" {{#if (eq system.dominio.config.ambientalCondicao.value "atordoado")}}selected{{/if}}>Atordoado</option>
+          <option value="paralisado" {{#if (eq system.dominio.config.ambientalCondicao.value "paralisado")}}selected{{/if}}>Paralisado</option>
+          <option value="desprevenido" {{#if (eq system.dominio.config.ambientalCondicao.value "desprevenido")}}selected{{/if}}>Desprevenido</option>
+        </select>
+      </div>
+
+      <hr style="border-color: #5d1b7e;">
+
+      <h3 class="item-section-title">Barreira</h3>
+      <div class="grid grid-2col" style="gap: 10px;">
+        <div class="field">
+          <label>PV Atual (gerenciado pelo sistema)</label>
+          <input type="number" name="system.dominio.hpBarreira.value" value="{{system.dominio.hpBarreira.value}}" readonly />
+        </div>
+        <div class="field">
+          <label>PV Máximo (gerenciado pelo sistema)</label>
+          <input type="number" name="system.dominio.hpBarreira.max" value="{{system.dominio.hpBarreira.max}}" readonly />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="sheet-footer">
+    <div class="footer-controls" style="display:flex; align-items:center; gap:12px;">
+      <button type="submit" class="jem-btn jem-btn--primary">Salvar</button>
+    </div>
+  </footer>
+</form>

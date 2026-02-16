@@ -100,7 +100,7 @@ export async function seedHabilidadesOrigem() {
   {
     name: 'Postura da Estátua',
     type: 'habilidade',
-    img: 'icons/skills/defensive/shield-stone-brown.webp',
+    img: '/systems/feiticeiros-e-maldicoes/icons/equipment/hand/gauntlet-simple-steel.svg',
     folder: folderIdZenite,
     system: {
       nivel: { value: 1 },
@@ -112,7 +112,7 @@ export async function seedHabilidadesOrigem() {
   {
     name: 'Retaliação Solar',
     type: 'habilidade',
-    img: 'icons/skills/fire/beam-flame-sun-yellow.webp',
+    img: '/systems/feiticeiros-e-maldicoes/icons/weapons/maces/flail-ball-chain.svg',
     folder: folderIdZenite,
     system: {
       nivel: { value: 5 },
@@ -124,7 +124,7 @@ export async function seedHabilidadesOrigem() {
   {
     name: 'Levitação Divina',
     type: 'habilidade',
-    img: 'icons/magic/air/blast-air-stream-blue.webp',
+    img: '/systems/feiticeiros-e-maldicoes/icons/weapons/thrown/shuriken-fan-steel.svg',
     folder: folderIdZenite,
     system: {
       nivel: { value: 10 },

@@ -266,50 +266,62 @@
     return text.split(/\n\s*\n/).map(p => `<p>${p.trim().replace(/\n/g, "<br>")}</p>`).join("");
   }
 
-  // --- 3. PREPARAÇÃO DO COMPÊNDIO ---
-  
-  let pack = game.packs.find(p => p.metadata?.label === PACK_LABEL && p.documentName === "Item");
-  if (!pack) {
-    pack = await CompendiumCollection.createCompendium({
-      label: PACK_LABEL,
-      name: PACK_NAME,
-      type: "Item",
-      package: "world"
-    });
-  }
-  if (pack.locked) {
-    ui.notifications.error(`Destrave o Compêndio "${PACK_LABEL}" e tente novamente.`);
-    return;
-  }
+  try {
+    // --- 3. PREPARAÇÃO DO COMPÊNDIO ---
 
-  const existingItems = await pack.getDocuments();
-  const existingIdByName = new Map(existingItems.map(i => [i.name.trim().toLowerCase(), i.id]));
-  const existingDocByName = new Map(existingItems.map(i => [i.name.trim().toLowerCase(), i]));
+    let pack = game.packs.find(p => p.metadata?.label === PACK_LABEL && p.documentName === "Item");
+    if (!pack) {
+      pack = await CompendiumCollection.createCompendium({
+        label: PACK_LABEL,
+        name: PACK_NAME,
+        type: "Item",
+        package: "world"
+      });
+    }
 
-  // --- 4. GESTÃO DE PASTAS ---
-  
-  const existingFolders = pack.folders.contents;
-  const folderMap = new Map(existingFolders.map(f => [`${f.name}#${f.folder?.id || 'root'}`, f]));
+    // Em algumas mesas o compêndio pode estar travado; tentamos destravar automaticamente.
+    const wasLocked = !!pack.locked;
+    if (wasLocked) {
+      try {
+        await pack.configure({ locked: false });
+      } catch (e) {
+        ui.notifications.error(`O Compêndio "${PACK_LABEL}" está travado e não consegui destravar automaticamente.`);
+        console.error("[FEITICEIROS] importar-habilidades-suporte | pack locked", e);
+        return;
+      }
+    }
 
-  async function ensureFolder(name, parentId = null) {
-    const key = `${name}#${parentId || 'root'}`;
-    if (folderMap.has(key)) return folderMap.get(key);
+    const existingItems = await pack.getDocuments();
+    const existingIdByName = new Map(existingItems.map(i => [i.name.trim().toLowerCase(), i.id]));
+    const existingDocByName = new Map(existingItems.map(i => [i.name.trim().toLowerCase(), i]));
 
-    const folder = await Folder.create({
-      name: name,
-      type: "Item",
-      folder: parentId,
-      sorting: "a"
-    }, { pack: pack.collection });
-    
-    folderMap.set(key, folder);
-    return folder;
-  }
+    // --- 4. GESTÃO DE PASTAS ---
 
-  const rootFolder = await ensureFolder(PACK_LABEL);
+    // Compatibilidade: em algumas versões/fluxos `pack.folders` pode não estar disponível.
+    // Preferimos usar `game.folders` filtrando por `pack.collection`.
+    const allPackFolders = (game.folders?.contents ?? []).filter(f => (f.pack ?? null) === pack.collection && f.type === "Item");
+    const folderMap = new Map(allPackFolders.map(f => [`${f.name}#${f.folder?.id || 'root'}`, f]));
 
-  // Estrutura: Habilidades Amaldiçoadas > Suporte > (Habilidades / Habilidades Base) > Nível X
-  const classFolder = await ensureFolder(CLASSE_BASE, rootFolder.id);
+    async function ensureFolder(name, parentId = null) {
+      const key = `${name}#${parentId || 'root'}`;
+      if (folderMap.has(key)) return folderMap.get(key);
+
+      const folder = await Folder.create({
+        name: name,
+        type: "Item",
+        folder: parentId,
+        sorting: "a"
+      }, { pack: pack.collection });
+
+      folderMap.set(key, folder);
+      return folder;
+    }
+
+    // Padroniza com os outros macros: `Suporte > (Habilidades / Habilidades Base) > Nível X`
+    // (sem criar uma pasta raiz extra com o mesmo nome do compêndio).
+    // Se já existir uma estrutura antiga dentro de uma pasta "Habilidades Amaldiçoadas",
+    // a próxima execução vai mover/atualizar os itens para a estrutura nova.
+    const classFolder = await ensureFolder(CLASSE_BASE, null);
   const habilidadesFolder = await ensureFolder('Habilidades', classFolder.id);
   const baseFolder = await ensureFolder('Habilidades Base', classFolder.id);
 
@@ -333,88 +345,96 @@
     folderIdCache.base[lvl] = lvlFolder.id;
   }
 
-  // --- 5. PREPARAÇÃO DOS DADOS ---
+    // --- 5. PREPARAÇÃO DOS DADOS ---
 
-  const toCreate = [];
-  const toUpdate = [];
-  const toDelete = [];
+    const toCreate = [];
+    const toUpdate = [];
+    const toDelete = [];
 
-  for (const entry of ENTRIES) {
-    const isBase = entry._section === 'base';
-    const catName = entry.system?.categoria || "Outros";
-    const lvl = entry.nivel || 0;
-    const folderId = isBase ? folderIdCache.base[lvl] : folderIdCache.habilidades[lvl];
+    for (const entry of ENTRIES) {
+      const isBase = entry._section === 'base';
+      const catName = entry.system?.categoria || "Outros";
+      const lvl = entry.nivel || 0;
+      const folderId = isBase ? folderIdCache.base[lvl] : folderIdCache.habilidades[lvl];
 
-    const descriptionHtml = formatDescription(entry.description);
-    const icon = await resolveIcon(entry.img || guessIcon(entry.name));
+      const descriptionHtml = formatDescription(entry.description);
+      const icon = await resolveIcon(entry.img || guessIcon(entry.name));
 
-    const acaoNorm = normalizeAcao(entry.system?.ativacao);
-    const habilidadeKey = `${APTIDAO_PREFIX}.${slugifyKey(entry.name)}`;
-    const existingDoc = existingDocByName.get(entry.name.trim().toLowerCase());
-    const existingHasEffects = (existingDoc?.effects?.size ?? (existingDoc?.effects?.contents?.length ?? 0)) > 0;
+      const acaoNorm = normalizeAcao(entry.system?.ativacao);
+      const habilidadeKey = `${APTIDAO_PREFIX}.${slugifyKey(entry.name)}`;
+      const existingDoc = existingDocByName.get(entry.name.trim().toLowerCase());
+      const existingHasEffects = (existingDoc?.effects?.size ?? (existingDoc?.effects?.contents?.length ?? 0)) > 0;
 
-    const itemData = {
-      name: entry.name,
-      type: "habilidade",
-      img: icon,
-      folder: folderId,
-      flags: foundry.utils.mergeObject(existingDoc?.toObject?.()?.flags ?? {}, {
-        [SYSTEM_ID]: { habilidadeKey }
-      }),
-      system: {
-        fonte: { value: PACK_LABEL },
-        descricao: { value: descriptionHtml },
-        custo: { value: parseInt(entry.system?.custo?.match(/\d+/)?.[0] || 0), label: "Custo (PE)" },
-        custoTexto: { value: entry.system?.custo || "", label: "Custo (texto)" },
-        acao: { value: acaoNorm, label: "Ação" },
-        requisito: { value: entry.system?.requisitos || "", label: "Requisito" },
+      const itemData = {
+        name: entry.name,
+        type: "habilidade",
+        img: icon,
+        folder: folderId,
+        flags: foundry.utils.mergeObject(existingDoc?.toObject?.()?.flags ?? {}, {
+          [SYSTEM_ID]: { habilidadeKey }
+        }),
+        system: {
+          fonte: { value: PACK_LABEL },
+          descricao: { value: descriptionHtml },
+          custo: { value: parseInt(entry.system?.custo?.match(/\d+/)?.[0] || 0), label: "Custo (PE)" },
+          custoTexto: { value: entry.system?.custo || "", label: "Custo (texto)" },
+          acao: { value: acaoNorm, label: "Ação" },
+          requisito: { value: entry.system?.requisitos || "", label: "Requisito" },
 
-        classe: { value: CLASSE_BASE, label: "Classe" },
-        nivelMin: { value: lvl, label: "Nível mínimo (classe)" },
-        
-        tipo: { value: "habilidade" },
-        categoria: { value: catName },
-        ativacao: { value: entry.system?.ativacao || "" },
-        duracao: { value: entry.system?.duracao || "" }
+          classe: { value: CLASSE_BASE, label: "Classe" },
+          nivelMin: { value: lvl, label: "Nível mínimo (classe)" },
+
+          tipo: { value: "habilidade" },
+          categoria: { value: catName },
+          ativacao: { value: entry.system?.ativacao || "" },
+          duracao: { value: entry.system?.duracao || "" }
+        }
+      };
+
+      if (acaoNorm === 'Passiva' && !existingHasEffects) {
+        itemData.effects = [buildPassivePlaceholderEffect(entry.name, icon)];
       }
-    };
 
-    if (acaoNorm === 'Passiva' && !existingHasEffects) {
-      itemData.effects = [buildPassivePlaceholderEffect(entry.name, icon)];
-    }
+      const existingId = existingIdByName.get(entry.name.trim().toLowerCase());
+      if (existingId) {
+        if (existingDoc?.type && existingDoc.type !== 'habilidade') {
+          toDelete.push(existingId);
+          toCreate.push(itemData);
+          continue;
+        }
 
-    const existingId = existingIdByName.get(entry.name.trim().toLowerCase());
-    if (existingId) {
-      if (existingDoc?.type && existingDoc.type !== 'habilidade') {
-        toDelete.push(existingId);
+        if (entry.shared) continue;
+
+        toUpdate.push({ _id: existingId, ...itemData });
+      } else {
         toCreate.push(itemData);
-        continue;
       }
-
-      if (entry.shared) continue;
-
-      toUpdate.push({ _id: existingId, ...itemData });
-    } else {
-      toCreate.push(itemData);
     }
-  }
 
-  // --- 6. EXECUÇÃO EM BATCH ---
+    // --- 6. EXECUÇÃO EM BATCH ---
 
-  if (toDelete.length > 0) {
-    console.log(`Removendo ${toDelete.length} itens com tipo incorreto...`);
-    await Item.deleteDocuments(toDelete, { pack: pack.collection });
-  }
-  
-  if (toCreate.length > 0) {
-    console.log(`Criando ${toCreate.length} novos itens...`);
-    await Item.createDocuments(toCreate, { pack: pack.collection });
-  }
-  
-  if (toUpdate.length > 0) {
-    console.log(`Atualizando ${toUpdate.length} itens existentes...`);
-    await Item.updateDocuments(toUpdate, { pack: pack.collection });
-  }
+    if (toDelete.length > 0) {
+      console.log(`Removendo ${toDelete.length} itens com tipo incorreto...`);
+      await Item.deleteDocuments(toDelete, { pack: pack.collection });
+    }
 
-  ui.notifications.info(`Concluído! ${toCreate.length} criados, ${toUpdate.length} atualizados.`);
+    if (toCreate.length > 0) {
+      console.log(`Criando ${toCreate.length} novos itens...`);
+      await Item.createDocuments(toCreate, { pack: pack.collection });
+    }
+
+    if (toUpdate.length > 0) {
+      console.log(`Atualizando ${toUpdate.length} itens existentes...`);
+      await Item.updateDocuments(toUpdate, { pack: pack.collection });
+    }
+
+    ui.notifications.info(`Concluído! ${toCreate.length} criados, ${toUpdate.length} atualizados.`);
+
+    if (wasLocked) {
+      try { await pack.configure({ locked: true }); } catch {}
+    }
+  } catch (e) {
+    console.error("[FEITICEIROS] importar-habilidades-suporte | erro", e);
+    ui.notifications.error(`Falha ao importar habilidades de Suporte. Veja o console (F12): ${e?.message ?? e}`);
+  }
 })();

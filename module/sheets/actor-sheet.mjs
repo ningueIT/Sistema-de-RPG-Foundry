@@ -4,6 +4,7 @@ import {
 } from '../helpers/effects.mjs';
 
 import { MAPA_ATRIBUTOS } from './actor-sheet/atributos.mjs';
+import { TREINAMENTO_DESCRICOES } from '../helpers/treinamento-descricoes.mjs';
 const MAPA_DE_ATRIBUTOS = {
   'lutador': 'sabedoria',
   'especialista em combate': 'sabedoria',
@@ -20,8 +21,10 @@ import {
 } from './actor-sheet/aptidoes-data.mjs';
 import { extrairPrereqsDaDescricao, inferirTipoAcao, inferirCustoPE } from './actor-sheet/aptidoes-utils.mjs';
 import { handleLutadorUse } from '../helpers/lutador-habilidades.mjs';
+import { activateDominio, getBurnout, computePeCostWithDominio } from '../helpers/dominio.mjs';
 import LevelUpDialog from '../apps/level-up-dialog.mjs';
 import { rollFormula } from '../helpers/rolls.mjs';
+import { notifyTokensInsideDominio } from '../helpers/dominio-clash.mjs';
 
 function _normalizarTextoAptidaoLocal(str = '') {
   return String(str)
@@ -263,6 +266,8 @@ export class BoilerplateActorSheet extends ActorSheet {
 /** @override */
   async getData() {
     const context = super.getData();
+    context.isGM = !!game?.user?.isGM;
+    context.treinamentoDescricoes = TREINAMENTO_DESCRICOES;
     const actorData = this.document.toObject(false);
     // Start from raw system data, then apply ActiveEffects transiently for display
     context.system = actorData.system;
@@ -410,10 +415,17 @@ export class BoilerplateActorSheet extends ActorSheet {
             }
             const detalhes = context.system.detalhes || {};
 
+            const treinoBonuses = context.system?.treinamentoDerivados?.bonuses ?? {};
+            const aptDelta = treinoBonuses?.aptidaoDelta ?? {};
+            const barreiraTreino = treinoBonuses?.barreiras ?? {};
+
             context.system.aptidaoDerivados = context.system.aptidaoDerivados || {};
-            const clNivel = Number(context.system?.aptidaoNiveis?.controleELeitura?.value ?? 0) || 0;
-            const barNivel = Number(context.system?.aptidaoNiveis?.barreiras?.value ?? 0) || 0;
+            const clNivelBase = Number(context.system?.aptidaoNiveis?.controleELeitura?.value ?? 0) || 0;
+            const barNivelBase = Number(context.system?.aptidaoNiveis?.barreiras?.value ?? 0) || 0;
             const domNivel = Number(context.system?.aptidaoNiveis?.dominio?.value ?? 0) || 0;
+
+            const clNivel = clNivelBase + (Number(aptDelta?.controleELeitura ?? 0) || 0);
+            const barNivel = barNivelBase + (Number(aptDelta?.barreiras ?? 0) || 0);
             const nivelPrincipal = Number(detalhes?.niveis?.principal?.value ?? 0) || 0;
             const nivelSecundario = Number(detalhes?.niveis?.secundario?.value ?? 0) || 0;
             const charNivel = (nivelPrincipal || nivelSecundario)
@@ -427,9 +439,14 @@ export class BoilerplateActorSheet extends ActorSheet {
             // BARREIRA: cálculos específicos
             const tamanhoSegmentoM = 1.5;
             const custoPEporParede = 1;
-            const pvPadrao = 5 + (barNivel * Math.floor(charNivel / 2));
-            const pvParedesResistentes = 10 + (barNivel * charNivel);
+            const pvBonusTreino = Number(barreiraTreino?.pvBonus ?? 0) || 0;
+            const pvPadrao = 5 + (barNivel * Math.floor(charNivel / 2)) + pvBonusTreino;
+            const pvParedesResistentes = 10 + (barNivel * charNivel) + pvBonusTreino;
             const pvCascaDominio = pvPadrao * 2;
+
+            const maxSegBase = 6;
+            const maxSegBonus = Number(barreiraTreino?.maxParedesBonus ?? 0) || 0;
+            const maxSegmentos = maxSegBase + maxSegBonus;
 
             context.system.aptidaoDerivados.barreira = {
               tamanhoSegmentoM,
@@ -437,7 +454,7 @@ export class BoilerplateActorSheet extends ActorSheet {
               pvPadrao,
               pvParedesResistentes,
               pvCascaDominio,
-              maxSegmentos: 6,
+              maxSegmentos,
               pvPadraoObj: { label: 'PV por Parede (Padrão)', value: pvPadrao },
               pvParedesResistentesObj: { label: 'PV Paredes Resistentes', value: pvParedesResistentes },
               pvCascaDominioObj: { label: 'PV Casca do Domínio', value: pvCascaDominio }
@@ -1511,11 +1528,17 @@ export class BoilerplateActorSheet extends ActorSheet {
       || aptidaoKey === 'dominio.expansaoDeDominioCompleta'
       || aptidaoKey === 'dominio.acertoGarantido') {
 
-      const custo = (aptidaoKey === 'dominio.expansaoDeDominioIncompleta')
+      let custo = (aptidaoKey === 'dominio.expansaoDeDominioIncompleta')
         ? 15
         : (aptidaoKey === 'dominio.expansaoDeDominioCompleta')
           ? 20
           : 25;
+
+      // Condenado: +1 PE em todas as habilidades
+      try {
+        const condCondenado = Boolean(this.actor.system?.condicoes?.fisicas?.condenado);
+        if (condCondenado && custo > 0) custo = custo + 1;
+      } catch (e) { /* ignore */ }
 
       const atualPE = Number(this.actor.system?.recursos?.energia?.value ?? 0) || 0;
       if (atualPE < custo) {
@@ -1561,6 +1584,11 @@ export class BoilerplateActorSheet extends ActorSheet {
     try {
       const condCondenado = Boolean(this.actor.system?.condicoes?.fisicas?.condenado);
       if (condCondenado && actualCost > 0) actualCost = actualCost + 1; // Condenado: +1 PE em todas as habilidades
+    } catch (e) { /* ignore */ }
+
+    // Dentro do próprio Domínio: -1 PE (se tiver custo)
+    try {
+      actualCost = computePeCostWithDominio(this.actor, actualCost);
     } catch (e) { /* ignore */ }
 
     if (actualCost > 0) {
@@ -1609,7 +1637,7 @@ export class BoilerplateActorSheet extends ActorSheet {
 
     await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: this.actor }),
-      content: `<b>${item.name}</b> foi usada.${custoPE ? ` (Custo: ${custoPE} PE)` : ''}`,
+      content: `<b>${item.name}</b> foi usada.${actualCost ? ` (Custo: ${actualCost} PE)` : ''}`,
     });
 
     try {
@@ -1753,9 +1781,25 @@ export class BoilerplateActorSheet extends ActorSheet {
     const token = this._getControlledTokenOrWarn();
     if (!token) throw new Error('Nenhum token controlado');
 
-    const gridMeters = 1.5;
+    const dominioItem = (this.actor?.items ?? []).find(i => i?.type === 'dominio' && (i?.system?.dominio?.ativo?.value === true))
+      ?? (this.actor?.items ?? []).find(i => i?.type === 'dominio')
+      ?? null;
+
+    const tipoFromItem = String(dominioItem?.system?.dominio?.tipo?.value ?? '').trim();
+    const tipoFinal = tipoFromItem || tipo;
+
+    const dominioConfig = {
+      amplificacaoTecnica: Number(dominioItem?.system?.dominio?.config?.amplificacaoTecnica?.value ?? 0) || 0,
+      amplificacaoCorporal: Number(dominioItem?.system?.dominio?.config?.amplificacaoCorporal?.value ?? 0) || 0,
+      efeitoAmbiental: String(dominioItem?.system?.dominio?.config?.efeitoAmbiental?.value ?? 'nenhum'),
+      ambientalSave: String(dominioItem?.system?.dominio?.config?.ambientalSave?.value ?? 'fortitude'),
+      ambientalDcBonus: Number(dominioItem?.system?.dominio?.config?.ambientalDcBonus?.value ?? 0) || 0,
+      ambientalCondicao: String(dominioItem?.system?.dominio?.config?.ambientalCondicao?.value ?? 'abalado'),
+    };
+
+    const gridMeters = Number(canvas?.scene?.grid?.distance ?? canvas?.scene?.gridDistance ?? 1.5) || 1.5;
     let radiusMeters = 0;
-    if (tipo === 'incompleta') {
+    if (tipoFinal === 'incompleta') {
       const baseTreino = Number(this.actor.system?.detalhes?.treinamento?.value ?? 0) || 0;
       if (baseTreino <= 0) throw new Error('Bônus de treinamento inválido');
       radiusMeters = 4.5 * baseTreino;
@@ -1765,10 +1809,63 @@ export class BoilerplateActorSheet extends ActorSheet {
     const squares = radiusMeters / gridMeters;
     const radiusPixels = squares * canvas.grid.size;
 
-    const flags = { 'feiticeiros-e-maldicoes': { dominio: { tipo, acertoGarantido: Boolean(acertoGarantido), owner: this.actor.id } } };
-    const created = await this._createCircularWalls(token.center, radiusPixels, flags);
-    const resumo = created.map(w => ({ id: w.id }));
-    await this.actor.setFlag('feiticeiros-e-maldicoes', 'lastDominio', { type: `${tipo}${acertoGarantido ? '-acerto' : ''}`, walls: resumo });
+    // Se estiver em burnout, impede criação por enquanto
+    try {
+      const burnout = getBurnout(this.actor);
+      const until = Number(burnout?.untilRound ?? 0) || 0;
+      if (until > 0 && game.combat && (Number(game.combat.round ?? 0) || 0) < until) {
+        throw new Error(`Burnout de Domínio ativo até a rodada ${until}.`);
+      }
+    } catch (e) {
+      if (e?.message) throw e;
+    }
+
+    const flags = { 'feiticeiros-e-maldicoes': { dominio: { tipo: tipoFinal, acertoGarantido: Boolean(acertoGarantido), owner: this.actor.id } } };
+    const created = (tipoFinal === 'sem_barreiras') ? [] : await this._createCircularWalls(token.center, radiusPixels, flags);
+    const wallIds = created.map(w => w.id);
+
+    const dominioData = await activateDominio(this.actor, token.document, {
+      tipo: tipoFinal,
+      acertoGarantido: Boolean(acertoGarantido),
+      center: { x: token.center.x, y: token.center.y },
+      radiusPixels,
+      radiusMeters,
+      squares,
+      wallIds,
+      dominioItemUuid: dominioItem?.uuid ?? null,
+      config: dominioConfig,
+    });
+
+    // Notifica tokens dentro da área (whisper para donos). Botão opcional para iniciar Batalha de Domínio.
+    try { await notifyTokensInsideDominio({ ownerActor: this.actor, dominio: dominioData }); } catch (_) { /* ignore */ }
+
+    // Persiste PV da barreira no Item Domínio (se houver)
+    try {
+      const hp = dominioData?.hpBarreira;
+      if (dominioItem && hp && typeof dominioItem.update === 'function') {
+        await dominioItem.update({
+          'system.dominio.hpBarreira.max': Number(hp.max ?? 0) || 0,
+          'system.dominio.hpBarreira.value': Number(hp.value ?? 0) || 0,
+        });
+      }
+    } catch (_) { /* ignore */ }
+
+    // Card no chat: PV da barreira + botão de ataque
+    try {
+      const hp = dominioData?.hpBarreira ?? { value: 0, max: 0 };
+      if (Number(hp.max ?? 0) > 0) {
+        await ChatMessage.create({
+          content: `
+            <div><strong>Barreira do Domínio</strong> — ${this.actor.name}</div>
+            <div class="flavor-text">PV: <strong>${Number(hp.value ?? 0) || 0}</strong> / ${Number(hp.max ?? 0) || 0}</div>
+            <div style="margin-top:8px; display:flex; gap:8px;">
+              <button class="jem-attack-dominio-barrier jem-btn jem-btn--primary" data-owner-actor-id="${this.actor.id}">Atacar Paredes do Domínio</button>
+            </div>`
+        });
+      }
+    } catch (_) { /* ignore */ }
+
+    await this.actor.setFlag('feiticeiros-e-maldicoes', 'lastDominio', { type: `${tipoFinal}${acertoGarantido ? '-acerto' : ''}`, walls: wallIds.map(id => ({ id })), data: dominioData });
     ui.notifications.info(`Expansão de Domínio criada: raio ${radiusMeters} m (${Math.round(squares)} quadrados).`);
     return { created, radiusMeters, squares };
   }
@@ -1784,7 +1881,10 @@ export class BoilerplateActorSheet extends ActorSheet {
       const x = center.x + Math.cos(theta) * radiusPixels;
       const y = center.y + Math.sin(theta) * radiusPixels;
       if (prev) {
-        walls.push({ c: [prev.x, prev.y, x, y], flags });
+        walls.push({
+          c: [prev.x, prev.y, x, y],
+          flags,
+        });
       }
       prev = { x, y };
     }
@@ -1988,7 +2088,7 @@ export class BoilerplateActorSheet extends ActorSheet {
       ui.notifications.warn('Perícia inválida.');
       return;
     }
-    const grauTreino = pericia.value; // 0, 1 ou 2
+    let grauTreino = pericia.value; // 0, 1 ou 2
 
     const atributoKey = MAPA_ATRIBUTOS[key];
     let atributoMod = 0;
@@ -2029,6 +2129,40 @@ export class BoilerplateActorSheet extends ActorSheet {
     } catch (_) {}
 
     let bonusExtra = 0;
+
+    // Bônus vindos do sistema de Treinamento (derivado no Actor)
+    let bonusTreinamentoLinhas = 0;
+    let bonusTreinoPericiaEscolhida = 0;
+    let treinoPericiaCompletoReroll = false;
+    try {
+      const t = system?.treinamentoDerivados?.bonuses ?? {};
+      const tTests = t?.tests ?? {};
+      bonusTreinamentoLinhas += Number(tTests?.[group]?.[key] ?? 0) || 0;
+
+      // Caso especial: Treino de Perícia
+      if (group === 'pericias') {
+        const escolhaKey = system?.treinamentoDerivados?.escolhas?.pericia?.key ?? null;
+        if (escolhaKey && String(escolhaKey) === String(key)) {
+          const minGrau = Number(t?.pericia?.minGrau ?? 0) || 0;
+          const bonusSeJa = Number(t?.pericia?.bonusSeJa ?? 0) || 0;
+          if (minGrau > 0) {
+            if (Number(grauTreino) >= minGrau) bonusTreinoPericiaEscolhida += bonusSeJa;
+            else grauTreino = minGrau;
+          }
+          treinoPericiaCompletoReroll = !!(t?.pericia?.completoRerollLt5);
+        }
+      }
+    } catch (_) {}
+
+    // Recalcula o bônus de Treino caso o grau tenha sido ajustado pelo Treino de Perícia
+    if (grauTreino === 1) {
+      treinoBonus = baseTreino;
+    } else if (grauTreino === 2) {
+      treinoBonus = Math.floor(baseTreino * 1.5);
+    } else {
+      treinoBonus = 0;
+    }
+    totalBonus = atributoMod + treinoBonus;
     try {
       const sysId = game?.system?.id ?? 'feiticeiros-e-maldicoes';
       const bonuses = (await this.actor.getFlag(sysId, 'bonuses')) || {};
@@ -2062,6 +2196,10 @@ export class BoilerplateActorSheet extends ActorSheet {
         await this.actor.setFlag(sysId, 'temp', next);
       }
     } catch (_) {}
+
+    // Aplica bônus do Treinamento por fora de flags (sempre ativo)
+    if (bonusTreinamentoLinhas) bonusExtra += bonusTreinamentoLinhas;
+    if (bonusTreinoPericiaEscolhida) bonusExtra += bonusTreinoPericiaEscolhida;
 
     let formulaString = `${dieTerm} + ${atributoMod}[${atributoLabel}]`;
     if (treinoBonus > 0) formulaString += ` + ${treinoBonus}[Treino]`;
@@ -2097,12 +2235,40 @@ export class BoilerplateActorSheet extends ActorSheet {
       if (firstDie && firstDie.results && firstDie.results.length) dieFace = firstDie.results[0].result;
     }
 
-    const totalRoll = Number(roll.total ?? 0) || 0;
+    let totalRoll = Number(roll.total ?? 0) || 0;
+
+    // Treino de Perícia completo: reroll se o d20 for < 5 e mantém o melhor
+    let rerollNote = '';
+    try {
+      if (treinoPericiaCompletoReroll && dieFace != null && Number(dieFace) < 5 && !/^\s*20\s*$/.test(String(dieTerm))) {
+        const oldFace = Number(dieFace);
+        const oldTotal = Number(totalRoll);
+
+        const reroll = await rollFormula(formulaString, { actor: this.actor }, { asyncEval: true, toMessage: false });
+        let rerollFace = null;
+        const rFirstDie = (reroll.dice && reroll.dice.length) ? reroll.dice[0] : null;
+        if (rFirstDie && rFirstDie.results && rFirstDie.results.length) rerollFace = rFirstDie.results[0].result;
+        const rerollTotal = Number(reroll.total ?? 0) || 0;
+
+        if (rerollTotal > oldTotal) {
+          roll = reroll;
+          totalRoll = rerollTotal;
+          dieFace = (rerollFace != null) ? rerollFace : dieFace;
+          rerollNote = `Treino completo: reroll (d20 ${oldFace} → ${dieFace})`;
+        } else {
+          rerollNote = `Treino completo: reroll (d20 ${oldFace} → ${rerollFace ?? '?'}) — manteve ${oldFace}`;
+        }
+      }
+    } catch (e) {
+      console.warn('Falha ao aplicar reroll do Treino de Perícia completo:', e);
+    }
     const parts = ['1d20'];
     parts.push((atributoMod >= 0 ? '+ ' : '- ') + Math.abs(Number(atributoMod || 0)));
     if (metadeNivel > 0) parts.push('+ ' + metadeNivel);
     if (treinoBonus > 0) parts.push('+ ' + treinoBonus);
     const formulaShort = parts.join(' ');
+
+    const rerollLine = rerollNote ? `<div style="margin-top:6px; font-size:0.85rem; color:#bbb;">${rerollNote}</div>` : '';
 
     const content = `
       <div class="card chat-card skill-roll" style="background:#000; color:#fff; padding:8px; display:flex; gap:12px; align-items:center; border-radius:6px;">
@@ -2118,6 +2284,7 @@ export class BoilerplateActorSheet extends ActorSheet {
             <span style="background:#111; padding:3px 6px; border-radius:4px;">Fórmula: <code style="background:transparent; color:#fff;">${formulaShort}</code></span>
             <span style="margin-left:12px">Total: <strong>${totalRoll}</strong></span>
           </div>
+          ${rerollLine}
         </div>
       </div>`;
 

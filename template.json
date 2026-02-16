@@ -48,6 +48,20 @@
         "notas": { "value": "", "label": "Treino (Interlúdio)" },
         "pontosAdicionais": { "value": 0, "label": "Pontos de Treino (Adicionais)" }
       },
+    "treinamento": {
+      "pontos": { "total": 0, "gastos": 0, "disponivel": 0, "extra": 0 },
+        "agilidade": { "etapa1": false, "etapa2": false, "etapa3": false, "etapa4": false, "completo": false },
+        "barreiras": { "etapa1": false, "etapa2": false, "etapa3": false, "etapa4": false, "completo": false },
+        "compreensao": { "etapa1": false, "etapa2": false, "etapa3": false, "etapa4": false, "completo": false },
+        "controleEnergia": { "etapa1": false, "etapa2": false, "etapa3": false, "etapa4": false, "completo": false },
+        "dominios": { "etapa1": false, "etapa2": false, "etapa3": false, "etapa4": false, "completo": false },
+        "energiaReversa": { "etapa1": false, "etapa2": false, "etapa3": false, "etapa4": false, "completo": false },
+        "luta": { "etapa1": false, "etapa2": false, "etapa3": false, "etapa4": false, "completo": false },
+        "manejoArma": { "escolha": "", "etapa1": false, "etapa2": false, "etapa3": false, "etapa4": false, "completo": false },
+        "pericia": { "escolha": "", "etapa1": false, "etapa2": false, "etapa3": false, "etapa4": false, "completo": false },
+        "potencialFisico": { "etapa1": false, "etapa2": false, "etapa3": false, "etapa4": false, "completo": false },
+        "resistencia": { "etapa1": false, "etapa2": false, "etapa3": false, "etapa4": false, "completo": false }
+      },
     "aptidoes": {
         "aura": {
           "aura": false,
@@ -283,7 +297,7 @@
     }
   },
   "Item": {
-    "types": ["item", "feature", "spell", "aptidao", "tecnica", "arma", "class", "habilidade", "uniforme", "acao-npc", "dote", "caracteristica"],
+    "types": ["item", "feature", "spell", "aptidao", "tecnica", "arma", "class", "habilidade", "uniforme", "acao-npc", "dote", "caracteristica", "dominio"],
     "templates": {
       "base": {
         "descricao": { "value": "" },
@@ -360,6 +374,22 @@
       "equipado": { "value": true, "label": "Ativo" },
       "efeito": { "value": "", "label": "Efeito (texto)" },
       "changesJson": { "value": "", "label": "Changes JSON (avançado)" }
+    },
+    "dominio": {
+      "templates": ["base"],
+      "dominio": {
+        "ativo": { "value": true, "label": "Ativo" },
+        "tipo": { "value": "completa", "label": "Tipo (incompleta|completa|sem_barreiras)" },
+        "config": {
+          "amplificacaoTecnica": { "value": 0, "label": "Amplificação Técnica (0-5)" },
+          "amplificacaoCorporal": { "value": 0, "label": "Amplificação Corporal (0-5)" },
+          "efeitoAmbiental": { "value": "nenhum", "label": "Efeito Ambiental (nenhum|dano|condicao|lentidao)" },
+          "ambientalSave": { "value": "fortitude", "label": "TR Ambiental (fortitude|reflexos|vontade|astucia)" },
+          "ambientalDcBonus": { "value": 0, "label": "Bônus na CD do TR Ambiental" },
+          "ambientalCondicao": { "value": "abalado", "label": "Condição Ambiental (em falha)" }
+        },
+        "hpBarreira": { "value": 0, "max": 0 }
+      }
     }
   }
 }

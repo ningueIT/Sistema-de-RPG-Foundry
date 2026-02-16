@@ -1,0 +1,127 @@
+.jem-skillcheck {
+  /* Variáveis usadas pelo dial CSS */
+  --jem-zone-angle: 0;
+  --jem-success-width: 40;
+  --jem-great-width: 14;
+  --jem-needle-angle: 0;
+
+  /* Paleta existente do sistema (dialog já é escuro) */
+  --jem-sc-bg: #0f0f0f;
+  --jem-sc-ring: #121212;
+  --jem-sc-border: #444;
+  --jem-sc-success: rgba(155, 77, 202, 0.38); /* roxo do tema */
+  --jem-sc-success-strong: rgba(155, 77, 202, 0.70);
+  --jem-sc-great: rgba(255, 215, 0, 0.55); /* dourado já usado no CSS */
+  --jem-sc-great-strong: rgba(255, 215, 0, 0.85);
+  --jem-sc-text: #ffffff;
+
+  color: var(--jem-sc-text);
+}
+
+.jem-skillcheck__wrap {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.jem-skillcheck__dial {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  border: 1px solid rgba(155, 77, 202, 0.18);
+  border-radius: 50%;
+  background: linear-gradient(180deg, #111, #0b0b0b);
+  overflow: hidden;
+}
+
+.jem-skillcheck__band {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+/* Faixa de sucesso: bem visível */
+.jem-skillcheck__band--success {
+  background: conic-gradient(
+    from -90deg,
+    transparent 0deg,
+    transparent calc((var(--jem-zone-angle) - (var(--jem-success-width) / 2)) * 1deg),
+    var(--jem-sc-success) calc((var(--jem-zone-angle) - (var(--jem-success-width) / 2)) * 1deg),
+    var(--jem-sc-success-strong) calc(var(--jem-zone-angle) * 1deg),
+    var(--jem-sc-success) calc((var(--jem-zone-angle) + (var(--jem-success-width) / 2)) * 1deg),
+    transparent calc((var(--jem-zone-angle) + (var(--jem-success-width) / 2)) * 1deg),
+    transparent 360deg
+  );
+}
+
+/* Faixa de GREAT: menor e mais "forte" */
+.jem-skillcheck__band--great {
+  background: conic-gradient(
+    from -90deg,
+    transparent 0deg,
+    transparent calc((var(--jem-zone-angle) - (var(--jem-great-width) / 2)) * 1deg),
+    var(--jem-sc-great) calc((var(--jem-zone-angle) - (var(--jem-great-width) / 2)) * 1deg),
+    var(--jem-sc-great-strong) calc(var(--jem-zone-angle) * 1deg),
+    var(--jem-sc-great) calc((var(--jem-zone-angle) + (var(--jem-great-width) / 2)) * 1deg),
+    transparent calc((var(--jem-zone-angle) + (var(--jem-great-width) / 2)) * 1deg),
+    transparent 360deg
+  );
+}
+
+/* Furo para virar um anel e destacar melhor a faixa */
+.jem-skillcheck__hole {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--jem-sc-ring);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Marcador da zona (triângulo no aro) */
+.jem-skillcheck__marker {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 14px solid rgba(255, 255, 255, 0.85);
+  transform-origin: 50% 100%;
+  transform: translate(-50%, -100%) rotate(0deg);
+}
+
+.jem-skillcheck__needle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 90px;
+  background: rgba(255, 255, 255, 0.9);
+  transform-origin: 50% 100%;
+  transform: translate(-50%, -100%) rotate(calc(var(--jem-needle-angle) * 1deg));
+}
+
+.jem-skillcheck__center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  transform: translate(-50%, -50%);
+}
+
+.jem-skillcheck__hint {
+  margin-top: 6px;
+}
+
+.jem-skillcheck__result {
+  margin-top: 6px;
+  font-weight: 700;
+}

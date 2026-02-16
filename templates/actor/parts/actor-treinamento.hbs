@@ -1,0 +1,478 @@
+<h3 class="jem-section-title">TREINAMENTO</h3>
+
+<div class="jem-train-help" style="margin-bottom: 12px; opacity: 0.9; font-size: 12px;">
+  Marque as etapas conforme completar. A próxima etapa só habilita após a anterior.
+</div>
+
+<div class="combat-card jem-train-summary" style="padding:10px; margin-bottom: 10px; text-align:left;">
+  <div class="jem-train-summary__row" style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+    <strong>Capacidade de Treinamento</strong>
+    <div class="jem-train-summary__stats" style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; font-size: 12px; opacity: 0.95;">
+      <span><strong>{{system.treinamentoDerivados.pontos.gastos}}</strong> / <strong>{{system.treinamentoDerivados.pontos.total}}</strong> usados</span>
+      <span>Disponível: <strong>{{system.treinamentoDerivados.pontos.disponivel}}</strong></span>
+      {{#if isGM}}
+        <label class="jem-train-summary__extra" style="display:flex; gap:6px; align-items:center;">
+          <span style="opacity:0.9;">Extra:</span>
+          <input type="number" name="system.treinamento.pontos.extra" value="{{system.treinamento.pontos.extra}}" style="width:80px; height:auto; font-size: 14px;"/>
+        </label>
+      {{else}}
+        <span style="opacity:0.85;">Extra: <strong>{{system.treinamento.pontos.extra}}</strong></span>
+      {{/if}}
+    </div>
+  </div>
+  {{#if system.treinamentoDerivados.pontos.locked}}
+    <div class="jem-train-summary__locked" style="margin-top: 6px; font-size: 12px; opacity: 0.85;">
+      Sem pontos disponíveis para aprender novas etapas. Desmarque algo para liberar pontos, ou aumente o nível.
+    </div>
+  {{/if}}
+</div>
+
+<div class="jem-train-list" style="display:flex; flex-direction:column; gap:10px;">
+
+  {{!-- Agilidade --}}
+  <div class="combat-card jem-train-tree" style="padding:10px;">
+    <div class="jem-train-tree__header">
+      <strong>Treino de Agilidade</strong>
+    </div>
+    <div class="jem-train-stages">
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.agilidade.etapa1" {{checked system.treinamento.agilidade.etapa1}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.agilidade.etapa1}}disabled{{/unless}}{{/if}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 1</div>
+          {{#if treinamentoDescricoes.agilidade.etapa1}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.agilidade.etapa1}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.agilidade.etapa2" {{checked system.treinamento.agilidade.etapa2}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.agilidade.etapa2}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.agilidade.etapa1}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 2</div>
+          {{#if treinamentoDescricoes.agilidade.etapa2}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.agilidade.etapa2}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.agilidade.etapa3" {{checked system.treinamento.agilidade.etapa3}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.agilidade.etapa3}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.agilidade.etapa2}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 3</div>
+          {{#if treinamentoDescricoes.agilidade.etapa3}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.agilidade.etapa3}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.agilidade.etapa4" {{checked system.treinamento.agilidade.etapa4}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.agilidade.etapa4}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.agilidade.etapa3}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 4</div>
+          {{#if treinamentoDescricoes.agilidade.etapa4}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.agilidade.etapa4}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.agilidade.completo" {{checked system.treinamento.agilidade.completo}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.agilidade.completo}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.agilidade.etapa4}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">★ Completo</div>
+          {{#if treinamentoDescricoes.agilidade.completo}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.agilidade.completo}}</div>{{/if}}
+        </div>
+      </label>
+    </div>
+  </div>
+
+  {{!-- Barreiras --}}
+  <div class="combat-card jem-train-tree" style="padding:10px;">
+    <div class="jem-train-tree__header"><strong>Treino de Barreiras</strong></div>
+    <div class="jem-train-stages">
+      <label class="jem-train-stage"><input type="checkbox" name="system.treinamento.barreiras.etapa1" {{checked system.treinamento.barreiras.etapa1}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.barreiras.etapa1}}disabled{{/unless}}{{/if}}><div class="jem-train-stage__body"><div class="jem-train-stage__title">Etapa 1</div>{{#if treinamentoDescricoes.barreiras.etapa1}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.barreiras.etapa1}}</div>{{/if}}</div></label>
+      <label class="jem-train-stage"><input type="checkbox" name="system.treinamento.barreiras.etapa2" {{checked system.treinamento.barreiras.etapa2}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.barreiras.etapa2}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.barreiras.etapa1}}disabled{{/unless}}><div class="jem-train-stage__body"><div class="jem-train-stage__title">Etapa 2</div>{{#if treinamentoDescricoes.barreiras.etapa2}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.barreiras.etapa2}}</div>{{/if}}</div></label>
+      <label class="jem-train-stage"><input type="checkbox" name="system.treinamento.barreiras.etapa3" {{checked system.treinamento.barreiras.etapa3}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.barreiras.etapa3}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.barreiras.etapa2}}disabled{{/unless}}><div class="jem-train-stage__body"><div class="jem-train-stage__title">Etapa 3</div>{{#if treinamentoDescricoes.barreiras.etapa3}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.barreiras.etapa3}}</div>{{/if}}</div></label>
+      <label class="jem-train-stage"><input type="checkbox" name="system.treinamento.barreiras.etapa4" {{checked system.treinamento.barreiras.etapa4}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.barreiras.etapa4}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.barreiras.etapa3}}disabled{{/unless}}><div class="jem-train-stage__body"><div class="jem-train-stage__title">Etapa 4</div>{{#if treinamentoDescricoes.barreiras.etapa4}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.barreiras.etapa4}}</div>{{/if}}</div></label>
+      <label class="jem-train-stage"><input type="checkbox" name="system.treinamento.barreiras.completo" {{checked system.treinamento.barreiras.completo}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.barreiras.completo}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.barreiras.etapa4}}disabled{{/unless}}><div class="jem-train-stage__body"><div class="jem-train-stage__title">★ Completo</div>{{#if treinamentoDescricoes.barreiras.completo}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.barreiras.completo}}</div>{{/if}}</div></label>
+    </div>
+  </div>
+
+  {{!-- Compreensão --}}
+  <div class="combat-card jem-train-tree" style="padding:10px;">
+    <div class="jem-train-tree__header"><strong>Treino de Compreensão</strong></div>
+    <div class="jem-train-stages">
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.compreensao.etapa1" {{checked system.treinamento.compreensao.etapa1}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.compreensao.etapa1}}disabled{{/unless}}{{/if}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 1</div>
+          {{#if treinamentoDescricoes.compreensao.etapa1}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.compreensao.etapa1}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.compreensao.etapa2" {{checked system.treinamento.compreensao.etapa2}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.compreensao.etapa2}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.compreensao.etapa1}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 2</div>
+          {{#if treinamentoDescricoes.compreensao.etapa2}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.compreensao.etapa2}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.compreensao.etapa3" {{checked system.treinamento.compreensao.etapa3}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.compreensao.etapa3}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.compreensao.etapa2}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 3</div>
+          {{#if treinamentoDescricoes.compreensao.etapa3}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.compreensao.etapa3}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.compreensao.etapa4" {{checked system.treinamento.compreensao.etapa4}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.compreensao.etapa4}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.compreensao.etapa3}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 4</div>
+          {{#if treinamentoDescricoes.compreensao.etapa4}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.compreensao.etapa4}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.compreensao.completo" {{checked system.treinamento.compreensao.completo}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.compreensao.completo}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.compreensao.etapa4}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">★ Completo</div>
+          {{#if treinamentoDescricoes.compreensao.completo}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.compreensao.completo}}</div>{{/if}}
+        </div>
+      </label>
+    </div>
+  </div>
+
+  {{!-- Controle de Energia --}}
+  <div class="combat-card jem-train-tree" style="padding:10px;">
+    <div class="jem-train-tree__header"><strong>Treino de Controle de Energia</strong></div>
+    <div class="jem-train-stages">
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.controleEnergia.etapa1" {{checked system.treinamento.controleEnergia.etapa1}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.controleEnergia.etapa1}}disabled{{/unless}}{{/if}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 1</div>
+          {{#if treinamentoDescricoes.controleEnergia.etapa1}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.controleEnergia.etapa1}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.controleEnergia.etapa2" {{checked system.treinamento.controleEnergia.etapa2}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.controleEnergia.etapa2}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.controleEnergia.etapa1}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 2</div>
+          {{#if treinamentoDescricoes.controleEnergia.etapa2}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.controleEnergia.etapa2}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.controleEnergia.etapa3" {{checked system.treinamento.controleEnergia.etapa3}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.controleEnergia.etapa3}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.controleEnergia.etapa2}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 3</div>
+          {{#if treinamentoDescricoes.controleEnergia.etapa3}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.controleEnergia.etapa3}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.controleEnergia.etapa4" {{checked system.treinamento.controleEnergia.etapa4}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.controleEnergia.etapa4}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.controleEnergia.etapa3}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 4</div>
+          {{#if treinamentoDescricoes.controleEnergia.etapa4}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.controleEnergia.etapa4}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.controleEnergia.completo" {{checked system.treinamento.controleEnergia.completo}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.controleEnergia.completo}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.controleEnergia.etapa4}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">★ Completo</div>
+          {{#if treinamentoDescricoes.controleEnergia.completo}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.controleEnergia.completo}}</div>{{/if}}
+        </div>
+      </label>
+    </div>
+  </div>
+
+  {{!-- Domínios --}}
+  <div class="combat-card jem-train-tree" style="padding:10px;">
+    <div class="jem-train-tree__header"><strong>Treino de Domínios</strong></div>
+    <div class="jem-train-stages">
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.dominios.etapa1" {{checked system.treinamento.dominios.etapa1}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.dominios.etapa1}}disabled{{/unless}}{{/if}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 1</div>
+          {{#if treinamentoDescricoes.dominios.etapa1}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.dominios.etapa1}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.dominios.etapa2" {{checked system.treinamento.dominios.etapa2}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.dominios.etapa2}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.dominios.etapa1}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 2</div>
+          {{#if treinamentoDescricoes.dominios.etapa2}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.dominios.etapa2}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.dominios.etapa3" {{checked system.treinamento.dominios.etapa3}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.dominios.etapa3}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.dominios.etapa2}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 3</div>
+          {{#if treinamentoDescricoes.dominios.etapa3}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.dominios.etapa3}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.dominios.etapa4" {{checked system.treinamento.dominios.etapa4}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.dominios.etapa4}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.dominios.etapa3}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 4</div>
+          {{#if treinamentoDescricoes.dominios.etapa4}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.dominios.etapa4}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.dominios.completo" {{checked system.treinamento.dominios.completo}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.dominios.completo}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.dominios.etapa4}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">★ Completo</div>
+          {{#if treinamentoDescricoes.dominios.completo}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.dominios.completo}}</div>{{/if}}
+        </div>
+      </label>
+    </div>
+  </div>
+
+  {{!-- Energia Reversa --}}
+  <div class="combat-card jem-train-tree" style="padding:10px;">
+    <div class="jem-train-tree__header"><strong>Treino de Energia Reversa</strong></div>
+    <div class="jem-train-stages">
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.energiaReversa.etapa1" {{checked system.treinamento.energiaReversa.etapa1}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.energiaReversa.etapa1}}disabled{{/unless}}{{/if}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 1</div>
+          {{#if treinamentoDescricoes.energiaReversa.etapa1}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.energiaReversa.etapa1}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.energiaReversa.etapa2" {{checked system.treinamento.energiaReversa.etapa2}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.energiaReversa.etapa2}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.energiaReversa.etapa1}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 2</div>
+          {{#if treinamentoDescricoes.energiaReversa.etapa2}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.energiaReversa.etapa2}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.energiaReversa.etapa3" {{checked system.treinamento.energiaReversa.etapa3}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.energiaReversa.etapa3}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.energiaReversa.etapa2}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 3</div>
+          {{#if treinamentoDescricoes.energiaReversa.etapa3}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.energiaReversa.etapa3}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.energiaReversa.etapa4" {{checked system.treinamento.energiaReversa.etapa4}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.energiaReversa.etapa4}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.energiaReversa.etapa3}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 4</div>
+          {{#if treinamentoDescricoes.energiaReversa.etapa4}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.energiaReversa.etapa4}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.energiaReversa.completo" {{checked system.treinamento.energiaReversa.completo}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.energiaReversa.completo}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.energiaReversa.etapa4}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">★ Completo</div>
+          {{#if treinamentoDescricoes.energiaReversa.completo}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.energiaReversa.completo}}</div>{{/if}}
+        </div>
+      </label>
+    </div>
+  </div>
+
+  {{!-- Luta --}}
+  <div class="combat-card jem-train-tree" style="padding:10px;">
+    <div class="jem-train-tree__header"><strong>Treino de Luta</strong></div>
+    <div class="jem-train-stages">
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.luta.etapa1" {{checked system.treinamento.luta.etapa1}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.luta.etapa1}}disabled{{/unless}}{{/if}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 1</div>
+          {{#if treinamentoDescricoes.luta.etapa1}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.luta.etapa1}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.luta.etapa2" {{checked system.treinamento.luta.etapa2}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.luta.etapa2}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.luta.etapa1}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 2</div>
+          {{#if treinamentoDescricoes.luta.etapa2}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.luta.etapa2}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.luta.etapa3" {{checked system.treinamento.luta.etapa3}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.luta.etapa3}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.luta.etapa2}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 3</div>
+          {{#if treinamentoDescricoes.luta.etapa3}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.luta.etapa3}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.luta.etapa4" {{checked system.treinamento.luta.etapa4}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.luta.etapa4}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.luta.etapa3}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 4</div>
+          {{#if treinamentoDescricoes.luta.etapa4}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.luta.etapa4}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.luta.completo" {{checked system.treinamento.luta.completo}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.luta.completo}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.luta.etapa4}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">★ Completo</div>
+          {{#if treinamentoDescricoes.luta.completo}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.luta.completo}}</div>{{/if}}
+        </div>
+      </label>
+    </div>
+  </div>
+
+  {{!-- Manejo de Arma --}}
+  <div class="combat-card jem-train-tree" style="padding:10px;">
+    <div class="jem-train-tree__header" style="display:flex; flex-direction:column; gap:6px;">
+      <strong>Treino de Manejo de Arma</strong>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <span style="opacity:0.85; font-size:12px;">Arma:</span>
+        <input type="text" name="system.treinamento.manejoArma.escolha" value="{{system.treinamento.manejoArma.escolha}}" placeholder="Ex: Katana" style="min-width:220px;"/>
+      </div>
+    </div>
+    <div class="jem-train-stages">
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.manejoArma.etapa1" {{checked system.treinamento.manejoArma.etapa1}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.manejoArma.etapa1}}disabled{{/unless}}{{/if}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 1</div>
+          {{#if treinamentoDescricoes.manejoArma.etapa1}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.manejoArma.etapa1}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.manejoArma.etapa2" {{checked system.treinamento.manejoArma.etapa2}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.manejoArma.etapa2}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.manejoArma.etapa1}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 2</div>
+          {{#if treinamentoDescricoes.manejoArma.etapa2}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.manejoArma.etapa2}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.manejoArma.etapa3" {{checked system.treinamento.manejoArma.etapa3}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.manejoArma.etapa3}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.manejoArma.etapa2}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 3</div>
+          {{#if treinamentoDescricoes.manejoArma.etapa3}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.manejoArma.etapa3}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.manejoArma.etapa4" {{checked system.treinamento.manejoArma.etapa4}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.manejoArma.etapa4}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.manejoArma.etapa3}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 4</div>
+          {{#if treinamentoDescricoes.manejoArma.etapa4}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.manejoArma.etapa4}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.manejoArma.completo" {{checked system.treinamento.manejoArma.completo}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.manejoArma.completo}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.manejoArma.etapa4}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">★ Completo</div>
+          {{#if treinamentoDescricoes.manejoArma.completo}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.manejoArma.completo}}</div>{{/if}}
+        </div>
+      </label>
+    </div>
+  </div>
+
+  {{!-- Perícia --}}
+  <div class="combat-card jem-train-tree" style="padding:10px;">
+    <div class="jem-train-tree__header" style="display:flex; flex-direction:column; gap:6px;">
+      <strong>Treino de Perícia</strong>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <span style="opacity:0.85; font-size:12px;">Perícia:</span>
+        <input type="text" name="system.treinamento.pericia.escolha" value="{{system.treinamento.pericia.escolha}}" placeholder="Ex: Ocultismo" style="min-width:220px;"/>
+      </div>
+    </div>
+    <div class="jem-train-stages">
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.pericia.etapa1" {{checked system.treinamento.pericia.etapa1}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.pericia.etapa1}}disabled{{/unless}}{{/if}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 1</div>
+          {{#if treinamentoDescricoes.pericia.etapa1}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.pericia.etapa1}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.pericia.etapa2" {{checked system.treinamento.pericia.etapa2}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.pericia.etapa2}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.pericia.etapa1}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 2</div>
+          {{#if treinamentoDescricoes.pericia.etapa2}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.pericia.etapa2}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.pericia.etapa3" {{checked system.treinamento.pericia.etapa3}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.pericia.etapa3}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.pericia.etapa2}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 3</div>
+          {{#if treinamentoDescricoes.pericia.etapa3}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.pericia.etapa3}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.pericia.etapa4" {{checked system.treinamento.pericia.etapa4}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.pericia.etapa4}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.pericia.etapa3}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 4</div>
+          {{#if treinamentoDescricoes.pericia.etapa4}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.pericia.etapa4}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.pericia.completo" {{checked system.treinamento.pericia.completo}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.pericia.completo}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.pericia.etapa4}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">★ Completo</div>
+          {{#if treinamentoDescricoes.pericia.completo}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.pericia.completo}}</div>{{/if}}
+        </div>
+      </label>
+    </div>
+  </div>
+
+  {{!-- Potencial Físico --}}
+  <div class="combat-card jem-train-tree" style="padding:10px;">
+    <div class="jem-train-tree__header"><strong>Treino de Potencial Físico</strong></div>
+    <div class="jem-train-stages">
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.potencialFisico.etapa1" {{checked system.treinamento.potencialFisico.etapa1}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.potencialFisico.etapa1}}disabled{{/unless}}{{/if}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 1</div>
+          {{#if treinamentoDescricoes.potencialFisico.etapa1}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.potencialFisico.etapa1}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.potencialFisico.etapa2" {{checked system.treinamento.potencialFisico.etapa2}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.potencialFisico.etapa2}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.potencialFisico.etapa1}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 2</div>
+          {{#if treinamentoDescricoes.potencialFisico.etapa2}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.potencialFisico.etapa2}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.potencialFisico.etapa3" {{checked system.treinamento.potencialFisico.etapa3}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.potencialFisico.etapa3}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.potencialFisico.etapa2}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 3</div>
+          {{#if treinamentoDescricoes.potencialFisico.etapa3}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.potencialFisico.etapa3}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.potencialFisico.etapa4" {{checked system.treinamento.potencialFisico.etapa4}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.potencialFisico.etapa4}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.potencialFisico.etapa3}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 4</div>
+          {{#if treinamentoDescricoes.potencialFisico.etapa4}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.potencialFisico.etapa4}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.potencialFisico.completo" {{checked system.treinamento.potencialFisico.completo}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.potencialFisico.completo}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.potencialFisico.etapa4}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">★ Completo</div>
+          {{#if treinamentoDescricoes.potencialFisico.completo}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.potencialFisico.completo}}</div>{{/if}}
+        </div>
+      </label>
+    </div>
+  </div>
+
+  {{!-- Resistência --}}
+  <div class="combat-card jem-train-tree" style="padding:10px;">
+    <div class="jem-train-tree__header"><strong>Treino de Resistência</strong></div>
+    <div class="jem-train-stages">
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.resistencia.etapa1" {{checked system.treinamento.resistencia.etapa1}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.resistencia.etapa1}}disabled{{/unless}}{{/if}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 1</div>
+          {{#if treinamentoDescricoes.resistencia.etapa1}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.resistencia.etapa1}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.resistencia.etapa2" {{checked system.treinamento.resistencia.etapa2}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.resistencia.etapa2}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.resistencia.etapa1}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 2</div>
+          {{#if treinamentoDescricoes.resistencia.etapa2}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.resistencia.etapa2}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.resistencia.etapa3" {{checked system.treinamento.resistencia.etapa3}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.resistencia.etapa3}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.resistencia.etapa2}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 3</div>
+          {{#if treinamentoDescricoes.resistencia.etapa3}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.resistencia.etapa3}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.resistencia.etapa4" {{checked system.treinamento.resistencia.etapa4}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.resistencia.etapa4}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.resistencia.etapa3}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">Etapa 4</div>
+          {{#if treinamentoDescricoes.resistencia.etapa4}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.resistencia.etapa4}}</div>{{/if}}
+        </div>
+      </label>
+      <label class="jem-train-stage">
+        <input type="checkbox" name="system.treinamento.resistencia.completo" {{checked system.treinamento.resistencia.completo}} {{#if system.treinamentoDerivados.pontos.locked}}{{#unless system.treinamento.resistencia.completo}}disabled{{/unless}}{{/if}} {{#unless system.treinamento.resistencia.etapa4}}disabled{{/unless}}>
+        <div class="jem-train-stage__body">
+          <div class="jem-train-stage__title">★ Completo</div>
+          {{#if treinamentoDescricoes.resistencia.completo}}<div class="jem-train-stage__desc">{{treinamentoDescricoes.resistencia.completo}}</div>{{/if}}
+        </div>
+      </label>
+    </div>
+  </div>
+
+</div>

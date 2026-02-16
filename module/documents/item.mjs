@@ -4,6 +4,7 @@
  */
 import { convertDamageLevel } from "../helpers/damage-scale.mjs";
 import { rollFormula } from '../helpers/rolls.mjs';
+import { getSureHitTargetsForAttack } from '../helpers/dominio.mjs';
 export class BoilerplateItem extends Item {
   /**
    * Augment the basic Item data model with additional dynamic data.
@@ -469,6 +470,18 @@ export class BoilerplateItem extends Item {
     const speaker = ChatMessage.getSpeaker({ actor: this.actor });
     const rollMode = game.settings.get('core', 'rollMode');
 
+    const targets = Array.from(game.user?.targets ?? []);
+    const targetTokenDocs = targets.map(t => t?.document).filter(Boolean);
+    const sureHitTokenDocs = (() => {
+      try { return getSureHitTargetsForAttack(this.actor, targetTokenDocs) || []; } catch (_) { return []; }
+    })();
+    const sureHitIds = new Set(sureHitTokenDocs.map(t => t.id));
+
+    const primaryTarget = (targetTokenDocs.length === 1) ? targetTokenDocs[0] : null;
+    const primaryTargetActor = primaryTarget?.actor ?? null;
+    const primaryTargetDefense = Number(primaryTargetActor?.system?.combate?.defesa?.value ?? primaryTargetActor?.system?.combate?.defesa ?? NaN);
+    const hasPrimaryDefense = Number.isFinite(primaryTargetDefense);
+
     const rollData = this.getRollData();
 
     const attackBlock = this.system?.ataque ?? {};
@@ -479,7 +492,21 @@ export class BoilerplateItem extends Item {
     const attrMod = Number(actorAttrs?.[atributoKey]?.mod ?? Math.floor((attrVal - 10) / 2));
 
     const training = Number(rollData.actor?.detalhes?.treinamento?.value ?? rollData.actor?.detalhes?.treinamento ?? 0);
-    const itemBonus = Number(attackBlock?.bonus?.value ?? attackBlock?.bonus ?? 0);
+    let itemBonus = Number(attackBlock?.bonus?.value ?? attackBlock?.bonus ?? 0);
+
+    // Treinamento: Manejo de Arma (bônus só para a arma escolhida)
+    try {
+      const norm = (s) => String(s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+      const t = this.actor?.system?.treinamentoDerivados ?? {};
+      const choice = String(t?.escolhas?.manejoArma?.norm ?? '').trim();
+      if (choice && String(item.type) === 'arma') {
+        const nameNorm = norm(item.name);
+        if (nameNorm && (nameNorm === choice || nameNorm.includes(choice) || choice.includes(nameNorm))) {
+          const atkBonus = Number(t?.bonuses?.manejoArma?.ataque ?? 0) || 0;
+          if (atkBonus) itemBonus += atkBonus;
+        }
+      }
+    } catch (_) {}
 
     const critThreshold = Number(attackBlock?.critico?.min?.value ?? attackBlock?.critico?.min ?? 20) || 20;
     const critMult = Number(attackBlock?.critico?.mult?.value ?? attackBlock?.critico?.mult ?? 2) || 2;
@@ -575,6 +602,32 @@ export class BoilerplateItem extends Item {
       const flavor = `Ataque — ${item.name}`;
       // Construir cartão estilizado parecido com skill-roll
       const formulaShort = `1d20 + ${attrMod}${training ? ' + ' + training + '[Treino]' : ''}${itemBonus ? ' + ' + itemBonus + '[Item]' : ''}${attackPenalty ? ' - ' + attackPenalty + '[Cond]' : ''}`;
+
+      const sureHitForPrimary = Boolean(primaryTarget && sureHitIds.has(primaryTarget.id));
+      const hitComputed = (primaryTarget && hasPrimaryDefense)
+        ? (sureHitForPrimary || (Number(total) >= Number(primaryTargetDefense)))
+        : null;
+
+      const hitBadge = (hitComputed === null)
+        ? ''
+        : (hitComputed ? '<span style="color:#111; background:#20c997; padding:2px 6px; border-radius:6px; font-weight:800;">ACERTOU</span>'
+          : '<span style="color:#111; background:#dc3545; padding:2px 6px; border-radius:6px; font-weight:800;">ERROU</span>');
+
+      const sureHitBadge = sureHitForPrimary
+        ? '<span style="color:#111; background:#ffc107; padding:2px 6px; border-radius:6px; font-weight:800;">ACERTO GARANTIDO</span>'
+        : '';
+
+      const defenseLine = (primaryTarget && hasPrimaryDefense)
+        ? `<div style="margin-top:6px; font-size:0.9rem; color:#ddd;">Alvo: <strong>${primaryTargetActor?.name ?? '—'}</strong> — Defesa: <strong>${primaryTargetDefense}</strong> ${hitBadge} ${sureHitBadge}</div>`
+        : (primaryTarget && !hasPrimaryDefense)
+          ? `<div style="margin-top:6px; font-size:0.9rem; color:#ddd;">Alvo: <strong>${primaryTargetActor?.name ?? '—'}</strong> — Defesa: <strong>—</strong></div>`
+          : '';
+
+      const multiSureHitLine = (!primaryTarget && sureHitTokenDocs.length)
+        ? `<div style="margin-top:6px; font-size:0.9rem; color:#ddd;">Acerto Garantido (Domínio) em: <strong>${sureHitTokenDocs.map(t => t?.name ?? t?.actor?.name ?? '—').join(', ')}</strong></div>`
+        : '';
+
+      const canRollDamage = (hitComputed === null) ? true : Boolean(hitComputed);
       const content = `
         <div class="card chat-card skill-roll">
           <div class="die"><i class="fas fa-dice-d20"></i><span>${usedD20 ?? '-'}</span></div>
@@ -587,8 +640,10 @@ export class BoilerplateItem extends Item {
               <span style="background:#111; padding:3px 6px; border-radius:4px;">Fórmula: <code style="background:transparent; color:#fff;">${formulaShort}</code></span>
               ${kokusenTag || ''}
             </div>
+            ${defenseLine}
+            ${multiSureHitLine}
             <div style="margin-top:8px;">
-              <button class="button roll-weapon-damage" data-actor-id="${this.actor?.id ?? ''}" data-item-id="${this.id}" data-item-uuid="${this.uuid ?? ''}" data-item-name="${this.name ?? ''}" data-critical="${isCritical}" data-crit-mult="${critMult}">Rolar Dano</button>
+              ${canRollDamage ? `<button class="button roll-weapon-damage" data-actor-id="${this.actor?.id ?? ''}" data-item-id="${this.id}" data-item-uuid="${this.uuid ?? ''}" data-item-name="${this.name ?? ''}" data-critical="${isCritical}" data-crit-mult="${critMult}">Rolar Dano</button>` : `<div style="opacity:0.85; font-weight:700;">Sem dano (ataque errou).</div>`}
             </div>
           </div>
         </div>`;
@@ -637,7 +692,19 @@ export class BoilerplateItem extends Item {
     try {
       if (damageBlock && ['arma', 'tecnica'].includes(String(item.type))) {
         const base = String(damageBlock.base?.value ?? damageBlock.base ?? '');
-        const levelBoost = Number(damageBlock.levelBoost?.value ?? damageBlock.levelBoost ?? 0);
+        let levelBoost = Number(damageBlock.levelBoost?.value ?? damageBlock.levelBoost ?? 0);
+
+        // Treinamento: Treino de Luta (aumenta nível do dano desarmado)
+        try {
+          const norm = (s) => String(s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+          const n = norm(item?.name ?? '');
+          const isUnarmed = (String(item.type) === 'arma') && (n === 'soco' || n === 'desarmado');
+          if (isUnarmed) {
+            const t = this.actor?.system?.treinamentoDerivados ?? {};
+            const boost = Number(t?.bonuses?.luta?.unarmedLevelBoost ?? 0) || 0;
+            if (boost) levelBoost += boost;
+          }
+        } catch (_) {}
         if (base) {
           // 1) Primeiro converte pela escala de níveis
           const finalDie = convertDamageLevel(base, levelBoost);
@@ -683,6 +750,20 @@ export class BoilerplateItem extends Item {
 
     // 3) Kokusen é aplicado DEPOIS da rolagem (1.5x) e ignora RD.
 
+    // Treinamento: Manejo de Arma (bônus plano em dano para a arma escolhida)
+    try {
+      const norm = (s) => String(s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+      const t = this.actor?.system?.treinamentoDerivados ?? {};
+      const choice = String(t?.escolhas?.manejoArma?.norm ?? '').trim();
+      if (choice && String(item.type) === 'arma') {
+        const nameNorm = norm(item.name);
+        if (nameNorm && (nameNorm === choice || nameNorm.includes(choice) || choice.includes(nameNorm))) {
+          const dmgBonus = Number(t?.bonuses?.manejoArma?.dano ?? 0) || 0;
+          if (dmgBonus) formula = `${formula} + ${dmgBonus}`;
+        }
+      }
+    } catch (_) {}
+
     let afterAttackBonus = 0;
     try {
       if (this.actor && this.actor.getFlag) {
@@ -690,6 +771,16 @@ export class BoilerplateItem extends Item {
         if (this.actor && ['arma', 'tecnica'].includes(String(item.type))) {
           const bonuses = (await this.actor.getFlag(sysId, 'bonuses')) || {};
           const bonusAlways = Number(bonuses?.itemDamage ?? 0) || 0;
+          // Domínio: Amplificação Técnica (bônus específico para técnicas)
+          if (String(item.type) === 'tecnica') {
+            const techDice = Number(bonuses?.dominio?.techDice ?? 0) || 0;
+            const techFlat = Number(bonuses?.dominio?.techFlat ?? 0) || 0;
+            if (techDice || techFlat) {
+              const faces = Number(String(convertedDie || '').match(/d(\d+)/i)?.[1] ?? String(formula).match(/d(\d+)/i)?.[1] ?? 0) || 0;
+              if (faces && techDice) formula = `${formula} + ${techDice}d${faces}`;
+              if (techFlat) formula = `${formula} + ${techFlat}`;
+            }
+          }
           const temp = (await this.actor.getFlag(sysId, 'temp')) || {};
           const bonusTemp = Number(temp?.damageBonus ?? 0) || 0;
           // Dano Após Ataque: aplicado depois de Kokusen (não entra na rolagem)

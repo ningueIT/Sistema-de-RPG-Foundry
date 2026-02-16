@@ -10,6 +10,10 @@ import { BOILERPLATE, FEITICEIROS } from './helpers/config.mjs';
 import { seedAptidoesCompendium } from './helpers/seed-aptidoes.mjs';
 import { seedHabilidades } from './helpers/seed-habilidades.mjs';
 import * as ImportWeapons from './scripts/import-weapons.mjs';
+import { registerDominioHooks, computePeCostWithDominio, isSureHitApplicableToTarget, getActiveDominio, endDominio, isTokenInsideDominio, SYSTEM_ID, FLAG_ACTIVE } from './helpers/dominio.mjs';
+import { registerDominioClashSocket, requestStartDominioClash, requestNextRound, requestRejectDominioClash } from './helpers/dominio-clash.mjs';
+import { rollFormula } from './helpers/rolls.mjs';
+import { MAPA_ATRIBUTOS } from './sheets/actor-sheet/atributos.mjs';
 
 // Caso o ciclo de hooks não exponha por timing, tenta anexar imediatamente ao `window`.
 try {
@@ -130,6 +134,163 @@ Handlebars.registerHelper('toLowerCase', function (str) {
 /* -------------------------------------------- */
 
 Hooks.once('ready', function () {
+  // Hooks do sistema de Domínio (duração em combate, buff dentro do domínio, etc.)
+  try { registerDominioHooks(); } catch (e) { console.warn('Falha ao registrar hooks de domínio:', e); }
+
+  // Socket + fluxo de Batalha de Domínio (expansão → whisper → rolagens via Dialog)
+  try { registerDominioClashSocket(); } catch (e) { console.warn('Falha ao registrar socket de Batalha de Domínio:', e); }
+
+  try {
+    console.warn(`[${SYSTEM_ID}] dominioClash ready: sistema carregado (${new Date().toISOString()})`);
+  } catch (_) { /* ignore */ }
+
+  // Handler global (delegado) para botões no chat.
+  // Motivo: em alguns cenários o binding por mensagem pode falhar (re-render/DOM trocado),
+  // e aí o clique parece "não fazer nada".
+  try {
+    if (typeof window !== 'undefined' && !window.__jemDominioClashHandlersBound) {
+      window.__jemDominioClashHandlersBound = true;
+
+      $(document).on('click', '.jem-dominio-clash-start', async (event) => {
+        event.preventDefault();
+        const btn = $(event.currentTarget);
+        if (btn.data('jem-processing')) return;
+        btn.data('jem-processing', true);
+        try { btn.prop('disabled', true); } catch (_) { /* ignore */ }
+
+        try {
+          const ownerActorId = String(btn.data('owner-actor-id') || '');
+          const challengerActorId = String(btn.data('challenger-actor-id') || '');
+          const challengerTokenId = String(btn.data('challenger-token-id') || '');
+
+          try {
+            console.warn(`[${SYSTEM_ID}] dominioClash delegated click start`, { ownerActorId, challengerActorId, user: game.user?.name, userId: game.user?.id, isGM: !!game.user?.isGM });
+          } catch (_) { /* ignore */ }
+
+          if (!ownerActorId || !challengerActorId) return ui.notifications.warn('Dados insuficientes para iniciar a Batalha de Domínio.');
+
+          // Quem clica precisa ser dono do desafiante (ou GM). Resolve por game.actors ou token.
+          let challenger = null;
+          try {
+            challenger = game.actors?.get?.(challengerActorId) ?? null;
+            if (!challenger) {
+              challenger = (canvas?.tokens?.placeables ?? []).map(t => t?.actor).find(a => a && String(a.id) === String(challengerActorId)) ?? null;
+            }
+          } catch (_) { /* ignore */ }
+
+          try {
+            if (!game.user?.isGM) {
+              const ownedByUser = (() => {
+                try {
+                  if (challenger) return challenger.isOwner || !!challenger.testUserPermission?.(game.user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER);
+                  const charId = game.user?.character?.id;
+                  return !!charId && String(charId) === String(challengerActorId);
+                } catch (_) {
+                  return false;
+                }
+              })();
+              if (!ownedByUser) return ui.notifications.warn('Apenas o dono do personagem pode solicitar o confronto.');
+            }
+          } catch (_) { /* ignore */ }
+
+          // Fluxo único: helper lida com player (solicita aprovação) vs GM (inicia direto).
+          if (!game.user?.isGM) ui.notifications.info('Batalha de Domínio: solicitação enviada ao Mestre.');
+          else ui.notifications.info('Batalha de Domínio: iniciando...');
+          requestStartDominioClash({ ownerActorId, challengerActorId, challengerTokenId: challengerTokenId || null });
+        } finally {
+          try {
+            btn.data('jem-processing', false);
+            btn.prop('disabled', false);
+          } catch (_) { /* ignore */ }
+        }
+      });
+
+      $(document).on('click', '.jem-dominio-clash-next', async (event) => {
+        event.preventDefault();
+        const btn = $(event.currentTarget);
+        if (btn.data('jem-processing')) return;
+        btn.data('jem-processing', true);
+        try { btn.prop('disabled', true); } catch (_) { /* ignore */ }
+
+        try {
+          const clashId = String(btn.data('clash-id') || '');
+          try {
+            console.warn(`[${SYSTEM_ID}] dominioClash delegated click next`, { clashId, user: game.user?.name, userId: game.user?.id, isGM: !!game.user?.isGM });
+          } catch (_) { /* ignore */ }
+
+          if (!clashId) return;
+          requestNextRound({ clashId });
+        } finally {
+          try {
+            btn.data('jem-processing', false);
+            btn.prop('disabled', false);
+          } catch (_) { /* ignore */ }
+        }
+      });
+
+      $(document).on('click', '.jem-dominio-clash-approve', async (event) => {
+        event.preventDefault();
+        const btn = $(event.currentTarget);
+        if (btn.data('jem-processing')) return;
+        btn.data('jem-processing', true);
+        try { btn.prop('disabled', true); } catch (_) { /* ignore */ }
+
+        try {
+          const ownerActorId = String(btn.data('owner-actor-id') || '');
+          const challengerActorId = String(btn.data('challenger-actor-id') || '');
+          const challengerTokenId = String(btn.data('challenger-token-id') || '');
+
+          try {
+            console.warn(`[${SYSTEM_ID}] dominioClash delegated click approve`, { ownerActorId, challengerActorId, user: game.user?.name, userId: game.user?.id, isGM: !!game.user?.isGM });
+          } catch (_) { /* ignore */ }
+
+          if (!game.user?.isGM) return ui.notifications.warn('Apenas o Mestre pode aprovar o confronto.');
+          if (!ownerActorId || !challengerActorId) return ui.notifications.warn('Dados insuficientes para aprovar o confronto.');
+
+          ui.notifications.info('Confronto aprovado: iniciando Batalha de Domínio.');
+          requestStartDominioClash({ ownerActorId, challengerActorId, challengerTokenId: challengerTokenId || null });
+        } finally {
+          try {
+            btn.data('jem-processing', false);
+            btn.prop('disabled', false);
+          } catch (_) { /* ignore */ }
+        }
+      });
+
+      $(document).on('click', '.jem-dominio-clash-reject', async (event) => {
+        event.preventDefault();
+        const btn = $(event.currentTarget);
+        if (btn.data('jem-processing')) return;
+        btn.data('jem-processing', true);
+        try { btn.prop('disabled', true); } catch (_) { /* ignore */ }
+
+        try {
+          const ownerActorId = String(btn.data('owner-actor-id') || '');
+          const challengerActorId = String(btn.data('challenger-actor-id') || '');
+          const challengerTokenId = String(btn.data('challenger-token-id') || '');
+          const requestedBy = String(btn.data('requested-by') || '');
+
+          try {
+            console.warn(`[${SYSTEM_ID}] dominioClash delegated click reject`, { ownerActorId, challengerActorId, requestedBy, user: game.user?.name, userId: game.user?.id, isGM: !!game.user?.isGM });
+          } catch (_) { /* ignore */ }
+
+          if (!game.user?.isGM) return ui.notifications.warn('Apenas o Mestre pode recusar o confronto.');
+          if (!ownerActorId || !challengerActorId) return ui.notifications.warn('Dados insuficientes para recusar o confronto.');
+
+          ui.notifications.info('Confronto recusado.');
+          requestRejectDominioClash({ ownerActorId, challengerActorId, challengerTokenId: challengerTokenId || null, requestedBy: requestedBy || null });
+        } finally {
+          try {
+            btn.data('jem-processing', false);
+            btn.prop('disabled', false);
+          } catch (_) { /* ignore */ }
+        }
+      });
+    }
+  } catch (e) {
+    console.warn('Falha ao registrar handlers delegados de dominioClash', e);
+  }
+
   // Exponibiliza helper pra você poder rodar manualmente no console, se quiser:
   // game.feiticeirosEAMaldicoes.seedAptidoesCompendium()
   game.feiticeirosEAMaldicoes = {
@@ -382,6 +543,177 @@ Hooks.once('ready', function () {
       console.error('Erro ao estilizar chat message:', e);
     }
     try {
+      // Handler: atacar paredes do domínio (barreira)
+      html.on('click', '.jem-attack-dominio-barrier', async (event) => {
+        event.preventDefault();
+        const btn = $(event.currentTarget);
+        const ownerActorId = String(btn.data('owner-actor-id') || '');
+        if (!ownerActorId) return ui.notifications.warn('Dono do domínio não informado.');
+        const ownerActor = game.actors.get(ownerActorId);
+        if (!ownerActor) return ui.notifications.warn('Ator dono do domínio não encontrado.');
+
+        // Domínio pode estar setado no Actor "de mundo" OU no Actor sintético do Token (quando o domínio foi criado a partir da cena).
+        let dominio = getActiveDominio(ownerActor);
+        if (!dominio) {
+          try {
+            const tokenActors = (canvas?.tokens?.placeables ?? [])
+              .map(t => t?.actor)
+              .filter(a => a && String(a.id) === String(ownerActorId));
+            for (const a of tokenActors) {
+              dominio = getActiveDominio(a);
+              if (dominio) break;
+            }
+          } catch (_) { /* ignore */ }
+        }
+
+        if (!dominio) return ui.notifications.warn('Este ator não tem um domínio ativo (ou o token com domínio não está na cena atual).');
+
+        const attackerToken = (canvas.tokens?.controlled?.[0])
+          ?? (game.user?.character?.getActiveTokens?.(true, true)?.[0])
+          ?? null;
+        const attackerTokenDoc = attackerToken?.document ?? null;
+        const insideAuto = attackerTokenDoc ? isTokenInsideDominio(attackerTokenDoc, dominio) : false;
+
+        const current = Number(dominio?.hpBarreira?.value ?? 0) || 0;
+        const max = Number(dominio?.hpBarreira?.max ?? 0) || 0;
+        if (max <= 0) return ui.notifications.warn('Este domínio não possui barreira.');
+
+        const content = `
+          <p><strong>Barreira do Domínio</strong> — PV ${current} / ${max}</p>
+          <p class="flavor-text">Detecção automática: ${insideAuto ? '<strong>por dentro</strong>' : '<strong>por fora</strong>'} ${attackerTokenDoc ? `(token: ${attackerToken?.name ?? '—'})` : '(nenhum token selecionado)'}</p>
+          <div class="form-group">
+            <label>Lado do ataque:</label>
+            <select name="sideMode">
+              <option value="auto" selected>Automático (pelo token selecionado)</option>
+              <option value="outside">Forçar: por fora</option>
+              <option value="inside">Forçar: por dentro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Dano causado:</label>
+            <input type="number" name="damage" min="0" value="0" />
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" name="reversao" /> Usar Reversão (ignora regra interna; por fora, vulnerável)</label>
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" name="spell3" /> Feitiço nível 3+ (necessário por dentro, sem Reversão)</label>
+          </div>`;
+
+        new Dialog({
+          title: 'Atacar Paredes do Domínio',
+          content,
+          buttons: {
+            ok: {
+              label: 'Aplicar',
+              callback: async (htmlDlg) => {
+                const sideMode = String(htmlDlg.find('select[name="sideMode"]').val() || 'auto');
+                const dmg = Number(htmlDlg.find('input[name="damage"]').val() || 0) || 0;
+                const reversao = !!htmlDlg.find('input[name="reversao"]')[0]?.checked;
+                const spell3 = !!htmlDlg.find('input[name="spell3"]')[0]?.checked;
+
+                let inside = insideAuto;
+                if (sideMode === 'inside') inside = true;
+                else if (sideMode === 'outside') inside = false;
+
+                let effective = dmg;
+                if (inside) {
+                  if (!reversao && !spell3) effective = 0;
+                  else if (!reversao) effective = Math.floor(dmg * 0.5);
+                } else {
+                  if (reversao) effective = Math.floor(dmg * 2);
+                }
+
+                const next = Math.max(0, current - Math.max(0, effective));
+                dominio.hpBarreira = dominio.hpBarreira || { value: current, max };
+                dominio.hpBarreira.value = next;
+
+                try { await ownerActor.setFlag(SYSTEM_ID, FLAG_ACTIVE, dominio); } catch (_) { /* ignore */ }
+
+                // Atualiza Item Domínio vinculado, se existir
+                try {
+                  if (dominio?.dominioItemUuid) {
+                    const doc = await fromUuid(dominio.dominioItemUuid);
+                    if (doc && typeof doc.update === 'function') {
+                      await doc.update({
+                        'system.dominio.hpBarreira.value': next,
+                        'system.dominio.hpBarreira.max': max,
+                      });
+                    }
+                  }
+                } catch (_) { /* ignore */ }
+
+                await ChatMessage.create({
+                  content: `<div><strong>${ownerActor.name}</strong> — Barreira do Domínio: PV ${next} / ${max} (dano efetivo ${effective}).</div>`
+                });
+
+                if (next <= 0) {
+                  await endDominio(ownerActor, { reason: 'barreira-destruida', applyBurnout: true });
+                  await ChatMessage.create({ content: `<div><strong>${ownerActor.name}</strong>: a barreira colapsou e o Domínio foi desfeito.</div>` });
+                }
+              }
+            },
+            cancel: { label: 'Cancelar' }
+          },
+          default: 'ok'
+        }).render(true);
+      });
+
+      // Debug: confirmar se o botão está sendo renderizado no cliente que recebeu o whisper
+      try {
+        const startBtns = html.find('.jem-dominio-clash-start');
+        if (startBtns?.length) {
+          const btn = startBtns.first();
+          console.log(`[${SYSTEM_ID}] dominioClash render: botão start encontrado`, {
+            ownerActorId: String(btn.data('owner-actor-id') || ''),
+            challengerActorId: String(btn.data('challenger-actor-id') || ''),
+            messageId: app?.message?.id ?? null,
+          });
+        }
+      } catch (_) { /* ignore */ }
+
+      // Handlers de Batalha de Domínio (por mensagem)
+      // Se o handler global delegado estiver ativo, evita bind duplo.
+      if (!(typeof window !== 'undefined' && window.__jemDominioClashHandlersBound)) {
+        // Handler: iniciar Batalha de Domínio (a partir do whisper recebido por quem está dentro da área)
+        html.on('click', '.jem-dominio-clash-start', async (event) => {
+          event.preventDefault();
+          const btn = $(event.currentTarget);
+          const ownerActorId = String(btn.data('owner-actor-id') || '');
+          const challengerActorId = String(btn.data('challenger-actor-id') || '');
+
+          try {
+            console.log(`[${SYSTEM_ID}] dominioClash click start`, { ownerActorId, challengerActorId, user: game.user?.name, userId: game.user?.id, isGM: !!game.user?.isGM });
+          } catch (_) { /* ignore */ }
+
+          if (!ownerActorId || !challengerActorId) return ui.notifications.warn('Dados insuficientes para iniciar a Batalha de Domínio.');
+
+          // Quem clica precisa ser dono do desafiante (ou GM)
+          try {
+            if (!game.user?.isGM) {
+              const challenger = game.actors.get(challengerActorId);
+              if (!challenger || !challenger.isOwner) return ui.notifications.warn('Apenas o dono do personagem pode iniciar a Batalha de Domínio.');
+            }
+          } catch (_) { /* ignore */ }
+
+          requestStartDominioClash({ ownerActorId, challengerActorId });
+        });
+
+        // Handler: próxima rodada (GM consolida e solicita rolagens via socket)
+        html.on('click', '.jem-dominio-clash-next', async (event) => {
+          event.preventDefault();
+          const btn = $(event.currentTarget);
+          const clashId = String(btn.data('clash-id') || '');
+
+          try {
+            console.log(`[${SYSTEM_ID}] dominioClash click next`, { clashId, user: game.user?.name, userId: game.user?.id, isGM: !!game.user?.isGM });
+          } catch (_) { /* ignore */ }
+
+          if (!clashId) return;
+          requestNextRound({ clashId });
+        });
+      }
+
       // Listener: quem clicou em 'Causar Dano' deve ser quem rolou; cria solicitação de aprovação para o Mestre
       html.on('click', '.apply-damage', async (event) => {
         event.preventDefault();
@@ -554,7 +886,7 @@ Hooks.once('ready', function () {
         const btn = $(event.currentTarget);
         const itemUuid = String(btn.data('item-uuid') || '');
         const actorId = String(btn.data('actor-id') || '');
-        const custo = Number(btn.data('custo') || 0) || 0;
+        const baseCusto = Number(btn.data('custo') || 0) || 0;
 
         // Só o Mestre ou o dono do ator pode executar ações de NPC via interface
         if (!game.user.isGM && !game.user.character) return ui.notifications.warn('Apenas o Mestre pode executar ações NPC desta forma.');
@@ -571,6 +903,16 @@ Hooks.once('ready', function () {
         } catch (e) { /* ignore */ }
         if (!actor) return ui.notifications.warn('Ator não encontrado para executar a ação.');
         if (!item) return ui.notifications.warn('Item de ação não resolvido.');
+
+        // Custo efetivo (Condenado + Domínio)
+        let custo = baseCusto;
+        try {
+          const condCondenado = Boolean(actor.system?.condicoes?.fisicas?.condenado);
+          if (condCondenado && custo > 0) custo = custo + 1;
+        } catch (e) { /* ignore */ }
+        try {
+          custo = computePeCostWithDominio(actor, custo);
+        } catch (e) { /* ignore */ }
 
         // Verifica PE suficiente
         const energia = Number(actor.system?.recursos?.energia?.value ?? 0) || 0;
@@ -592,6 +934,66 @@ Hooks.once('ready', function () {
             resultHtml += `<div>Acerto automático.</div>`;
           } else if (tipo === 'cd') {
             resultHtml += `<div>Teste contra CD (Mestre escolhe alvo). Nenhuma rolagem automática aqui.</div>`;
+          } else if (tipo === 'tr' || tipo === 'tr_area') {
+            // Solicitar TR aos alvos selecionados
+            const targetsSet = game.user?.targets ?? new Set();
+            const targetTokenDocs = Array.from(targetsSet).map(t => t?.document).filter(Boolean);
+            if (!targetTokenDocs.length) {
+              await ChatMessage.create({ content: `${resultHtml}<div><strong>TR:</strong> selecione ao menos um alvo (Target) para solicitar o teste.</div>` });
+              return;
+            }
+
+            const defaultDc = Number(actor.system?.cd?.value ?? actor.system?.cd ?? 10) || 10;
+            const dlgContent = `
+              <form class="jem-save-request">
+                <div class="form-group">
+                  <label>Salvaguarda</label>
+                  <select name="saveKey">
+                    <option value="fortitude">Fortitude</option>
+                    <option value="reflexos">Reflexos</option>
+                    <option value="vontade">Vontade</option>
+                    <option value="astucia">Astúcia</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>CD</label>
+                  <input type="number" name="dc" value="${defaultDc}" />
+                </div>
+              </form>`;
+
+            const request = await new Promise((resolve) => {
+              new Dialog({
+                title: `${actor.name} — Solicitar TR`,
+                content: dlgContent,
+                buttons: {
+                  ok: { label: 'Criar Solicitação', callback: (htmlDlg) => {
+                    const saveKey = String(htmlDlg.find('select[name="saveKey"]').val() || 'fortitude');
+                    const dc = Number(htmlDlg.find('input[name="dc"]').val() || defaultDc) || defaultDc;
+                    resolve({ saveKey, dc });
+                  } },
+                  cancel: { label: 'Cancelar', callback: () => resolve(null) }
+                },
+                default: 'ok'
+              }).render(true);
+            });
+            if (!request) return;
+
+            const saveKey = request.saveKey;
+            const dc = request.dc;
+            const saveLabel = ({ fortitude: 'Fortitude', reflexos: 'Reflexos', vontade: 'Vontade', astucia: 'Astúcia' })[saveKey] || saveKey;
+            const reductionText = (tipo === 'tr_area')
+              ? 'Em sucesso, dano reduzido pela metade.'
+              : 'Em sucesso, dano reduzido em 1 ND.';
+
+            const buttons = targetTokenDocs.map(t => {
+              const targetName = t?.name ?? t?.actor?.name ?? 'Alvo';
+              const targetTokenId = String(t.id);
+              const targetActorId = String(t.actor?.id ?? '');
+              return `<button class="jem-roll-save jem-btn jem-btn--primary" data-source-actor-id="${actor.id}" data-save-key="${saveKey}" data-dc="${dc}" data-target-token-id="${targetTokenId}" data-target-actor-id="${targetActorId}">Rolar TR (${targetName})</button>`;
+            }).join(' ');
+
+            resultHtml += `<div><strong>TR:</strong> ${saveLabel} — CD <strong>${dc}</strong>. ${reductionText}</div>`;
+            resultHtml += `<div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;">${buttons}</div>`;
           } else {
             // atributo_bt
             const attrVal = Number(actor.system?.atributos?.[atributo]?.value ?? 10) || 10;
@@ -612,6 +1014,154 @@ Hooks.once('ready', function () {
         } catch (e) {
           console.error('Erro ao executar ação NPC:', e);
         }
+      });
+
+      // Handler: rolar TR solicitado via chat
+      html.on('click', '.jem-roll-save', async (event) => {
+        event.preventDefault();
+        const btn = $(event.currentTarget);
+        const sourceActorId = String(btn.data('source-actor-id') || '');
+        const saveKey = String(btn.data('save-key') || 'fortitude');
+        const dc = Number(btn.data('dc') || 10) || 10;
+        const targetTokenId = String(btn.data('target-token-id') || '');
+        const targetActorId = String(btn.data('target-actor-id') || '');
+        const onFailCondition = String(btn.data('on-fail-condition') || '').trim();
+        const conditionRounds = Number(btn.data('condition-rounds') || 0) || 0;
+
+        const targetToken = targetTokenId ? canvas.tokens.get(targetTokenId) : null;
+        const targetActor = (targetToken?.actor) || (targetActorId ? game.actors.get(targetActorId) : null);
+        const sourceActor = sourceActorId ? game.actors.get(sourceActorId) : null;
+
+        if (!targetActor) return ui.notifications.warn('Alvo não encontrado para rolar TR.');
+
+        // Permissão: GM ou dono do ator alvo
+        try {
+          const canRoll = game.user?.isGM || targetActor.isOwner || targetActor.testUserPermission?.(game.user, 'OWNER');
+          if (!canRoll) return ui.notifications.warn('Você não tem permissão para rolar TR para este ator.');
+        } catch (_) { /* ignore */ }
+
+        const saveLabel = ({ fortitude: 'Fortitude', reflexos: 'Reflexos', vontade: 'Vontade', astucia: 'Astúcia' })[saveKey] || saveKey;
+
+        // Sure-hit do Domínio: se aplicável ao alvo, falha automática
+        let sureHit = false;
+        try {
+          if (sourceActor && targetToken?.document) sureHit = isSureHitApplicableToTarget({ sourceActor, targetTokenDoc: targetToken.document });
+        } catch (_) { sureHit = false; }
+
+        const system = targetActor.system ?? {};
+        const pericia = system?.salvaguardas?.[saveKey] ?? null;
+        if (!pericia) return ui.notifications.warn('Salvaguarda inválida.');
+        const grauTreino = Number(pericia.value ?? 0) || 0;
+
+        const atributoKey = MAPA_ATRIBUTOS?.[saveKey];
+        const atributoMod = Number(system?.atributos?.[atributoKey]?.mod ?? 0) || 0;
+        const baseTreino = Number(system?.detalhes?.treinamento?.value ?? 0) || 0;
+        let treinoBonus = 0;
+        if (grauTreino === 1) treinoBonus = baseTreino;
+        else if (grauTreino === 2) treinoBonus = Math.floor(baseTreino * 1.5);
+
+        const nivelTotalDerivado = system.detalhes?.nivel?.value ?? ((system.detalhes?.niveis?.principal?.value || 0) + (system.detalhes?.niveis?.secundario?.value || 0));
+        const metadeNivel = Math.floor((Number(nivelTotalDerivado) || 0) / 2);
+
+        const dieTerm = sureHit ? '1' : '1d20';
+        let formula = `${dieTerm} + ${atributoMod}[Atributo]`;
+        if (treinoBonus > 0) formula += ` + ${treinoBonus}[Treino]`;
+        if (metadeNivel > 0) formula += ` + ${metadeNivel}[MetadeNivel]`;
+
+        const flavor = sureHit
+          ? `<b>TR — ${saveLabel}</b> (Falha automática: Acerto Garantido do Domínio)`
+          : `<b>TR — ${saveLabel}</b> (CD ${dc})`;
+
+        let roll;
+        try {
+          roll = await rollFormula(formula, { actor: targetActor }, { asyncEval: true, toMessage: true, flavor });
+        } catch (e) {
+          console.warn('Falha ao rolar TR:', e);
+          return ui.notifications.error('Falha ao rolar TR.');
+        }
+
+        const total = Number(roll?.total ?? 0) || 0;
+        const success = (!sureHit) && (total >= dc);
+        const outcome = sureHit ? 'FALHA AUTOMÁTICA' : (success ? 'SUCESSO' : 'FALHA');
+
+        // Se a mensagem solicitou condição em falha, aplica aqui
+        if (!success && onFailCondition) {
+          try {
+            const sysId = game?.system?.id ?? 'feiticeiros-e-maldicoes';
+            const norm = String(onFailCondition).toLowerCase();
+            const condMap = {
+              abalado: 'system.condicoes.mentais.abalado',
+              amedrontado: 'system.condicoes.mentais.amedrontado',
+              exposto: 'system.condicoes.mentais.exposto',
+              confuso: 'system.condicoes.mentais.confuso',
+              desprevenido: 'system.condicoes.sensoriais.desprevenido',
+              desorientado: 'system.condicoes.sensoriais.desorientado',
+              lento: 'system.condicoes.movimento.lento',
+              caido: 'system.condicoes.movimento.caido',
+              agarrado: 'system.condicoes.movimento.agarrado',
+              atordoado: 'system.condicoes.movimento.atordoado',
+              paralisado: 'system.condicoes.fisicas.paralisado',
+            };
+
+            const key = norm.startsWith('system.') ? norm : (norm.includes('.') ? `system.${norm}` : (condMap[norm] || ''));
+            if (key) {
+              // Atualiza o boolean no system
+              try { await targetActor.update({ [key]: true }); } catch (_) { /* ignore */ }
+
+              // Cria um ActiveEffect simples (não depende da UI da ficha)
+              const keyNoSystem = key.replace(/^system\./, '');
+              const existing = targetActor.effects?.find?.(e => e?.flags?.[sysId]?.condition === keyNoSystem) ?? null;
+
+              const changes = [];
+              const system = targetActor.system ?? {};
+              const pericias = Object.keys(system?.pericias || {});
+              const ataques = Object.keys(system?.ataques || {});
+              const salvaguardas = Object.keys(system?.salvaguardas || {});
+
+              const addPericias = (n) => { for (const p of pericias) changes.push({ key: `system.pericias.${p}.value`, mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(n), priority: 20 }); };
+              const addAtaques = (n) => { for (const a of ataques) changes.push({ key: `system.ataques.${a}.value`, mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(n), priority: 20 }); };
+              const addSalv = (n) => { for (const s of salvaguardas) changes.push({ key: `system.salvaguardas.${s}.value`, mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(n), priority: 20 }); };
+
+              if (keyNoSystem === 'condicoes.mentais.abalado') { addPericias(-1); addAtaques(-1); }
+              else if (keyNoSystem === 'condicoes.mentais.amedrontado') { addPericias(-3); addAtaques(-3); }
+              else if (keyNoSystem === 'condicoes.sensoriais.desprevenido') {
+                changes.push({ key: 'system.combate.defesa.value', mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(-3), priority: 20 });
+                if (salvaguardas.includes('reflexos')) addSalv(-3);
+              }
+              else if (keyNoSystem === 'condicoes.movimento.lento') { changes.push({ key: 'system.combate.movimento.value', mode: CONST.ACTIVE_EFFECT_MODES.MULTIPLY, value: '0.5', priority: 20 }); }
+              else if (keyNoSystem === 'condicoes.movimento.caido') {
+                changes.push({ key: 'system.combate.defesa.value', mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(-3), priority: 20 });
+                changes.push({ key: 'system.combate.movimento.value', mode: CONST.ACTIVE_EFFECT_MODES.OVERRIDE, value: String(4.5), priority: 20 });
+              }
+
+              const effectData = {
+                label: `Condição: ${keyNoSystem.split('.').pop()} (Domínio)`,
+                icon: 'icons/svg/downgrade.svg',
+                origin: sourceActor?.uuid ?? sourceActor?.id ?? null,
+                disabled: false,
+                changes: changes.length ? changes : undefined,
+                duration: {},
+                flags: { [sysId]: { condition: keyNoSystem, fromDominioAmbiental: true } },
+              };
+
+              if (game.combat && conditionRounds > 0) {
+                effectData.duration.rounds = Number(conditionRounds) || 1;
+                effectData.duration.startRound = Number(game.combat.round ?? 0) || 0;
+                effectData.duration.startTurn = Number(game.combat.turn ?? 0) || 0;
+              }
+
+              if (!existing) {
+                try { await targetActor.createEmbeddedDocuments('ActiveEffect', [effectData]); } catch (_) { /* ignore */ }
+              }
+            }
+          } catch (e) {
+            console.warn('Falha ao aplicar condição em falha de TR:', e);
+          }
+        }
+
+        await ChatMessage.create({
+          content: `<div><strong>${targetActor.name}</strong> — TR ${saveLabel} vs CD ${dc}: <strong>${outcome}</strong> (total ${total}).</div>`
+        });
       });
 
       // Handler para decisão do Mestre (aplica 0 / 0.5 / 2 multiplicador)

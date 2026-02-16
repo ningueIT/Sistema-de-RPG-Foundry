@@ -31,6 +31,7 @@ export class BoilerplateActor extends Actor {
     // Aqui mesclamos os defaults do model do sistema com os dados atuais.
     if (this.type === 'character') {
       const modelAptidoes = game?.system?.model?.Actor?.character?.aptidoes ?? {};
+      const modelTreinamento = game?.system?.model?.Actor?.character?.treinamento ?? {};
 
       if (Object.keys(modelAptidoes).length > 0) {
         this.system.aptidoes = foundry.utils.mergeObject(
@@ -52,6 +53,33 @@ export class BoilerplateActor extends Actor {
       this.system.aptidoes.maldicaoAnatomia ??= {};
       this.system.aptidoes.maldicaoControleELeitura ??= {};
       this.system.aptidoes.maldicaoEspeciais ??= {};
+
+      // ----------------------------------------------------
+      // TREINAMENTO (INTERLÚDIO): GARANTE DEFAULTS PARA ATORES ANTIGOS
+      // ----------------------------------------------------
+      if (Object.keys(modelTreinamento).length > 0) {
+        this.system.treinamento = foundry.utils.mergeObject(
+          foundry.utils.deepClone(modelTreinamento),
+          this.system.treinamento ?? {},
+          { inplace: false, overwrite: true }
+        );
+      } else {
+        this.system.treinamento = this.system.treinamento ?? {};
+      }
+
+      // Safety: garante as chaves mais usadas existirem.
+      this.system.treinamento.pontos ??= { total: 0, gastos: 0, disponivel: 0, extra: 0 };
+      this.system.treinamento.agilidade ??= { etapa1: false, etapa2: false, etapa3: false, etapa4: false, completo: false };
+      this.system.treinamento.barreiras ??= { etapa1: false, etapa2: false, etapa3: false, etapa4: false, completo: false };
+      this.system.treinamento.compreensao ??= { etapa1: false, etapa2: false, etapa3: false, etapa4: false, completo: false };
+      this.system.treinamento.controleEnergia ??= { etapa1: false, etapa2: false, etapa3: false, etapa4: false, completo: false };
+      this.system.treinamento.dominios ??= { etapa1: false, etapa2: false, etapa3: false, etapa4: false, completo: false };
+      this.system.treinamento.energiaReversa ??= { etapa1: false, etapa2: false, etapa3: false, etapa4: false, completo: false };
+      this.system.treinamento.luta ??= { etapa1: false, etapa2: false, etapa3: false, etapa4: false, completo: false };
+      this.system.treinamento.manejoArma ??= { escolha: '', etapa1: false, etapa2: false, etapa3: false, etapa4: false, completo: false };
+      this.system.treinamento.pericia ??= { escolha: '', etapa1: false, etapa2: false, etapa3: false, etapa4: false, completo: false };
+      this.system.treinamento.potencialFisico ??= { etapa1: false, etapa2: false, etapa3: false, etapa4: false, completo: false };
+      this.system.treinamento.resistencia ??= { etapa1: false, etapa2: false, etapa3: false, etapa4: false, completo: false };
     }
   }
 
@@ -93,32 +121,227 @@ export class BoilerplateActor extends Actor {
     // Usa '|| 0' para garantir que não quebre se o valor for nulo
     const nivelPrincipal = system.detalhes.niveis?.principal?.value || 0;
     const nivelSecundario = system.detalhes.niveis?.secundario?.value || 0;
-    
     const nivelTotal = nivelPrincipal + nivelSecundario;
-
     if (system.detalhes.nivel) system.detalhes.nivel.value = nivelTotal;
+
+    // ----------------------------------------------------
+    // TREINAMENTO (INTERLÚDIO): BÔNUS DERIVADOS
+    // - Não persiste nada; só calcula efeitos a partir das checkboxes.
+    // - Regra: marcou uma etapa mais alta => assume as anteriores.
+    // ----------------------------------------------------
+    const _normText = (s = '') => String(s ?? '')
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase()
+      .trim();
+
+    // Segurança: só considera uma etapa válida se as anteriores também estiverem marcadas.
+    // Isso evita “pular” etapas via edição manual/macro e protege o cálculo de pontos.
+    const _chainProgress = (t = {}) => {
+      const etapa1 = !!t?.etapa1;
+      const etapa2 = etapa1 && !!t?.etapa2;
+      const etapa3 = etapa2 && !!t?.etapa3;
+      const etapa4 = etapa3 && !!t?.etapa4;
+      const completo = etapa4 && !!t?.completo;
+      return { etapa1, etapa2, etapa3, etapa4, completo };
+    };
+
+    const treinoRaw = system.treinamento ?? {};
+
+    // ----------------------------------------------------
+    // TREINAMENTO (INTERLÚDIO): PONTOS
+    // - Total por nível: floor(nível/3) + floor(nível/5)
+    // - Extra: editável pelo mestre (persistido)
+    // - Gastos: soma das etapas válidas (respeita cadeia)
+    // - Disponível: total - gastos (mínimo 0)
+    // ----------------------------------------------------
+    const TREE_KEYS = [
+      'agilidade',
+      'barreiras',
+      'compreensao',
+      'controleEnergia',
+      'dominios',
+      'energiaReversa',
+      'luta',
+      'manejoArma',
+      'pericia',
+      'potencialFisico',
+      'resistencia',
+    ];
+    const STAGE_KEYS = ['etapa1', 'etapa2', 'etapa3', 'etapa4', 'completo'];
+
+    const trValid = Object.fromEntries(
+      TREE_KEYS.map((k) => [k, _chainProgress(treinoRaw?.[k] ?? {})])
+    );
+
+    const _countStages = (p = {}) => STAGE_KEYS.reduce((acc, k) => acc + (p?.[k] ? 1 : 0), 0);
+    const pontosGastos = TREE_KEYS.reduce((acc, k) => acc + _countStages(trValid[k]), 0);
+
+    const extraRaw = Number(treinoRaw?.pontos?.extra ?? 0) || 0;
+    const pontosExtra = Math.max(0, Math.floor(extraRaw));
+    const lvl = Math.max(0, Number(nivelTotal) || 0);
+    const pontosPorNivel = Math.floor(lvl / 3) + Math.floor(lvl / 5);
+    const pontosTotal = Math.max(0, pontosPorNivel + pontosExtra);
+    const pontosDisponivel = Math.max(0, pontosTotal - pontosGastos);
+    const pontosLocked = pontosDisponivel <= 0;
+
+    // Mantém `extra` persistido e expõe os derivados para a ficha.
+    system.treinamento = system.treinamento ?? {};
+    system.treinamento.pontos = {
+      ...(system.treinamento.pontos ?? {}),
+      extra: pontosExtra,
+      total: pontosTotal,
+      gastos: pontosGastos,
+      disponivel: pontosDisponivel,
+    };
+
+    // Aplica “orçamento” aos bônus (segurança extra contra overspend via macro).
+    let budget = pontosTotal;
+    const trAplicado = {};
+    for (const tree of TREE_KEYS) {
+      const src = trValid[tree] ?? {};
+      const dst = { etapa1: false, etapa2: false, etapa3: false, etapa4: false, completo: false };
+      for (const stage of STAGE_KEYS) {
+        if (src?.[stage] && budget > 0) {
+          dst[stage] = true;
+          budget -= 1;
+        }
+      }
+      trAplicado[tree] = dst;
+    }
+
+    const tr = trAplicado;
+
+    const _resolveKeyByChoice = (choice, groupObj = {}) => {
+      const tok = _normText(choice);
+      if (!tok) return null;
+      // 1) tenta por key direto
+      if (groupObj?.[tok]) return tok;
+      // 2) tenta por label
+      for (const [k, v] of Object.entries(groupObj || {})) {
+        const lbl = _normText(v?.label ?? '');
+        if (lbl && lbl === tok) return k;
+      }
+      // 3) match por inclusão simples (tolerante)
+      for (const [k, v] of Object.entries(groupObj || {})) {
+        const lbl = _normText(v?.label ?? '');
+        if (!lbl) continue;
+        if (lbl.includes(tok) || tok.includes(lbl)) return k;
+      }
+      return null;
+    };
+
+    const periciaEscolhaRaw = String(treinoRaw?.pericia?.escolha ?? '').trim();
+    const periciaEscolhaKey = _resolveKeyByChoice(periciaEscolhaRaw, system.pericias ?? {});
+    const manejoArmaEscolhaNorm = _normText(String(treinoRaw?.manejoArma?.escolha ?? ''));
+
+    const treinoDerivados = {
+      linhas: tr,
+      pontos: {
+        total: pontosTotal,
+        gastos: pontosGastos,
+        disponivel: pontosDisponivel,
+        extra: pontosExtra,
+        locked: pontosLocked,
+      },
+      escolhas: {
+        pericia: { raw: periciaEscolhaRaw, key: periciaEscolhaKey },
+        manejoArma: { raw: String(treinoRaw?.manejoArma?.escolha ?? ''), norm: manejoArmaEscolhaNorm },
+      },
+      bonuses: {
+        defesa: { value: 0 },
+        movimento: { value: 0 },
+        iniciativa: { value: 0 },
+        recursos: { hpMax: 0, energiaMax: 0, dadosVidaMax: 0 },
+        aptidaoDelta: { barreiras: 0, controleELeitura: 0, energiaReversa: 0 },
+        barreiras: { pvBonus: 0, maxParedesBonus: 0 },
+        luta: { unarmedLevelBoost: 0 },
+        manejoArma: { ataque: 0, dano: 0 },
+        pericia: { minGrau: 0, bonusSeJa: 0, completoRerollLt5: false },
+        tests: { pericias: {}, salvaguardas: {} },
+      },
+    };
+
+    // Agilidade
+    treinoDerivados.bonuses.movimento.value += tr.agilidade.completo ? 4.5 : (tr.agilidade.etapa1 ? 1.5 : 0);
+    if (tr.agilidade.etapa2) treinoDerivados.bonuses.tests.pericias.acrobacia = (treinoDerivados.bonuses.tests.pericias.acrobacia ?? 0) + 2;
+    if (tr.agilidade.etapa3) treinoDerivados.bonuses.iniciativa.value += 2;
+    if (tr.agilidade.etapa4) treinoDerivados.bonuses.tests.salvaguardas.reflexos = (treinoDerivados.bonuses.tests.salvaguardas.reflexos ?? 0) + 2;
+
+    // Barreiras
+    treinoDerivados.bonuses.barreiras.pvBonus += (tr.barreiras.etapa1 ? 10 : 0) + (tr.barreiras.etapa3 ? 10 : 0);
+    if (tr.barreiras.etapa2) treinoDerivados.bonuses.aptidaoDelta.barreiras += 1;
+    if (tr.barreiras.etapa4) treinoDerivados.bonuses.barreiras.maxParedesBonus += 2;
+
+    // Compreensão
+    treinoDerivados.bonuses.recursos.energiaMax += (tr.compreensao.etapa1 ? 2 : 0) + (tr.compreensao.etapa3 ? 3 : 0);
+    {
+      const b = tr.compreensao.etapa4 ? 2 : (tr.compreensao.etapa2 ? 1 : 0);
+      if (b) {
+        treinoDerivados.bonuses.tests.pericias.feiticaria = (treinoDerivados.bonuses.tests.pericias.feiticaria ?? 0) + b;
+        treinoDerivados.bonuses.tests.pericias.ocultismo = (treinoDerivados.bonuses.tests.pericias.ocultismo ?? 0) + b;
+      }
+    }
+
+    // Controle de Energia
+    treinoDerivados.bonuses.recursos.energiaMax += (tr.controleEnergia.etapa1 ? 2 : 0) + (tr.controleEnergia.etapa3 ? 3 : 0);
+    if (tr.controleEnergia.etapa4) treinoDerivados.bonuses.aptidaoDelta.controleELeitura += 1;
+
+    // Energia Reversa
+    if (tr.energiaReversa.etapa2) treinoDerivados.bonuses.aptidaoDelta.energiaReversa += 1;
+
+    // Luta
+    if (tr.luta.etapa2) treinoDerivados.bonuses.defesa.value += 2;
+    treinoDerivados.bonuses.luta.unarmedLevelBoost += (tr.luta.etapa1 ? 1 : 0) + (tr.luta.etapa3 ? 1 : 0) + (tr.luta.etapa4 ? 2 : 0);
+
+    // Resistência
+    treinoDerivados.bonuses.recursos.hpMax += (tr.resistencia.etapa1 ? 4 : 0) + (tr.resistencia.etapa4 ? 6 : 0) + (tr.resistencia.completo ? 10 : 0);
+    if (tr.resistencia.etapa2) treinoDerivados.bonuses.recursos.dadosVidaMax += 2;
+    if (tr.resistencia.etapa3) treinoDerivados.bonuses.tests.salvaguardas.fortitude = (treinoDerivados.bonuses.tests.salvaguardas.fortitude ?? 0) + 2;
+
+    // Manejo de Arma (bônus numéricos aplicados em Item.rollAttack/rollDamage)
+    treinoDerivados.bonuses.manejoArma.ataque += (tr.manejoArma.etapa2 ? 1 : 0) + (tr.manejoArma.etapa4 ? 1 : 0);
+    treinoDerivados.bonuses.manejoArma.dano += (tr.manejoArma.etapa4 ? 2 : 0);
+
+    // Treino de Perícia (bônus aplicados no roll handler da ficha)
+    if (periciaEscolhaKey) {
+      const atual = Number(system?.pericias?.[periciaEscolhaKey]?.value ?? 0) || 0;
+      if (tr.pericia.etapa3) {
+        treinoDerivados.bonuses.pericia.minGrau = 2;
+        treinoDerivados.bonuses.pericia.bonusSeJa = (atual >= 2) ? 2 : 0;
+      } else if (tr.pericia.etapa1) {
+        treinoDerivados.bonuses.pericia.minGrau = 1;
+        treinoDerivados.bonuses.pericia.bonusSeJa = (atual >= 1) ? 1 : 0;
+      }
+      treinoDerivados.bonuses.pericia.completoRerollLt5 = !!tr.pericia.completo;
+    }
+
+    system.treinamentoDerivados = treinoDerivados;
 
     try {
       const calcDiceMax = (lvl) => {
         const L = Math.max(0, Number(lvl) || 0);
         return Math.max(1, 1 + Math.floor(L / 3));
       };
-      const dvdeMax = calcDiceMax(nivelTotal);
+      const dvdeMaxBase = calcDiceMax(nivelTotal);
+      const dvBonus = Number(system?.treinamentoDerivados?.bonuses?.recursos?.dadosVidaMax ?? 0) || 0;
+      const dvMax = Math.max(1, dvdeMaxBase + dvBonus);
+      const deMax = Math.max(1, dvdeMaxBase);
 
       system.combate = system.combate || {};
       system.combate.dadosVida = system.combate.dadosVida || { value: 1, max: 1, lado: '1d8', label: 'Dados de Vida' };
       system.combate.dadosEnergia = system.combate.dadosEnergia || { value: 1, max: 1, lado: '1d6', label: 'Dados de Energia' };
 
-      system.combate.dadosVida.max = dvdeMax;
-      system.combate.dadosEnergia.max = dvdeMax;
+      system.combate.dadosVida.max = dvMax;
+      system.combate.dadosEnergia.max = deMax;
 
       const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, Number(n)));
 
-      if (system.combate.dadosVida.value == null) system.combate.dadosVida.value = dvdeMax;
-      else system.combate.dadosVida.value = clamp(system.combate.dadosVida.value, 0, dvdeMax);
+      if (system.combate.dadosVida.value == null) system.combate.dadosVida.value = dvMax;
+      else system.combate.dadosVida.value = clamp(system.combate.dadosVida.value, 0, dvMax);
 
-      if (system.combate.dadosEnergia.value == null) system.combate.dadosEnergia.value = dvdeMax;
-      else system.combate.dadosEnergia.value = clamp(system.combate.dadosEnergia.value, 0, dvdeMax);
+      if (system.combate.dadosEnergia.value == null) system.combate.dadosEnergia.value = deMax;
+      else system.combate.dadosEnergia.value = clamp(system.combate.dadosEnergia.value, 0, deMax);
     } catch (e) {
       console.warn('Falha ao calcular limites de DV/DE:', e);
     }
@@ -198,6 +421,27 @@ export class BoilerplateActor extends Actor {
       if (system.recursos.hp) system.recursos.hp.max = Math.max(0, pvMax);
       if (system.recursos.energia) system.recursos.energia.max = Math.max(0, peMax);
 
+      // Aplicar bônus de Treinamento (derivado)
+      try {
+        const t = system?.treinamentoDerivados?.bonuses ?? {};
+        const hpBonus = Number(t?.recursos?.hpMax ?? 0) || 0;
+        const peBonus = Number(t?.recursos?.energiaMax ?? 0) || 0;
+
+        if (hpBonus && system.recursos.hp) {
+          system.recursos.hp.max = Math.max(0, Number(system.recursos.hp.max ?? 0) + hpBonus);
+        }
+
+        // Não “quebra” o Restringido: se o máximo já é 0, mantemos 0.
+        if (peBonus && system.recursos.energia) {
+          const curMax = Number(system.recursos.energia.max ?? 0) || 0;
+          if (curMax > 0) {
+            system.recursos.energia.max = Math.max(0, curMax + peBonus);
+          }
+        }
+      } catch (e) {
+        console.warn('Falha ao aplicar bônus de Treinamento em PV/PE:', e);
+      }
+
       // Garante que o atual não passe do máximo
       if (system.recursos.hp) system.recursos.hp.value = Math.min(system.recursos.hp.value ?? 0, system.recursos.hp.max ?? 0);
       if (system.recursos.energia) system.recursos.energia.value = Math.min(system.recursos.energia.value ?? 0, system.recursos.energia.max ?? 0);
@@ -274,7 +518,8 @@ export class BoilerplateActor extends Actor {
       const fromSystemLegacy = Number(system?.combate?.bonusAdHoc ?? system?.bonusAdHoc ?? system?.bonusCa ?? 0) || 0;
       const fromDefesaAdHoc = Number(defesaCfg?.bonusAdHoc ?? 0) || 0;
       const fromDefesaOutros = Number(defesaCfg?.outrosBonus ?? 0) || 0;
-      const BONUS_AD_HOC = fromFlags + fromSystemLegacy + fromDefesaAdHoc + fromDefesaOutros;
+      const fromTreinoDefesa = Number(system?.treinamentoDerivados?.bonuses?.defesa?.value ?? 0) || 0;
+      const BONUS_AD_HOC = fromFlags + fromSystemLegacy + fromDefesaAdHoc + fromDefesaOutros + fromTreinoDefesa;
 
       const caValue = BASE_VALUE + MODIFIER_DEX + BONUS_EQUIPMENT + BONUS_AD_HOC;
 
@@ -308,6 +553,7 @@ export class BoilerplateActor extends Actor {
       if (fromSystemLegacy) defesaLog.push(`Bônus legacy (system.combate.bonusAdHoc / system.bonusCa): +${fromSystemLegacy}`);
       if (fromDefesaAdHoc) defesaLog.push(`Bônus ad-hoc (system.combate.defesa.bonusAdHoc): +${fromDefesaAdHoc}`);
       if (fromDefesaOutros) defesaLog.push(`Outros bônus (system.combate.defesa.outrosBonus): +${fromDefesaOutros}`);
+      if (fromTreinoDefesa) defesaLog.push(`Treinamento (Treino de Luta): +${fromTreinoDefesa}`);
       defesaLog.push(`Ad-hoc total: +${Number(BONUS_AD_HOC)}`);
       defesaLog.push(`DEFESA final: ${Number(caValue)} = ${Number(BASE_VALUE)} + ${Number(MODIFIER_DEX)} + ${Number(BONUS_EQUIPMENT)} + ${Number(BONUS_AD_HOC)}`);
 
@@ -325,7 +571,8 @@ export class BoilerplateActor extends Actor {
           adHocFlags: Number(fromFlags),
           adHocLegacy: Number(fromSystemLegacy),
           adHocManual: Number(fromDefesaAdHoc),
-          adHocOutros: Number(fromDefesaOutros)
+          adHocOutros: Number(fromDefesaOutros),
+          adHocTreino: Number(fromTreinoDefesa)
         },
         log: defesaLog
       };
@@ -359,7 +606,8 @@ export class BoilerplateActor extends Actor {
 
       const BONUS_ADHOC = Number(movCfg?.bonusAdHoc ?? 0) || 0;
       const BONUS_OUTROS = Number(movCfg?.outrosBonus ?? 0) || 0;
-      const BONUS_TOTAL = Number(BONUS_ADHOC + BONUS_OUTROS) || 0;
+      const BONUS_TREINO = Number(system?.treinamentoDerivados?.bonuses?.movimento?.value ?? 0) || 0;
+      const BONUS_TOTAL = Number(BONUS_ADHOC + BONUS_OUTROS + BONUS_TREINO) || 0;
 
       const emDominio = !!movCfg?.emDominio;
       const MULT = emDominio ? 2 : 1;
@@ -385,6 +633,7 @@ export class BoilerplateActor extends Actor {
       movLog.push(`Base de deslocamento: ${round1(BASE)}m (padrão do livro: 9m)`);
       if (BONUS_ADHOC) movLog.push(`Bônus ad-hoc (system.combate.movimento.bonusAdHoc): +${round1(BONUS_ADHOC)}m`);
       if (BONUS_OUTROS) movLog.push(`Outros bônus (system.combate.movimento.outrosBonus): +${round1(BONUS_OUTROS)}m`);
+      if (BONUS_TREINO) movLog.push(`Treinamento (Treino de Agilidade): +${round1(BONUS_TREINO)}m`);
       movLog.push(`Bônus total: +${round1(BONUS_TOTAL)}m`);
       movLog.push(`Subtotal: ${round1(SUBTOTAL)}m`);
       movLog.push(`Em Domínio: ${emDominio ? 'sim' : 'não'} -> multiplicador x${MULT}`);
@@ -405,6 +654,7 @@ export class BoilerplateActor extends Actor {
           bonus: round1(BONUS_TOTAL),
           bonusAdHoc: round1(BONUS_ADHOC),
           outrosBonus: round1(BONUS_OUTROS),
+          treinoBonus: round1(BONUS_TREINO),
           subtotal: round1(SUBTOTAL),
           multiplicador: MULT,
           total: round1(FINAL)
@@ -460,12 +710,13 @@ export class BoilerplateActor extends Actor {
       const bonusFixo = Number(iniCfg?.bonusFixo ?? 0) || 0;
       const bonusAdHoc = Number(iniCfg?.bonusAdHoc ?? 0) || 0;
       const outrosBonus = Number(iniCfg?.outrosBonus ?? 0) || 0;
+      const treinoIni = Number(system?.treinamentoDerivados?.bonuses?.iniciativa?.value ?? 0) || 0;
 
       const sysId = game?.system?.id ?? 'feiticeiros-e-maldicoes';
       const flagBonuses = (actorData.flags ?? {})[sysId] ?? {};
       const flagsIni = Number(flagBonuses?.bonuses?.iniciativa ?? flagBonuses?.iniciativa ?? 0) || 0;
 
-      const totalOutros = Number(extraMod + trainingBonus + bonusFixo + bonusAdHoc + outrosBonus + flagsIni) || 0;
+      const totalOutros = Number(extraMod + trainingBonus + bonusFixo + bonusAdHoc + outrosBonus + flagsIni + treinoIni) || 0;
       const iniTotal = Number(dexMod + totalOutros) || 0;
 
       const iniLog = [];
@@ -477,6 +728,7 @@ export class BoilerplateActor extends Actor {
       if (bonusAdHoc) iniLog.push(`Bônus ad-hoc (system.combate.iniciativa.bonusAdHoc): +${bonusAdHoc}`);
       if (outrosBonus) iniLog.push(`Outros bônus (system.combate.iniciativa.outrosBonus): +${outrosBonus}`);
       if (flagsIni) iniLog.push(`Bônus via flags (${sysId}): +${flagsIni}`);
+      if (treinoIni) iniLog.push(`Treinamento (Treino de Agilidade): +${treinoIni}`);
       iniLog.push(`Outros bônus total: +${totalOutros}`);
       iniLog.push(`Bônus de iniciativa final (@iniciativa): ${iniTotal} = ${dexMod} + ${totalOutros}`);
       iniLog.push(`Obs.: Empates são desempatados por maior Mod. Destreza; persistindo, rola-se novamente entre os empatados.`);
@@ -498,6 +750,7 @@ export class BoilerplateActor extends Actor {
           adHoc: bonusAdHoc,
           outros: outrosBonus,
           flags: flagsIni,
+          treino: treinoIni,
           outrosTotal: totalOutros,
           total: iniTotal
         },
