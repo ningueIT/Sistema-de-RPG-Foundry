@@ -3962,7 +3962,6 @@ body .ultima-acao select.ultima-acao-select option {
 /* Faixa de SUCESSO (Roxo) */
 .jem-skillcheck__band--success {
     background: conic-gradient(
-        from -90deg, 
         transparent 0deg, 
         transparent calc((var(--jem-zone-angle) - var(--jem-success-width) / 2) * 1deg), 
     
@@ -3981,7 +3980,6 @@ body .ultima-acao select.ultima-acao-select option {
 .jem-skillcheck__band--great {
     z-index: 2;
     background: conic-gradient(
-        from -90deg, 
         transparent 0deg, 
         transparent calc((var(--jem-zone-angle) - var(--jem-great-width) / 2) * 1deg), 
     

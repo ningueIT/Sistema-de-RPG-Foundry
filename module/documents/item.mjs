@@ -5,6 +5,7 @@
 import { convertDamageLevel } from "../helpers/damage-scale.mjs";
 import { rollFormula } from '../helpers/rolls.mjs';
 import { getSureHitTargetsForAttack } from '../helpers/dominio.mjs';
+import { requestStartDominioClash } from "../helpers/dominio-clash.mjs";
 export class BoilerplateItem extends Item {
   /**
    * Augment the basic Item data model with additional dynamic data.
@@ -191,6 +192,87 @@ export class BoilerplateItem extends Item {
    */
   async roll() {
     const item = this;
+
+    // Intercepta itens de Expansão de Domínio: pergunta se o jogador quer Dados ou Skill Check.
+    // Mantém o fluxo padrão para todos os outros itens.
+    try {
+      const norm = (s) => String(s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+      const nameNorm = norm(this.name);
+
+      const tagsRaw = this.system?.tags;
+      const tags = Array.isArray(tagsRaw)
+        ? tagsRaw.map(t => norm(t))
+        : (typeof tagsRaw === 'string' ? tagsRaw.split(/[,;|]/g).map(t => norm(t)) : []);
+
+      const isDominio = (
+        nameNorm.includes('expansao de dominio') ||
+        String(this.type) === 'dominio' ||
+        tags.includes('dominio') ||
+        tags.includes('expansao de dominio')
+      );
+
+      if (isDominio && this.actor) {
+        const choice = await new Promise((resolve) => {
+          new Dialog({
+            title: 'Modo de Confronto',
+            content: `
+              <div style="margin-bottom: 10px;">
+                <p>Como deseja realizar este confronto?</p>
+                <ul>
+                  <li><strong>Skill Check:</strong> minigame de reflexo.</li>
+                  <li><strong>Dados:</strong> rolagem padrão do item (envia card no chat).</li>
+                </ul>
+              </div>
+            `,
+            buttons: {
+              skill: {
+                label: 'Skill Check',
+                callback: () => resolve('skill'),
+              },
+              dados: {
+                label: 'Rodar Dados',
+                callback: () => resolve('dados'),
+              },
+            },
+            default: 'skill',
+            close: () => resolve('close'),
+          }).render(true);
+        });
+
+        if (choice === 'skill') {
+          const targets = Array.from(game.user?.targets ?? []);
+          if (targets.length !== 1) {
+            ui?.notifications?.warn?.('Para o Skill Check, selecione exatamente 1 alvo (token do oponente) na cena.');
+            return null;
+          }
+
+          const challengerToken = targets[0];
+          const challengerTokenDoc = challengerToken?.document ?? challengerToken;
+          const challengerTokenId = challengerTokenDoc?.id ?? null;
+          const challengerActorId = challengerTokenDoc?.actorId ?? challengerToken?.actor?.id ?? null;
+
+          if (!challengerActorId) {
+            ui?.notifications?.error?.('O alvo selecionado não possui um ator válido.');
+            return null;
+          }
+
+          await requestStartDominioClash({
+            ownerActorId: this.actor.id,
+            challengerActorId,
+            challengerTokenId,
+            source: 'item.roll:dominio-modal',
+          });
+
+          return null;
+        }
+
+        if (choice === 'close') return null;
+        // choice === 'dados' => cai no fluxo normal abaixo
+      }
+    } catch (e) {
+      console.warn('Falha ao interceptar Expansão de Domínio no roll():', e);
+      // Em caso de erro, deixa o fluxo padrão continuar.
+    }
 
     // If this is a weapon, start the attack flow (attack roll then damage)
     if (String(item.type) === 'arma') {

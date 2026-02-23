@@ -1,0 +1,68 @@
+<div class="status-panel grid grid-2col" style="gap: 15px; margin-bottom: 10px;">
+
+  <div class="status-card hp">
+    <label>Pontos de Vida</label>
+    <div class="status-inputs flexrow">
+      <input type="number" name="system.recursos.hp.value" value="{{system.recursos.hp.value}}" placeholder="Atual"/>
+      <span class="sep">/</span>
+      <input type="number" name="system.recursos.hp.max" value="{{system.recursos.hp.max}}" placeholder="Max"/>
+    </div>
+    <div class="bar-bg"><div class="bar-fill" style="width: {{system.recursos.hp.percent}}%;"></div></div>
+  </div>
+
+  <div class="status-card pe">
+    <label>PE (do Usuário)</label>
+    <div class="status-inputs flexrow">
+      <input type="number" name="system.recursos.energia.value" value="{{system.recursos.energia.value}}" placeholder="Atual"/>
+      <span class="sep">/</span>
+      <input type="number" name="system.recursos.energia.max" value="{{system.recursos.energia.max}}" placeholder="Max"/>
+    </div>
+    <div class="bar-bg"><div class="bar-fill" style="width: {{system.recursos.energia.percent}}%;"></div></div>
+  </div>
+
+</div>
+
+<div style="margin-bottom: 10px; display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+  <div class="combat-card flexcol flex-group-center">
+    <label>PV (Regra)</label>
+    <input type="number" value="{{system.invocacao.pvCalculado}}" readonly disabled>
+  </div>
+  <div class="combat-card flexcol flex-group-center">
+    <label>DEF (Regra)</label>
+    <input type="number" value="{{system.invocacao.defCalculada}}" readonly disabled>
+  </div>
+  <div class="combat-card flexcol flex-group-center">
+    <label>Custo Invocar</label>
+    <div style="display:flex; align-items:center; justify-content:center; gap: 6px;">
+      <input type="number" value="{{system.invocacao.custoInvocarPe.value}}" readonly disabled>
+      <span style="font-size: 11px; opacity: 0.85;">PE</span>
+    </div>
+  </div>
+</div>
+
+<h3 class="jem-section-title">Fonte de Dados</h3>
+
+{{#if system.invocacao.ownerActorId.value}}
+  {{#if system.invocacao.autoSyncOwner.value}}
+    <p class="jem-empty">Sincronizando automaticamente do dono selecionado.</p>
+  {{else}}
+    <p class="jem-empty">Auto-sync desligado: usando valores manuais abaixo.</p>
+  {{/if}}
+{{else}}
+  <p class="jem-empty">Sem dono selecionado: usando valores manuais abaixo.</p>
+{{/if}}
+
+<div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+  <div class="combat-card flexcol flex-group-center">
+    <label>{{system.detalhes.nivel.label}}</label>
+    <input type="number" name="system.detalhes.nivel.value" value="{{system.detalhes.nivel.value}}" data-dtype="Number" />
+  </div>
+  <div class="combat-card flexcol flex-group-center">
+    <label>{{system.detalhes.treinamento.label}}</label>
+    <input type="number" name="system.detalhes.treinamento.value" value="{{system.detalhes.treinamento.value}}" data-dtype="Number" />
+  </div>
+  <div class="combat-card flexcol flex-group-center">
+    <label>{{system.invocacao.nivelControlador.label}}</label>
+    <input type="number" name="system.invocacao.nivelControlador.value" value="{{system.invocacao.nivelControlador.value}}" data-dtype="Number" />
+  </div>
+</div>

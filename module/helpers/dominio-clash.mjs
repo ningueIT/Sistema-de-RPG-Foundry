@@ -1,8 +1,52 @@
-import { SYSTEM_ID, getActiveDominio, isTokenInsideDominio } from './dominio.mjs';
+// ===========================================================================
+// DOMINIO CLASH - Módulo Independente (Sem imports circulares)
+// ===========================================================================
 
+const SYSTEM_ID = 'feiticeiros-e-maldicoes';
+const FLAG_ACTIVE = 'dominioActive';
 const FLAG_CLASHES = 'dominioClashes';
-
 const DEBUG = true;
+
+// --------------------------------------------------------------------------
+// FUNÇÕES AUXILIARES (Copiadas para quebrar dependência circular)
+// --------------------------------------------------------------------------
+
+function getActiveDominio(actor) {
+  if (!actor?.getFlag) return null;
+  return actor.getFlag(SYSTEM_ID, FLAG_ACTIVE) ?? null;
+}
+
+function _getTokenCenter(tokenDoc) {
+  const obj = tokenDoc?.object;
+  if (obj?.center) return { x: obj.center.x, y: obj.center.y };
+  // Fallback se o objeto canvas não estiver pronto
+  const x = Number(tokenDoc?.x ?? 0);
+  const y = Number(tokenDoc?.y ?? 0);
+  const size = canvas?.grid?.size ?? 100;
+  const w = Number(tokenDoc?.width ?? 1) * size;
+  const h = Number(tokenDoc?.height ?? 1) * size;
+  return { x: x + (w / 2), y: y + (h / 2) };
+}
+
+function _isInsideCircle(point, center, radiusPixels) {
+  if (!point || !center || !radiusPixels) return false;
+  const dx = point.x - center.x;
+  const dy = point.y - center.y;
+  return (dx * dx + dy * dy) <= (radiusPixels * radiusPixels);
+}
+
+function isTokenInsideDominio(tokenDoc, dominio) {
+  if (!tokenDoc || !dominio) return false;
+  const radiusPixels = Number(dominio.radiusPixels ?? 0) || 0;
+  if (!radiusPixels) return false;
+  const point = _getTokenCenter(tokenDoc);
+  if (!dominio.center) return false;
+  return _isInsideCircle(point, dominio.center, radiusPixels);
+}
+
+// --------------------------------------------------------------------------
+// LÓGICA DE CLASH (Batalha de Domínio)
+// --------------------------------------------------------------------------
 
 function _log(...args) {
   if (!DEBUG) return;
@@ -23,7 +67,6 @@ function _now() {
 }
 
 function _hashStringToUint(str = '') {
-  // FNV-1a 32-bit (determinístico)
   let h = 2166136261;
   const s = String(str);
   for (let i = 0; i < s.length; i += 1) {
@@ -152,7 +195,6 @@ function actorHasDominioExpansion(actor) {
       || keys.includes('dominio.expansaoDeDominioSemBarreiras')
       || keys.includes('dominio.acertoGarantido');
 
-    // Fallback: alguns mundos antigos podem não ter flags aptidaoKey nos itens importados.
     if (!eligible) {
       const joined = names.join(' | ').toLowerCase();
       const hasExp = joined.includes('expans') && joined.includes('dom') && joined.includes('nio');
@@ -259,8 +301,6 @@ function _activeGMCount() {
 }
 
 function _shouldHandleLocallyAsGM() {
-  // Alguns eventos de socket não "ecoam" para o emissor.
-  // Se existir apenas 1 GM ativo (este cliente), precisamos processar localmente.
   return !!game.user?.isGM && _activeGMCount() <= 1;
 }
 
@@ -279,7 +319,6 @@ function _hasOtherActiveOwner(actor) {
 }
 
 function _hasActiveNonGMOwner(actor) {
-  // Se existir qualquer dono jogador online para o ator, o GM NÃO deve abrir o modal.
   try {
     const users = game.users?.contents ?? [];
     for (const u of users) {
@@ -310,13 +349,8 @@ async function _requestRoll({ clashId, actorId, tokenUuid = null, round } = {}) 
     });
   } catch (_) { /* ignore */ }
 
-  // Sempre tenta enviar via socket para os donos em outros clientes.
-  // IMPORTANTE: pode acontecer do ator não existir em game.actors (token unlinked).
-  // Nesse caso, ainda assim o dono consegue resolver via tokenUuid.
   _emitToSocket('requestRoll', { clashId, actorId, tokenUuid, round });
 
-  // Se não existir outro dono ativo, abre localmente (útil em testes solo / dono offline).
-  // Só conseguimos abrir localmente se conseguimos resolver o actor neste cliente.
   if (!actor) return;
 
   try {
@@ -347,17 +381,13 @@ async function requestStartDominioClash({ ownerActorId, challengerActorId, chall
     challengerTokenId: challengerTokenId ?? null,
     sceneId: canvas?.scene?.id ?? null,
     requestedBy: game.user?.id ?? null,
-    // Usado para idempotência entre múltiplos GMs e/ou ausência de echo do socket.
     clashId: _makeClashId({ ownerActorId, challengerActorId }),
     source: arguments?.[0]?.source ?? null,
   };
 
   _log('requestStart: called', { ...payload, isGM: !!game.user?.isGM, user: game.user?.name, userId: game.user?.id });
 
-  // Player nunca inicia direto: ele solicita aprovação do Mestre.
   if (!game.user?.isGM) {
-    // Fallback robusto: cria card de aprovação diretamente no chat (whisper pros GMs).
-    // Motivo: em alguns cenários o socket não chega no GM (ou não "ecoou" como esperado).
     try {
       const gmIds = _gmWhisperGMUserIds();
       if (!gmIds.length) {
@@ -368,32 +398,20 @@ async function requestStartDominioClash({ ownerActorId, challengerActorId, chall
       const ownerActor = _resolveActorById(ownerActorId);
       const challengerActor = _resolveActorById(challengerActorId);
 
-      _log('startRequest: create GM approval card', {
-        ownerActorId,
-        challengerActorId,
-        requestedBy: payload.requestedBy,
-        gmIds,
-        ownerFound: !!ownerActor,
-        challengerFound: !!challengerActor,
-      });
+      _log('startRequest: create GM approval card', { ownerActorId, challengerActorId });
 
       await ChatMessage.create({
         content: _renderApprovalCard({ ownerActor, challengerActor, challengerTokenId: payload.challengerTokenId, requestedBy: payload.requestedBy }),
         whisper: gmIds,
       });
-
-      _log('startRequest: GM approval card created', { gmIds, ownerActorId, challengerActorId, requestedBy: payload.requestedBy });
     } catch (e) {
       console.warn('dominioClash: falha ao criar card de aprovação para o GM', e);
       try { ui.notifications?.warn?.('Falha ao enviar solicitação ao Mestre. Veja o console.'); } catch (_) { /* ignore */ }
     }
-
-    // Mantém o socket como best-effort (compat/telemetria); se chegar, o GM também verá.
     _emitToSocket('startRequest', payload);
     return;
   }
 
-  // Mestre pode iniciar diretamente.
   try {
     _log('requestStart: GM handle locally', payload);
     await _gmStartClash(payload);
@@ -401,8 +419,6 @@ async function requestStartDominioClash({ ownerActorId, challengerActorId, chall
     console.warn('dominioClash: falha ao iniciar clash localmente (GM)', e);
   }
 
-  // Se houver mais de 1 GM ativo, ainda emitimos para sincronizar outros clientes.
-  // Se houver só 1 GM, evitamos duplicação desnecessária.
   if (!_shouldHandleLocallyAsGM()) _emitToSocket('start', payload);
 }
 
@@ -448,18 +464,13 @@ function _renderApprovalCard({ ownerActor, challengerActor, challengerTokenId, r
 async function _gmStartRequest({ ownerActorId, challengerActorId, challengerTokenId, requestedBy } = {}) {
   const ownerActor = _resolveActorById(ownerActorId);
   const challengerActor = _resolveActorById(challengerActorId);
+  if (!ownerActor || !challengerActor) return;
 
-  if (!ownerActor || !challengerActor) {
-    _log('gmStartRequest: abort (actor inválido)', { ownerActorId, challengerActorId, requestedBy });
-    return;
-  }
-
-  // Regra: se já existe clash ativo entre o par, encerra e permite iniciar outro.
   try {
     const all = await getSceneClashes();
     const active = Object.values(all ?? {}).find(c => c && c.status === 'active' &&
       ((String(c.ownerActorId) === String(ownerActor.id) && String(c.challengerActorId) === String(challengerActor.id)) ||
-       (String(c.ownerActorId) === String(challengerActor.id) && String(c.challengerActorId) === String(ownerActor.id))));
+        (String(c.ownerActorId) === String(challengerActor.id) && String(c.challengerActorId) === String(ownerActor.id))));
     if (active?.id) {
       const clashId = String(active.id);
       try {
@@ -469,7 +480,6 @@ async function _gmStartRequest({ ownerActorId, challengerActorId, challengerToke
         all[clashId] = active;
         await setSceneClashes(all);
       } catch (_) { /* ignore */ }
-
       await ChatMessage.create({
         content: `<div><strong>Batalha de Domínio reiniciada</strong>: o confronto anterior entre <strong>${challengerActor.name}</strong> e <strong>${ownerActor.name}</strong> foi encerrado e um novo poderá ser iniciado.</div>`,
         whisper: _clashWhisperUserIds(ownerActor, challengerActor),
@@ -483,8 +493,6 @@ async function _gmStartRequest({ ownerActorId, challengerActorId, challengerToke
 }
 
 async function _gmRejectRequest({ ownerActorId, challengerActorId, challengerTokenId, requestedBy } = {}) {
-  const ownerActor = _resolveActorById(ownerActorId);
-  const challengerActor = _resolveActorById(challengerActorId);
   const requesterName = (() => {
     try {
       const u = requestedBy ? game.users?.get?.(requestedBy) : null;
@@ -493,7 +501,6 @@ async function _gmRejectRequest({ ownerActorId, challengerActorId, challengerTok
       return '—';
     }
   })();
-
   await ChatMessage.create({
     content: `<div><strong>Confronto de Domínio recusado</strong> pelo Mestre.</div><div class="flavor-text">Solicitante: <strong>${requesterName}</strong></div>`,
   });
@@ -522,60 +529,41 @@ function requestEndClash({ clashId } = {}) {
 async function _gmStartClash({ ownerActorId, challengerActorId, challengerTokenId, clashId } = {}) {
   const ownerActor = _resolveActorById(ownerActorId);
   const challengerActor = _resolveActorById(challengerActorId);
-  if (!ownerActor || !challengerActor) {
-    _log('gmStartClash: abort (actor inválido)', { ownerActorId, challengerActorId, ownerFound: !!ownerActor, challengerFound: !!challengerActor });
-    return;
-  }
+  if (!ownerActor || !challengerActor) return;
 
-  // Idempotência: se já existe um clash com este id, não cria de novo.
   try {
     const allExisting = await getSceneClashes();
     const existing = clashId ? (allExisting?.[clashId] ?? null) : null;
-    if (existing && existing.status === 'active') {
-      _log('gmStartClash: ignore (já existe clash ativo com mesmo id)', { clashId, ownerActorId, challengerActorId });
-      return;
-    }
+    if (existing && existing.status === 'active') return;
   } catch (_) { /* ignore */ }
 
   const dominio = getActiveDominio(ownerActor);
-  if (!dominio) {
-    _log('gmStartClash: abort (owner sem domínio ativo)', { owner: ownerActor.name, ownerActorId });
-    return;
-  }
-    // Evita criar clashes duplicados entre o mesmo par.
-    try {
-      const allExistingPairs = await getSceneClashes();
-      const alreadyActive = Object.values(allExistingPairs ?? {}).find(c => c && c.status === 'active' &&
-        ((String(c.ownerActorId) === String(ownerActor.id) && String(c.challengerActorId) === String(challengerActor.id)) ||
-         (String(c.ownerActorId) === String(challengerActor.id) && String(c.challengerActorId) === String(ownerActor.id))));
-      if (alreadyActive) {
-        const activeClashId = alreadyActive?.id ?? null;
-        _log('gmStartClash: restart (já existe clash ativo entre o par)', { ownerActorId, challengerActorId, clashId: activeClashId });
+  if (!dominio) return;
 
-        // Encerra o clash anterior para permitir iniciar um novo do zero.
-        try {
-          if (activeClashId) {
-            alreadyActive.status = 'finished';
-            alreadyActive.finishedAt = _now();
-            alreadyActive.reason = 'restarted';
-            allExistingPairs[String(activeClashId)] = alreadyActive;
-            await setSceneClashes(allExistingPairs);
+  try {
+    const allExistingPairs = await getSceneClashes();
+    const alreadyActive = Object.values(allExistingPairs ?? {}).find(c => c && c.status === 'active' &&
+      ((String(c.ownerActorId) === String(ownerActor.id) && String(c.challengerActorId) === String(challengerActor.id)) ||
+        (String(c.ownerActorId) === String(challengerActor.id) && String(c.challengerActorId) === String(ownerActor.id))));
+    if (alreadyActive) {
+      const activeClashId = alreadyActive?.id ?? null;
+      try {
+        if (activeClashId) {
+          alreadyActive.status = 'finished';
+          alreadyActive.finishedAt = _now();
+          alreadyActive.reason = 'restarted';
+          allExistingPairs[String(activeClashId)] = alreadyActive;
+          await setSceneClashes(allExistingPairs);
+          await ChatMessage.create({
+            content: `<div><strong>Batalha de Domínio reiniciada</strong>: o confronto anterior foi encerrado e um novo será iniciado.</div>`,
+            whisper: _clashWhisperUserIds(ownerActor, challengerActor),
+          });
+        }
+      } catch (_) { /* ignore */ }
+    }
+  } catch (_) { /* ignore */ }
 
-            await ChatMessage.create({
-              content: `<div><strong>Batalha de Domínio reiniciada</strong>: o confronto anterior foi encerrado e um novo será iniciado.</div>`,
-              whisper: _clashWhisperUserIds(ownerActor, challengerActor),
-            });
-          }
-        } catch (_) { /* ignore */ }
-
-        // Prossegue criando um novo clash (não retorna).
-      }
-    } catch (_) { /* ignore */ }
-
-  if (dominio.sceneId && canvas?.scene?.id && String(dominio.sceneId) !== String(canvas.scene.id)) {
-    _log('gmStartClash: abort (cena diferente)', { dominioSceneId: dominio.sceneId, canvasSceneId: canvas?.scene?.id ?? null });
-    return;
-  }
+  if (dominio.sceneId && canvas?.scene?.id && String(dominio.sceneId) !== String(canvas.scene.id)) return;
 
   const ownerTokenDoc = (() => {
     try {
@@ -595,14 +583,8 @@ async function _gmStartClash({ ownerActorId, challengerActorId, challengerTokenI
     } catch (_) { /* ignore */ }
     return _getPrimaryTokenDoc(challengerActor);
   })();
-  if (!challengerTokenDoc) {
-    _log('gmStartClash: abort (desafiante sem token ativo)', { challenger: challengerActor.name, challengerActorId, challengerTokenId: challengerTokenId ?? null });
-    return;
-  }
+  if (!challengerTokenDoc) return;
 
-  // Condição de início:
-  // - padrão: desafiante dentro da área do domínio do owner
-  // - overlap: se o desafiante também tem Domínio ativo e os círculos se sobrepõem, permite iniciar
   let insideOrOverlap = false;
   try {
     insideOrOverlap = isTokenInsideDominio(challengerTokenDoc, dominio);
@@ -614,44 +596,25 @@ async function _gmStartClash({ ownerActorId, challengerActorId, challengerTokenI
       const sameScene = (!dominio?.sceneId || !challengerDom?.sceneId) ? true : (String(dominio.sceneId) === String(challengerDom.sceneId));
       const overlap = sameScene && challengerDom?.center && challengerDom?.radiusPixels && dominio?.center && dominio?.radiusPixels
         ? (() => {
-            const dx = (Number(dominio.center.x ?? 0) - Number(challengerDom.center.x ?? 0));
-            const dy = (Number(dominio.center.y ?? 0) - Number(challengerDom.center.y ?? 0));
-            const dist2 = (dx * dx) + (dy * dy);
-            const r = (Number(dominio.radiusPixels ?? 0) || 0) + (Number(challengerDom.radiusPixels ?? 0) || 0);
-            return dist2 <= (r * r);
-          })()
+          const dx = (Number(dominio.center.x ?? 0) - Number(challengerDom.center.x ?? 0));
+          const dy = (Number(dominio.center.y ?? 0) - Number(challengerDom.center.y ?? 0));
+          const dist2 = (dx * dx) + (dy * dy);
+          const r = (Number(dominio.radiusPixels ?? 0) || 0) + (Number(challengerDom.radiusPixels ?? 0) || 0);
+          return dist2 <= (r * r);
+        })()
         : false;
 
-      if (overlap) {
-        insideOrOverlap = true;
-        _log('gmStartClash: allowed by overlap (domínios se sobrepõem)', { ownerActorId, challengerActorId });
-      }
+      if (overlap) insideOrOverlap = true;
     } catch (_) { /* ignore */ }
   }
 
-  if (!insideOrOverlap) {
-    _log('gmStartClash: abort (desafiante fora da área e sem overlap)', { challenger: challengerActor.name, challengerActorId });
-    return;
-  }
-
-  _log('gmStartClash: challenger inside dominio', {
-    owner: { name: ownerActor.name, id: ownerActor.id },
-    challenger: { name: challengerActor.name, id: challengerActor.id },
-  });
-
-  if (!actorHasDominioExpansion(challengerActor)) {
-    _log('gmStartClash: abort (desafiante sem expansão de domínio)', { challenger: challengerActor.name, challengerActorId });
-    return;
-  }
+  if (!insideOrOverlap) return;
+  if (!actorHasDominioExpansion(challengerActor)) return;
 
   const baseAreaOwner = Math.max(1, _safeInt(_computeActorDominioRadiusSquares(ownerActor), 1));
   const baseAreaChal = Math.max(1, _safeInt(_computeActorDominioRadiusSquares(challengerActor), 1));
-
-  // Para não ficar infinito, limita o crescimento (diferença máxima de pontos é 5)
   const maxAreaOwner = baseAreaOwner + 5;
   const maxAreaChal = baseAreaChal + 5;
-
-  // Sempre cria um novo clashId ao iniciar (evita colidir com clashes anteriores e torna o "restart" determinístico).
   const finalClashId = _makeClashId({ ownerActorId, challengerActorId });
 
   const clash = {
@@ -662,38 +625,17 @@ async function _gmStartClash({ ownerActorId, challengerActorId, challengerTokenI
     round: 1,
     ownerActorId: ownerActor.id,
     challengerActorId: challengerActor.id,
-    points: {
-      [ownerActor.id]: 0,
-      [challengerActor.id]: 0,
-    },
-    area: {
-      [ownerActor.id]: baseAreaOwner,
-      [challengerActor.id]: baseAreaChal,
-    },
-    maxArea: {
-      [ownerActor.id]: maxAreaOwner,
-      [challengerActor.id]: maxAreaChal,
-    },
+    points: { [ownerActor.id]: 0, [challengerActor.id]: 0 },
+    area: { [ownerActor.id]: baseAreaOwner, [challengerActor.id]: baseAreaChal },
+    maxArea: { [ownerActor.id]: maxAreaOwner, [challengerActor.id]: maxAreaChal },
     lastRolls: {},
-    pending: {
-      [ownerActor.id]: null,
-      [challengerActor.id]: null,
-    },
-    skillCheckHits: {
-      [ownerActor.id]: 0,
-      [challengerActor.id]: 0,
-    },
-    tokenUuids: {
-      [ownerActor.id]: ownerTokenDoc?.uuid ?? null,
-      [challengerActor.id]: challengerTokenDoc?.uuid ?? null,
-    },
+    pending: { [ownerActor.id]: null, [challengerActor.id]: null },
+    skillCheckHits: { [ownerActor.id]: 0, [challengerActor.id]: 0 },
+    tokenUuids: { [ownerActor.id]: ownerTokenDoc?.uuid ?? null, [challengerActor.id]: challengerTokenDoc?.uuid ?? null },
   };
 
   const all = await getSceneClashes();
-  if (all?.[finalClashId]?.status === 'active') {
-    _log('gmStartClash: ignore (clash já existe no setSceneClashes)', { clashId: finalClashId });
-    return;
-  }
+  if (all?.[finalClashId]?.status === 'active') return;
   all[finalClashId] = clash;
   await setSceneClashes(all);
 
@@ -701,17 +643,6 @@ async function _gmStartClash({ ownerActorId, challengerActorId, challengerTokenI
     content: _renderClashCard(clash, { ownerActor, challengerActor, header: 'Batalha de Domínio iniciada' }),
     whisper: _clashWhisperUserIds(ownerActor, challengerActor),
   });
-
-  try {
-    _log('gmStartClash: dispatch requestRoll (skillcheck)', {
-      clashId: finalClashId,
-      round: clash.round,
-      ownerActorId: ownerActor.id,
-      challengerActorId: challengerActor.id,
-      ownerTokenUuid: ownerTokenDoc?.uuid ?? null,
-      challengerTokenUuid: challengerTokenDoc?.uuid ?? null,
-    });
-  } catch (_) { /* ignore */ }
 
   await _requestRoll({ clashId: finalClashId, actorId: ownerActor.id, tokenUuid: ownerTokenDoc?.uuid ?? null, round: clash.round });
   await _requestRoll({ clashId: finalClashId, actorId: challengerActor.id, tokenUuid: challengerTokenDoc?.uuid ?? null, round: clash.round });
@@ -764,18 +695,14 @@ async function _gmReceiveRollResult({ clashId, actorId, total, formula, roll, sk
   if (!clash.pending || typeof clash.pending !== 'object') clash.pending = {};
   if (!Object.prototype.hasOwnProperty.call(clash.pending, actorId)) return;
 
-  // Desistência: quem cancelou perde imediatamente.
   if (forfeit === true) {
     const aId0 = ownerActor.id;
     const bId0 = challengerActor.id;
     const winnerActorId = (String(actorId) === String(aId0)) ? bId0 : aId0;
-
     clash.status = 'finished';
     clash.finishedAt = _now();
     clash.winnerActorId = winnerActorId;
     clash.reason = 'forfeit';
-
-    // Registra também no lastRolls para depuração
     clash.lastRolls = clash.lastRolls || {};
     clash.lastRolls[actorId] = {
       total: _safeInt(total, 0),
@@ -785,9 +712,7 @@ async function _gmReceiveRollResult({ clashId, actorId, total, formula, roll, sk
       skillCheck: (skillCheck && typeof skillCheck === 'object') ? skillCheck : { result: 'forfeit' },
       forfeit: true,
     };
-
     await setSceneClashes(all);
-
     await ChatMessage.create({
       content: _renderClashCard(clash, {
         ownerActor,
@@ -810,7 +735,6 @@ async function _gmReceiveRollResult({ clashId, actorId, total, formula, roll, sk
     skillCheck: (skillCheck && typeof skillCheck === 'object') ? skillCheck : null,
   };
 
-  // Espera os dois
   const aId = ownerActor.id;
   const bId = challengerActor.id;
   const aRoll = clash.pending[aId];
@@ -820,21 +744,16 @@ async function _gmReceiveRollResult({ clashId, actorId, total, formula, roll, sk
 
   if (aRoll == null || bRoll == null) return;
 
-  // Pontos baseados no resultado do skill check.
-  // FAIL = -1, SUCCESS = +1, GREAT = +2.
   const aRes = String(clash.lastRolls?.[aId]?.skillCheck?.result ?? '').toLowerCase();
   const bRes = String(clash.lastRolls?.[bId]?.skillCheck?.result ?? '').toLowerCase();
-
   const deltaFor = (res) => {
     if (res === 'great') return 2;
     if (res === 'success') return 1;
-    // Inclui 'fail' e qualquer caso inesperado
     return -1;
   };
 
   const aDelta = deltaFor(aRes);
   const bDelta = deltaFor(bRes);
-
   clash.points[aId] = _safeInt(clash.points?.[aId], 0) + aDelta;
   clash.points[bId] = _safeInt(clash.points?.[bId], 0) + bDelta;
 
@@ -846,8 +765,6 @@ async function _gmReceiveRollResult({ clashId, actorId, total, formula, roll, sk
     clash.reason = 'diff-5';
   }
 
-  // A cada acerto (SUCCESS/GREAT), o próximo skill check fica mais difícil para aquele ator.
-  // Interpretação: acerto = cair dentro da zona (skillCheck.result success/great).
   try {
     if (!clash.skillCheckHits || typeof clash.skillCheckHits !== 'object') clash.skillCheckHits = {};
     if (aRes === 'success') clash.skillCheckHits[aId] = _safeInt(clash.skillCheckHits[aId], 0) + 1;
@@ -868,7 +785,6 @@ async function _gmReceiveRollResult({ clashId, actorId, total, formula, roll, sk
     whisper: _clashWhisperUserIds(ownerActor, challengerActor),
   });
 
-  // Sequência automática: dispara a próxima rodada imediatamente até alguém abrir 5 pontos.
   if (clash.status !== 'finished') {
     clash.round = _safeInt(clash.round, 1) + 1;
     clash.pending = { [ownerActor.id]: null, [challengerActor.id]: null };
@@ -890,15 +806,12 @@ async function _gmReceiveRollResult({ clashId, actorId, total, formula, roll, sk
 function _renderClashCard(clash, { ownerActor, challengerActor, header = 'Batalha de Domínio', extra = '' } = {}) {
   const aId = ownerActor?.id ?? clash?.ownerActorId;
   const bId = challengerActor?.id ?? clash?.challengerActorId;
-
   const aPts = _safeInt(clash?.points?.[aId], 0);
   const bPts = _safeInt(clash?.points?.[bId], 0);
   const aArea = _safeInt(clash?.area?.[aId], 1);
   const bArea = _safeInt(clash?.area?.[bId], 1);
-
   const done = clash?.status === 'finished';
   const winner = done ? (clash?.winnerActorId === aId ? ownerActor?.name : challengerActor?.name) : null;
-
   const btns = done
     ? `<button class="jem-dominio-clash-end jem-btn" data-clash-id="${clash.id}" disabled>Encerrado</button>`
     : `<button class="jem-btn" disabled>Rodadas automáticas...</button>`;
@@ -938,32 +851,16 @@ async function notifyTokensInsideDominio({ ownerActor, dominio } = {}) {
       const tokenDoc = tok?.document;
       const actor = tok?.actor;
       if (!tokenDoc || !actor) continue;
-
-      // Cena do domínio
       if (dominio.sceneId && tokenDoc.scene?.id && String(dominio.sceneId) !== String(tokenDoc.scene.id)) continue;
-
       if (String(actor.id) === String(ownerActor.id)) continue;
+
       const inside = isTokenInsideDominio(tokenDoc, dominio);
       if (!inside) continue;
 
-      // Whisper somente para quem tem dono (não spammar NPCs sem dono)
       const hasOwner = !!(game.users?.contents ?? []).some(u => u?.active && !u.isGM && actor.testUserPermission?.(u, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER));
-      if (!hasOwner && !game.user?.isGM) {
-        _log('notify: skip token (no owner)', { token: tokenDoc.name, actor: actor.name });
-        continue;
-      }
+      if (!hasOwner && !game.user?.isGM) continue;
 
       const eligible = actorHasDominioExpansion(actor);
-
-      _log('notify: candidate', {
-        owner: ownerName,
-        targetActor: actor?.name,
-        targetToken: tokenDoc?.name,
-        inside,
-        eligible,
-        hasOwner,
-      });
-
       const whisper = [];
       try {
         const users = game.users?.contents ?? [];
@@ -980,7 +877,6 @@ async function notifyTokensInsideDominio({ ownerActor, dominio } = {}) {
       } catch (_) { /* ignore */ }
 
       if (!whisper.length) continue;
-      _log('notify: whisper recipients', { targetActor: actor?.name, whisper });
 
       const btn = eligible
         ? `<div style="margin-top:8px;"><button class="jem-dominio-clash-start jem-btn jem-btn--primary" data-owner-actor-id="${ownerActor.id}" data-challenger-actor-id="${actor.id}" data-challenger-token-id="${String(tok?.id ?? tokenDoc?.id ?? '')}">Solicitar Confronto (Batalha de Domínio)</button></div>`
@@ -996,8 +892,6 @@ async function notifyTokensInsideDominio({ ownerActor, dominio } = {}) {
         content: msg,
         whisper,
       });
-
-      _log('notify: whisper sent', { to: whisper, eligible, actor: actor?.name });
     } catch (e) {
       _warn('falha ao notificar token dentro do domínio', e);
     }
@@ -1006,7 +900,6 @@ async function notifyTokensInsideDominio({ ownerActor, dominio } = {}) {
 
 function registerDominioClashSocket() {
   if (!game.socket?.on) return;
-
   try {
     _log('socket: registered', { channel: _socketChannel(), user: game.user?.name, userId: game.user?.id, isGM: !!game.user?.isGM });
   } catch (_) { /* ignore */ }
@@ -1017,62 +910,28 @@ function registerDominioClashSocket() {
       const action = message.action;
       const data = message.data || {};
 
-       _log('socket recv', { action, data, user: game.user?.name, userId: game.user?.id, isGM: !!game.user?.isGM });
+      _log('socket recv', { action, data, user: game.user?.name, userId: game.user?.id, isGM: !!game.user?.isGM });
 
       if (action === 'requestRoll') {
         const { clashId, actorId, tokenUuid, round } = data;
 
         let actor = _resolveActorById(actorId);
-        let resolvedVia = actor ? 'actorId' : null;
-        let tokenFound = false;
-
         if (!actor && tokenUuid) {
           try {
             const tokenDoc = await fromUuid(tokenUuid);
-            tokenFound = !!tokenDoc;
             actor = tokenDoc?.actor ?? tokenDoc?.object?.actor ?? null;
-            if (actor) resolvedVia = 'tokenUuid';
-          } catch (_) {
-            tokenFound = false;
-          }
+          } catch (_) { /* ignore */ }
         }
 
-        if (!actor) {
-          _log('requestRoll: ignore (ator não encontrado neste cliente)', { clashId, actorId, tokenUuid, tokenFound });
-          return;
-        }
+        if (!actor) return;
+        if (!actor.isOwner) return;
 
-        try {
-          _log('requestRoll: resolved actor', { clashId, actorId, actor: actor?.name, resolvedVia, tokenUuid });
-        } catch (_) { /* ignore */ }
-
-        if (!actor.isOwner) {
-          _log('requestRoll: ignore (cliente não é dono do ator)', { clashId, actorId, actor: actor.name, resolvedVia, tokenUuid });
-          return;
-        }
-
-        // Regra: o modal deve aparecer apenas para o dono jogador.
-        // O GM só assume se não existir nenhum dono não-GM ativo.
-        if (game.user?.isGM && _hasActiveNonGMOwner(actor)) {
-          _log('requestRoll: ignore (GM, ator tem dono não-GM ativo)', { clashId, actorId, actor: actor.name, resolvedVia, tokenUuid });
-          return;
-        }
-
-        _log('requestRoll: opening skillcheck dialog', {
-          clashId,
-          actorId,
-          actor: actor?.name,
-          round,
-          localUser: game.user?.name,
-          localUserId: game.user?.id,
-          localIsGM: !!game.user?.isGM,
-        });
+        if (game.user?.isGM && _hasActiveNonGMOwner(actor)) return;
 
         await _openRollDialog({ clashId, actor, round });
         return;
       }
 
-      // Apenas o Mestre processa solicitações/aprovações.
       if (!game.user?.isGM) return;
 
       if (action === 'startRequest') return _gmStartRequest(data);
@@ -1088,13 +947,9 @@ function registerDominioClashSocket() {
 }
 
 async function _openRollDialog({ clashId, actor, round } = {}) {
-  try {
-    _log('openRollDialog: skillcheck', { clashId, actorId: actor?.id ?? null, actor: actor?.name ?? null, round });
-  } catch (_) { /* ignore */ }
   const bonus = computeDominioClashBonus(actor);
   const domNivel = getDominioAptidaoNivel(actor);
 
-  // Dificuldade progressiva por ator dentro do clash
   let hits = 0;
   try {
     const all = await getSceneClashes();
@@ -1104,20 +959,27 @@ async function _openRollDialog({ clashId, actor, round } = {}) {
     hits = 0;
   }
 
-  // Dificuldade por nível de Domínio: nível maior => mais fácil
   const baseSpeedDegPerSec = Math.max(120, 260 - (domNivel * 20));
   const baseSuccessWidthDeg = Math.min(120, 40 + (domNivel * 10));
   const baseGreatWidthDeg = Math.min(60, 12 + (domNivel * 4));
 
-  // A cada acerto, fica mais difícil: mais rápido e zona menor (com clamps para não ficar impossível)
   const speedDegPerSec = Math.round(baseSpeedDegPerSec * (1 + (hits * 0.12)));
   const successWidthDeg = Math.max(18, Math.round(baseSuccessWidthDeg - (hits * 4)));
   const greatWidthDeg = Math.max(6, Math.round(baseGreatWidthDeg - (hits * 2)));
 
-  // Zona determinística (sem RNG): depende de clashId/actor/round
   const r = _safeInt(round, 1);
-  const zoneAngle = _normalizeDeg(_hashToRange(`${clashId}:${actor?.id ?? ''}:${r}`, 0, 360));
-
+  // A zona muda a cada vez que o modal abre.
+  // (Antes era determinístico por hash; aqui intencionalmente é aleatório.)
+  const zoneAngle = (() => {
+    try {
+      // Preferir crypto quando disponível.
+      const a = new Uint32Array(1);
+      crypto.getRandomValues(a);
+      return _normalizeDeg((a[0] / 0xFFFFFFFF) * 360);
+    } catch (_) {
+      return _normalizeDeg(Math.random() * 360);
+    }
+  })();
   const baseByResult = { fail: 0, success: 10, great: 20 };
 
   return new Promise((resolve) => {
@@ -1126,6 +988,7 @@ async function _openRollDialog({ clashId, actor, round } = {}) {
     let startTs = null;
     let lastAngle = 0;
     let rootEl = null;
+    let skillcheckEl = null;
 
     const content = `
       <div class="jem-skillcheck">
@@ -1155,47 +1018,34 @@ async function _openRollDialog({ clashId, actor, round } = {}) {
       buttons: {
         hit: {
           label: 'Bater',
-          callback: async () => {
-            await finalize('hit');
-          },
+          callback: async () => { await finalize('hit'); },
         },
         cancel: {
           label: 'Cancelar',
-          callback: async () => {
-            await finalize('cancel');
-          },
+          callback: async () => { await finalize('cancel'); },
         },
       },
       default: 'hit',
-      close: async () => {
-        await finalize('close');
-        resolve(true);
-      },
-    }, {
-      width: 720,
-      height: 'auto',
-    });
+      close: async () => { await finalize('close'); resolve(true); },
+    }, { width: 720, height: 'auto' });
 
     const cleanup = () => {
-      try {
-        if (rafId != null) cancelAnimationFrame(rafId);
-      } catch (_) { /* ignore */ }
+      if (rafId != null) cancelAnimationFrame(rafId);
       rafId = null;
-      try {
-        window.removeEventListener('keydown', onKeyDown, true);
-      } catch (_) { /* ignore */ }
+      try { window.removeEventListener('keydown', onKeyDown, true); } catch (_) { /* ignore */ }
     };
 
     const tick = (ts, needleEl) => {
       if (startTs == null) startTs = ts;
       const elapsed = (ts - startTs) / 1000;
       lastAngle = _normalizeDeg(elapsed * speedDegPerSec);
+      // Sempre atualiza o transform da agulha diretamente (mais robusto do que depender apenas de CSS vars).
+      // Também mantém a CSS var com unidade 'deg' para compatibilidade com estilos existentes.
       try {
-        // Atualiza via CSS var para manter o dial e a agulha consistentes
-        if (rootEl) rootEl.style.setProperty('--jem-needle-angle', String(lastAngle));
-        // Fallback: aplica direto
         needleEl.style.transform = `translate(-50%, -100%) rotate(${lastAngle}deg)`;
       } catch (_) { /* ignore */ }
+      // CSS espera um número (pois multiplica por 1deg no stylesheet).
+      if (skillcheckEl) skillcheckEl.style.setProperty('--jem-needle-angle', String(lastAngle));
       rafId = requestAnimationFrame((t) => tick(t, needleEl));
     };
 
@@ -1203,7 +1053,6 @@ async function _openRollDialog({ clashId, actor, round } = {}) {
       const base = baseByResult[resultKey] ?? 0;
       const total = _safeInt(base + bonus, 0);
       const formula = `SKILLCHECK:${String(resultKey).toUpperCase()} + ${bonus}`;
-
       const payload = {
         clashId,
         actorId: actor.id,
@@ -1226,7 +1075,6 @@ async function _openRollDialog({ clashId, actor, round } = {}) {
       };
 
       if (_shouldHandleLocallyAsGM()) {
-        _log('rollResult: single GM, handle locally', { clashId, actorId: actor.id, total: payload.total, result: resultKey });
         await _gmReceiveRollResult(payload);
         return;
       }
@@ -1236,9 +1084,7 @@ async function _openRollDialog({ clashId, actor, round } = {}) {
     async function finalize(kind) {
       if (submitted) return;
       submitted = true;
-
       cleanup();
-
       let resultKey = 'fail';
       let isForfeit = false;
       if (kind === 'hit') {
@@ -1247,65 +1093,47 @@ async function _openRollDialog({ clashId, actor, round } = {}) {
         else if (dist <= (successWidthDeg / 2)) resultKey = 'success';
         else resultKey = 'fail';
       } else {
-        // Cancelar/fechar = desistência (perde o confronto)
         resultKey = 'fail';
         isForfeit = true;
       }
-
       try {
         const resEl = dialog?.element?.[0]?.querySelector?.('.jem-skillcheck__result');
         if (resEl) {
           resEl.textContent = `Resultado: ${resultKey.toUpperCase()} (Total: ${_safeInt((baseByResult[resultKey] ?? 0) + bonus, 0)})`;
-          try {
-            resEl.classList.remove('success', 'great', 'fail');
-            resEl.classList.add(String(resultKey));
-          } catch (_) { /* ignore */ }
+          resEl.classList.remove('success', 'great', 'fail');
+          resEl.classList.add(String(resultKey));
         }
       } catch (_) { /* ignore */ }
-
-      try {
-        await submitResult(resultKey, { forfeit: isForfeit });
-      } catch (e) {
-        console.warn('dominioClash: falha ao enviar resultado do skill check', e);
-        try { ui.notifications?.warn?.('Falha ao enviar resultado da Batalha de Domínio. Veja o console.'); } catch (_) { /* ignore */ }
-      }
-
-      // Fecha automaticamente após enviar (delay pequeno para o jogador ver o feedback)
-      setTimeout(() => {
-        try { dialog.close(); } catch (_) { /* ignore */ }
-      }, 350);
+      try { await submitResult(resultKey, { forfeit: isForfeit }); } catch (_) { /* ignore */ }
+      setTimeout(() => { try { dialog.close(); } catch (_) { /* ignore */ } }, 350);
     }
 
     function onKeyDown(ev) {
-      try {
-        if (ev?.code === 'Space' || ev?.key === ' ') {
-          ev.preventDefault();
-          ev.stopPropagation();
-          finalize('hit');
-        }
-      } catch (_) { /* ignore */ }
+      if (ev?.code === 'Space' || ev?.key === ' ') {
+        ev.preventDefault();
+        ev.stopPropagation();
+        finalize('hit');
+      }
     }
 
     dialog.render(true);
 
-    // Inicializa após render
     setTimeout(() => {
       try {
         rootEl = dialog?.element?.[0] ?? null;
         if (!rootEl) return;
-
-        // Configura variáveis CSS do dial (zona e tamanhos)
-        rootEl.style.setProperty('--jem-zone-angle', String(zoneAngle));
-        rootEl.style.setProperty('--jem-success-width', String(successWidthDeg));
-        rootEl.style.setProperty('--jem-great-width', String(greatWidthDeg));
-        rootEl.style.setProperty('--jem-needle-angle', '0');
-
+        skillcheckEl = rootEl.querySelector('.jem-skillcheck');
+        const targetEl = skillcheckEl || rootEl;
+        // Importante: `.jem-skillcheck` define defaults das CSS vars, então precisamos setar nela
+        // (setar no pai não sobrescreve as declarações locais).
+        targetEl.style.setProperty('--jem-zone-angle', String(zoneAngle));
+        targetEl.style.setProperty('--jem-success-width', String(successWidthDeg));
+        targetEl.style.setProperty('--jem-great-width', String(greatWidthDeg));
+        targetEl.style.setProperty('--jem-needle-angle', '0');
         const needleEl = rootEl.querySelector('.jem-skillcheck__needle');
         if (needleEl) rafId = requestAnimationFrame((t) => tick(t, needleEl));
         window.addEventListener('keydown', onKeyDown, true);
-      } catch (e) {
-        console.warn('dominioClash: falha ao iniciar skill check', e);
-      }
+      } catch (_) { /* ignore */ }
     }, 0);
   });
 }

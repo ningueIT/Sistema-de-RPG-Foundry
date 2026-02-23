@@ -1,0 +1,30 @@
+<form class="{{cssClass}}" autocomplete="off">
+
+  {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/invocacao-header.hbs"}}
+
+  <nav class="sheet-tabs tabs" data-group="primary">
+    <a class="item" data-tab="atributos">Status</a>
+    <a class="item" data-tab="pericias">Perícias</a>
+    <a class="item" data-tab="acoes">Ações</a>
+  </nav>
+  <hr>
+
+  <section class="sheet-body">
+    <div class="tab atributos" data-group="primary" data-tab="atributos">
+      {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/invocacao-status.hbs"}}
+      {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/invocacao-combat.hbs"}}
+      {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-caracteristicas.hbs"}}
+      {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-conditions.hbs"}}
+    </div>
+
+    <div class="tab pericias" data-group="primary" data-tab="pericias">
+      <h3 style="border-bottom: 2px solid #5d1b7e; margin-bottom: 10px;">Atributos</h3>
+      {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-attributes.hbs"}}
+      {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-skills.hbs"}}
+    </div>
+
+    <div class="tab acoes" data-group="primary" data-tab="acoes">
+      {{> "systems/feiticeiros-e-maldicoes/templates/actor/parts/invocacao-acoes.hbs"}}
+    </div>
+  </section>
+</form>

@@ -26,7 +26,7 @@
     }
   ],
   "documentTypes": {
-    "Actor": ["character", "npc", "inimigo", "maldicao"],
+    "Actor": ["character", "npc", "inimigo", "maldicao", "invocacao"],
     "Item": ["item", "tecnica", "arma", "aptidao", "habilidade", "uniforme", "acao-npc", "dote", "caracteristica", "dominio"]
   }
 }

@@ -1,6 +1,6 @@
 {
   "Actor": {
-    "types": ["character", "npc", "inimigo"],
+    "types": ["character", "npc", "inimigo", "invocacao"],
     "templates": {
       "base": {
         "biography": { "value": "" },
@@ -293,6 +293,94 @@
         "atencaoBase": 10,
         "atencaoBonus": 0,
         "atencao": 10
+      }
+    },
+
+    "invocacao": {
+      "templates": ["base"],
+      "detalhes": {
+        "nivel": { "value": 1, "label": "Nível do Usuário" },
+        "treinamento": { "value": 2, "label": "Bônus de Treino do Usuário" }
+      },
+      "invocacao": {
+        "tipo": { "value": "shikigami", "label": "Tipo" },
+        "grau": { "value": "quarto", "label": "Grau" },
+        "custoInvocarPe": { "value": 2, "label": "Custo para Invocar (PE)" },
+        "intermediario": { "value": "talisma", "label": "Intermediário" },
+        "intermediarioNome": { "value": "", "label": "Nome/Descrição do Intermediário" },
+        "dono": { "value": "", "label": "Dono/Controlador" },
+        "ownerActorId": { "value": "", "label": "Actor Dono" },
+        "autoSyncOwner": { "value": true, "label": "Sincronizar do Dono" },
+        "nivelControlador": { "value": 0, "label": "Nível de Controlador" }
+      },
+      "atributos": {
+        "forca": { "value": 8, "label": "Força" },
+        "destreza": { "value": 8, "label": "Destreza" },
+        "constituicao": { "value": 8, "label": "Constituição" },
+        "inteligencia": { "value": 8, "label": "Inteligência" },
+        "sabedoria": { "value": 8, "label": "Sabedoria" },
+        "presenca": { "value": 8, "label": "Presença" }
+      },
+      "combate": {
+        "defesa": { "value": 10, "label": "Defesa", "bonusAdHoc": 0, "outrosBonus": 0, "bonusEquipManual": 0 },
+        "movimento": { "value": 9, "label": "Deslocamento", "base": 9, "bonusAdHoc": 0, "outrosBonus": 0, "emDominio": false },
+        "iniciativa": { "value": 0, "label": "Iniciativa", "atributoExtra": "nenhum", "usarTreinamento": false, "bonusFixo": 0, "bonusAdHoc": 0, "outrosBonus": 0 },
+        "dadosVida": { "value": 1, "max": 1, "lado": "1d8", "label": "Dados de Vida" },
+        "dadosEnergia": { "value": 1, "max": 1, "lado": "1d6", "label": "Dados de Energia" },
+        "rd": { "value": 0, "irreducivel": 0, "special": "", "byType": {} },
+        "cd": { "value": 10, "label": "Classe de Dificuldade", "atributoPrincipal": "inteligencia", "bonusAdHoc": 0, "outrosBonus": 0 }
+      },
+      "ataques": {
+        "corpo": { "value": 0, "label": "Corpo a Corpo" },
+        "distancia": { "value": 0, "label": "Distância" },
+        "amaldicoado": { "value": 0, "label": "Amaldiçoado" }
+      },
+      "salvaguardas": {
+        "reflexos": { "value": 0, "label": "Reflexos" },
+        "fortitude": { "value": 0, "label": "Fortitude" },
+        "integridade": { "value": 0, "label": "Integridade" },
+        "vontade": { "value": 0, "label": "Vontade" },
+        "astucia": { "value": 0, "label": "Astúcia" }
+      },
+      "pericias": {
+        "acrobacia": { "value": 0, "label": "Acrobacia" },
+        "atletismo": { "value": 0, "label": "Atletismo" },
+        "direcao": { "value": 0, "label": "Direção" },
+        "enganacao": { "value": 0, "label": "Enganação" },
+        "feiticaria": { "value": 0, "label": "Feitiçaria" },
+        "furtividade": { "value": 0, "label": "Furtividade" },
+        "historia": { "value": 0, "label": "História" },
+        "intimidacao": { "value": 0, "label": "Intimidação" },
+        "intuicao": { "value": 0, "label": "Intuição" },
+        "investigacao": { "value": 0, "label": "Investigação" },
+        "manobra": { "value": 0, "label": "Manobra" },
+        "medicina": { "value": 0, "label": "Medicina" },
+        "ocultismo": { "value": 0, "label": "Ocultismo" },
+        "percepcao": { "value": 0, "label": "Percepção" },
+        "performance": { "value": 0, "label": "Performance" },
+        "persuasao": { "value": 0, "label": "Persuasão" },
+        "prestidigitacao": { "value": 0, "label": "Prestidigitação" },
+        "sobrevivencia": { "value": 0, "label": "Sobrevivência" },
+        "tecnologia": { "value": 0, "label": "Tecnologia" },
+        "teologia": { "value": 0, "label": "Teologia" }
+      },
+      "condicoes": {
+        "fisicas": {
+          "condenado": false, "engasgando": false, "enjoado": false, "envenenado": false,
+          "sangramento": false, "sofrendo": false, "paralisado": false, "fragilizado": false
+        },
+        "mentais": {
+          "abalado": false, "amedrontado": false, "aterrorizado": false, "confuso": false,
+          "enfeiticado": false, "indefeso": false, "exposto": false
+        },
+        "sensoriais": {
+          "cego": false, "desorientado": false, "desprevenido": false,
+          "surdo": false, "surpreso": false, "inconsciente": false
+        },
+        "movimento": {
+          "agarrado": false, "caido": false, "enredado": false,
+          "imovel": false, "lento": false, "atordoado": false
+        }
       }
     }
   },

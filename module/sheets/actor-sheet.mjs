@@ -24,7 +24,7 @@ import { handleLutadorUse } from '../helpers/lutador-habilidades.mjs';
 import { activateDominio, getBurnout, computePeCostWithDominio } from '../helpers/dominio.mjs';
 import LevelUpDialog from '../apps/level-up-dialog.mjs';
 import { rollFormula } from '../helpers/rolls.mjs';
-import { notifyTokensInsideDominio } from '../helpers/dominio-clash.mjs';
+import { notifyTokensInsideDominio, requestStartDominioClash } from '../helpers/dominio-clash.mjs';
 
 function _normalizarTextoAptidaoLocal(str = '') {
   return String(str)
@@ -228,6 +228,9 @@ export class BoilerplateActorSheet extends ActorSheet {
     if (this.actor?.type === 'inimigo') {
       return 'systems/feiticeiros-e-maldicoes/templates/actor/actor-inimigo-sheet.hbs';
     }
+    if (this.actor?.type === 'invocacao') {
+      return 'systems/feiticeiros-e-maldicoes/templates/actor/actor-invocacao-sheet.hbs';
+    }
     return 'systems/feiticeiros-e-maldicoes/templates/actor/actor-character-sheet.hbs';
   }
 
@@ -279,6 +282,17 @@ export class BoilerplateActorSheet extends ActorSheet {
 
     const items = this.actor?.items ? Array.from(this.actor.items) : [];
 
+    // Invocações: expor lista de ações (reutiliza o tipo de Item "acao-npc")
+    if (actorData.type === 'invocacao') {
+      try {
+        context.acoesInvocacao = items
+          .filter(i => i?.type === 'acao-npc')
+          .map(i => i.toObject(false));
+      } catch (e) {
+        context.acoesInvocacao = [];
+      }
+    }
+
     const caracteristicasAll = items
       .filter(i => i?.type === 'caracteristica')
       .map(i => i.toObject(false));
@@ -293,6 +307,66 @@ export class BoilerplateActorSheet extends ActorSheet {
 
     const aptCatalogClone = foundry.utils.deepClone(APTIDOES_CATALOGO);
     context.aptidoesCatalogo = aptCatalogClone;
+
+    // ----------------------------------------------------
+    // INVOCACAO: contexto mínimo (não roda lógica de personagem)
+    // ----------------------------------------------------
+    if (actorData.type === 'invocacao') {
+      // Necessário para selects de treino (0/1/2) no partial de perícias.
+      context.niveisPericia = { 0: '—', 1: 'Treinado', 2: 'Mestre' };
+
+      // Lista de possíveis donos (personagens). Mantém simples: só Actor type 'character'.
+      try {
+        const donos = {};
+        const chars = Array.from(game?.actors ?? []).filter(a => a?.type === 'character');
+        for (const a of chars) {
+          donos[a.id] = a.name;
+        }
+        context.listasInvocacao = { donos };
+      } catch (e) {
+        context.listasInvocacao = { donos: {} };
+      }
+
+      // Garante estrutura mínima para evitar crashes em Object.entries/partials
+      try {
+        const model = game?.system?.model?.Actor?.invocacao ?? {};
+        context.system = foundry.utils.mergeObject(
+          foundry.utils.deepClone(model),
+          context.system ?? {},
+          { inplace: false, overwrite: true }
+        );
+      } catch (e) {
+        context.system = context.system ?? {};
+      }
+
+      context.system.atributos = context.system.atributos ?? {};
+      context.system.pericias = context.system.pericias ?? {};
+
+      // Tags de atributo para perícias (reuso do layout padrão).
+      try {
+        for (let [key, pericia] of Object.entries(context.system.pericias)) {
+          const atributoKey = MAPA_ATRIBUTOS[key];
+          if (!atributoKey) {
+            pericia.atributoLabel = '';
+            pericia.atributoMod = 0;
+            continue;
+          }
+          const attr = context.system?.atributos?.[atributoKey];
+          if (attr) {
+            pericia.atributoLabel = (attr.label || atributoKey).substring(0, 3).toUpperCase();
+            pericia.atributoMod = attr.mod ?? 0;
+          } else {
+            pericia.atributoLabel = atributoKey.substring(0, 3).toUpperCase();
+            pericia.atributoMod = 0;
+          }
+        }
+      } catch (e) { /* ignore */ }
+
+      // Sempre expõe arrays usados na ficha
+      context.acoesInvocacao = Array.isArray(context.acoesInvocacao) ? context.acoesInvocacao : [];
+
+      return context;
+    }
 
     if (actorData.type === 'inimigo') {
       context.acoesNpc = items.filter(i => i?.type === 'acao-npc').map(i => i.toObject(false));
@@ -1555,6 +1629,35 @@ export class BoilerplateActorSheet extends ActorSheet {
       try {
         const { radiusMeters, squares } = await this._createDominioFromActor(dominioArgs);
         await this.actor.update({ 'system.recursos.energia.value': Math.max(0, atualPE - custo) });
+
+        // Força o início do Skill Check (Domínio Clash) ao usar Expansão de Domínio,
+        // porque este caminho (use-aptidao) não passa por item.roll().
+        try {
+          const isExpansao = (aptidaoKey === 'dominio.expansaoDeDominioIncompleta' || aptidaoKey === 'dominio.expansaoDeDominioCompleta');
+          if (isExpansao) {
+            const targets = Array.from(game.user?.targets ?? []);
+            if (targets.length !== 1) {
+              ui?.notifications?.warn?.('Para iniciar o Skill Check, selecione exatamente 1 alvo (token do oponente) na cena.');
+            } else {
+              const challengerToken = targets[0];
+              const challengerTokenDoc = challengerToken?.document ?? challengerToken;
+              const challengerTokenId = challengerTokenDoc?.id ?? null;
+              const challengerActorId = challengerTokenDoc?.actorId ?? challengerToken?.actor?.id ?? null;
+              if (!challengerActorId) {
+                ui?.notifications?.error?.('O alvo selecionado não possui um ator válido.');
+              } else {
+                await requestStartDominioClash({
+                  ownerActorId: this.actor.id,
+                  challengerActorId,
+                  challengerTokenId,
+                  source: 'actorSheet.useAptidao:dominio-expansao',
+                });
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Falha ao disparar Domínio Clash ao usar Expansão de Domínio:', e);
+        }
 
         const effects = item.effects?.contents ?? [];
         if (effects.length) {

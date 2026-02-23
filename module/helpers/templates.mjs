@@ -5,8 +5,13 @@
  */
 export const preloadHandlebarsTemplates = async function () {
   return loadTemplates([
+    "systems/feiticeiros-e-maldicoes/templates/actor/actor-invocacao-sheet.hbs",
     // --- PARTES DO SEU SISTEMA (Feiticeiros) ---
     "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-header.hbs",    
+    "systems/feiticeiros-e-maldicoes/templates/actor/parts/invocacao-header.hbs",
+    "systems/feiticeiros-e-maldicoes/templates/actor/parts/invocacao-status.hbs",
+    "systems/feiticeiros-e-maldicoes/templates/actor/parts/invocacao-combat.hbs",
+    "systems/feiticeiros-e-maldicoes/templates/actor/parts/invocacao-acoes.hbs",
     "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-attributes.hbs", 
     "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-conditions.hbs", 
     "systems/feiticeiros-e-maldicoes/templates/actor/parts/actor-status.hbs",

@@ -1,0 +1,34 @@
+<div style="display:flex; gap:10px; margin-bottom: 10px; flex-wrap: wrap;">
+  <button type="button" class="item-create" data-type="acao-npc">Adicionar Ação (Simples/Complexa)</button>
+</div>
+
+<h3 class="jem-section-title">Ações da Invocação</h3>
+
+{{#if acoesInvocacao.length}}
+  <ol class="items-list jem-items-list">
+    {{#each acoesInvocacao as |item|}}
+      <li class="item flexrow jem-item-row" data-item-id="{{item._id}}">
+        <div class="item-name flexrow">
+          <img class="item-image" src="{{item.img}}" title="{{item.name}}" width="24" height="24"/>
+          <button type="button" class="jem-item-name item-use">{{item.name}}</button>
+          {{#if item.system.custoPe.value}}
+            <span class="item-action">{{item.system.custoPe.value}} PE</span>
+          {{/if}}
+          {{#if item.system.tipoAcerto.value}}
+            <span class="item-action">{{item.system.tipoAcerto.value}}</span>
+          {{/if}}
+        </div>
+        <div class="item-controls flexrow jem-item-controls">
+          <button type="button" class="item-control item-edit" title="Editar"><i class="fas fa-edit"></i></button>
+          <button type="button" class="item-control item-delete" title="Remover"><i class="fas fa-trash"></i></button>
+        </div>
+      </li>
+    {{/each}}
+  </ol>
+{{else}}
+  <p class="jem-empty">Nenhuma ação ainda. Clique em “Adicionar Ação”.</p>
+{{/if}}
+
+<div style="margin-top:14px; opacity:0.85; font-size:12px;">
+  Dica: use Items do tipo <strong>Ação NPC</strong> para registrar ações simples/complexas, incluindo custo em PE, alcance, área e fórmula de dano.
+</div>

@@ -81,6 +81,53 @@ export class BoilerplateActor extends Actor {
       this.system.treinamento.potencialFisico ??= { etapa1: false, etapa2: false, etapa3: false, etapa4: false, completo: false };
       this.system.treinamento.resistencia ??= { etapa1: false, etapa2: false, etapa3: false, etapa4: false, completo: false };
     }
+
+    // ----------------------------------------------------
+    // INVOCACAO: GARANTE DEFAULTS PARA ATORES ANTIGOS
+    // ----------------------------------------------------
+    if (this.type === 'invocacao') {
+      const modelInv = game?.system?.model?.Actor?.invocacao ?? {};
+      if (Object.keys(modelInv).length > 0) {
+        this.system = foundry.utils.mergeObject(
+          foundry.utils.deepClone(modelInv),
+          this.system ?? {},
+          { inplace: true, overwrite: true }
+        );
+      } else {
+        this.system = this.system ?? {};
+      }
+
+      // Safety: garante blocos usados na ficha.
+      this.system.invocacao ??= {};
+      this.system.invocacao.tipo ??= { value: 'shikigami', label: 'Tipo' };
+      this.system.invocacao.grau ??= { value: 'quarto', label: 'Grau' };
+      this.system.invocacao.custoInvocarPe ??= { value: 2, label: 'Custo para Invocar (PE)' };
+      this.system.invocacao.intermediario ??= { value: 'talisma', label: 'Intermediário' };
+      this.system.invocacao.intermediarioNome ??= { value: '', label: 'Nome/Descrição do Intermediário' };
+      this.system.invocacao.dono ??= { value: '', label: 'Dono/Controlador' };
+      this.system.invocacao.ownerActorId ??= { value: '', label: 'Actor Dono' };
+      this.system.invocacao.autoSyncOwner ??= { value: true, label: 'Sincronizar do Dono' };
+      this.system.invocacao.nivelControlador ??= { value: 0, label: 'Nível de Controlador' };
+
+      this.system.detalhes ??= {};
+      this.system.detalhes.nivel ??= { value: 1, label: 'Nível do Usuário' };
+      this.system.detalhes.treinamento ??= { value: 2, label: 'Bônus de Treino do Usuário' };
+
+      this.system.atributos ??= {};
+      for (const k of ['forca', 'destreza', 'constituicao', 'inteligencia', 'sabedoria', 'presenca']) {
+        this.system.atributos[k] ??= { value: 8, label: k.toUpperCase() };
+      }
+
+      this.system.combate ??= {};
+      this.system.combate.defesa ??= { value: 10, label: 'Defesa', bonusAdHoc: 0, outrosBonus: 0, bonusEquipManual: 0 };
+      this.system.combate.movimento ??= { value: 9, label: 'Deslocamento', base: 9, bonusAdHoc: 0, outrosBonus: 0, emDominio: false };
+      this.system.combate.iniciativa ??= { value: 0, label: 'Iniciativa', atributoExtra: 'nenhum', usarTreinamento: false, bonusFixo: 0, bonusAdHoc: 0, outrosBonus: 0 };
+
+      this.system.pericias ??= {};
+      this.system.ataques ??= this.system.ataques ?? {};
+      this.system.salvaguardas ??= this.system.salvaguardas ?? {};
+      this.system.condicoes ??= this.system.condicoes ?? {};
+    }
   }
 
   /**
@@ -101,6 +148,183 @@ export class BoilerplateActor extends Actor {
     // things organized.
     this._prepareCharacterData(actorData);
     this._prepareNpcData(actorData);
+    this._prepareInvocacaoData(actorData);
+  }
+
+  _prepareInvocacaoData(actorData) {
+    if (actorData.type !== 'invocacao') return;
+
+    const system = actorData.system;
+
+    system.invocacao = system.invocacao ?? {};
+    system.detalhes = system.detalhes ?? {};
+    system.detalhes.nivel = system.detalhes.nivel ?? { value: 1, label: 'Nível do Usuário' };
+    system.detalhes.treinamento = system.detalhes.treinamento ?? { value: 2, label: 'Bônus de Treino do Usuário' };
+
+    // ----------------------------------------------------
+    // 1) Normalização de campos próprios
+    // ----------------------------------------------------
+    const grau = String(system.invocacao?.grau?.value ?? 'quarto').toLowerCase();
+
+    // Se houver um "dono" linkado, podemos puxar as infos automaticamente.
+    const ownerActorId = String(system.invocacao?.ownerActorId?.value ?? '').trim();
+    const autoSyncOwner = !!(system.invocacao?.autoSyncOwner?.value ?? true);
+
+    const _norm = (s = '') => String(s ?? '')
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase()
+      .trim();
+
+    const _getOwnerLevel = (owner) => {
+      try {
+        const d = owner?.system?.detalhes ?? {};
+        const p = Number(d?.niveis?.principal?.value ?? 0) || 0;
+        const s = Number(d?.niveis?.secundario?.value ?? 0) || 0;
+        if (p || s) return p + s;
+        return Number(d?.nivel?.value ?? 0) || 0;
+      } catch (e) { return 0; }
+    };
+
+    const _getOwnerTreino = (owner) => {
+      try { return Math.max(0, Math.floor(Number(owner?.system?.detalhes?.treinamento?.value ?? 0) || 0)); }
+      catch (e) { return 0; }
+    };
+
+    const _getOwnerControladorLevel = (owner) => {
+      try {
+        const d = owner?.system?.detalhes ?? {};
+        const classe = _norm(d?.classe?.value ?? '');
+        const multi = _norm(d?.multiclasse?.value ?? '');
+        const p = Number(d?.niveis?.principal?.value ?? 0) || 0;
+        const s = Number(d?.niveis?.secundario?.value ?? 0) || 0;
+        let total = 0;
+        if (classe === 'controlador') total += p;
+        if (multi === 'controlador') total += s;
+        return Math.max(0, Math.floor(total));
+      } catch (e) { return 0; }
+    };
+
+    let nivelUsuario = Math.max(0, Math.floor(Number(system.detalhes?.nivel?.value ?? 1) || 0));
+    let btUsuario = Math.max(0, Math.floor(Number(system.detalhes?.treinamento?.value ?? 2) || 0));
+    let nivelControlador = Math.max(0, Math.floor(Number(system.invocacao?.nivelControlador?.value ?? 0) || 0));
+
+    system.invocacao.owner = system.invocacao.owner ?? {};
+    system.invocacao.owner.name = '';
+    system.invocacao.owner.bt = btUsuario;
+    system.invocacao.owner.nivel = nivelUsuario;
+    system.invocacao.owner.nivelControlador = nivelControlador;
+
+    if (ownerActorId && autoSyncOwner) {
+      try {
+        const owner = game?.actors?.get?.(ownerActorId) ?? null;
+        if (owner && owner?.type === 'character') {
+          nivelUsuario = _getOwnerLevel(owner);
+          btUsuario = _getOwnerTreino(owner);
+          nivelControlador = _getOwnerControladorLevel(owner);
+          system.invocacao.owner.name = String(owner.name ?? '');
+          system.invocacao.owner.bt = btUsuario;
+          system.invocacao.owner.nivel = nivelUsuario;
+          system.invocacao.owner.nivelControlador = nivelControlador;
+          // Também preenche o campo textual "dono" para facilitar leitura.
+          try {
+            system.invocacao.dono = system.invocacao.dono ?? { value: '', label: 'Dono/Controlador' };
+            if (!String(system.invocacao.dono.value ?? '').trim()) system.invocacao.dono.value = system.invocacao.owner.name;
+          } catch (e) { /* ignore */ }
+        }
+      } catch (e) { /* ignore */ }
+    }
+    const metadeNivelControlador = Math.floor(nivelControlador / 2);
+
+    system.invocacao.nivelControlador = system.invocacao.nivelControlador ?? { value: 0, label: 'Nível de Controlador' };
+    system.invocacao.nivelControlador.value = nivelControlador;
+    system.invocacao.metadeNivelControlador = metadeNivelControlador;
+
+    // Custo padrão por grau (editável na ficha, mas sugerimos um default)
+    const custoDefault = {
+      quarto: 2,
+      terceiro: 4,
+      segundo: 6,
+      primeiro: 8,
+      especial: 12,
+    };
+    system.invocacao.custoInvocarPe = system.invocacao.custoInvocarPe ?? { value: custoDefault[grau] ?? 2, label: 'Custo para Invocar (PE)' };
+    if (system.invocacao.custoInvocarPe.value === null || typeof system.invocacao.custoInvocarPe.value === 'undefined') {
+      system.invocacao.custoInvocarPe.value = custoDefault[grau] ?? 2;
+    }
+
+    // ----------------------------------------------------
+    // 2) Atributos e modificadores
+    // ----------------------------------------------------
+    system.atributos = system.atributos ?? {};
+    for (const k of ['forca', 'destreza', 'constituicao', 'inteligencia', 'sabedoria', 'presenca']) {
+      system.atributos[k] = system.atributos[k] ?? { value: 8, label: k.toUpperCase() };
+      const raw = Number(system.atributos[k]?.value ?? 8);
+      const val = Number.isFinite(raw) ? raw : 8;
+      system.atributos[k].value = val;
+      system.atributos[k].mod = Math.floor((val - 10) / 2);
+    }
+
+    // ----------------------------------------------------
+    // 3) PV e Defesa por grau
+    // ----------------------------------------------------
+    const conVal = Number(system.atributos?.constituicao?.value ?? 8) || 8;
+    const dexMod = Number(system.atributos?.destreza?.mod ?? 0) || 0;
+
+    const halfCon = Math.floor(conVal / 2);
+    let pvCalc = 10 + halfCon + nivelUsuario;
+    if (grau === 'terceiro') pvCalc = 25 + halfCon + nivelUsuario;
+    else if (grau === 'segundo') pvCalc = 40 + conVal + nivelUsuario;
+    else if (grau === 'primeiro') pvCalc = 60 + conVal + Math.floor(1.5 * nivelUsuario);
+    else if (grau === 'especial') pvCalc = 80 + conVal + (2 * nivelUsuario);
+
+    const defBase = {
+      quarto: 10,
+      terceiro: 12,
+      segundo: 16,
+      primeiro: 20,
+      especial: 24,
+    };
+    const defCalc = (defBase[grau] ?? 10) + dexMod + btUsuario;
+
+    system.invocacao.pvCalculado = Math.max(0, Math.floor(pvCalc));
+    system.invocacao.defCalculada = Math.max(0, Math.floor(defCalc));
+
+    // ----------------------------------------------------
+    // 4) Recursos e combate
+    // ----------------------------------------------------
+    system.recursos = system.recursos ?? {};
+    system.recursos.hp = system.recursos.hp ?? { value: system.invocacao.pvCalculado, max: system.invocacao.pvCalculado };
+    system.recursos.hp.max = Math.max(0, Math.floor(Number(system.recursos.hp.max ?? system.invocacao.pvCalculado) || system.invocacao.pvCalculado));
+    if (system.recursos.hp.value === null || typeof system.recursos.hp.value === 'undefined') system.recursos.hp.value = system.recursos.hp.max;
+
+    system.recursos.energia = system.recursos.energia ?? { value: 0, max: 0 };
+    system.recursos.integridade = system.recursos.integridade ?? { value: 10, max: 10 };
+    system.recursos.humanidade = system.recursos.humanidade ?? { value: 10, max: 10 };
+
+    system.combate = system.combate ?? {};
+    system.combate.defesa = system.combate.defesa ?? { value: system.invocacao.defCalculada, label: 'Defesa', bonusAdHoc: 0, outrosBonus: 0, bonusEquipManual: 0 };
+    system.combate.defesa.value = Number(system.combate.defesa.value ?? system.invocacao.defCalculada) || system.invocacao.defCalculada;
+    system.combate.defesa.breakdown = { base: defBase[grau] ?? 10, dex: dexMod, treinamento: btUsuario };
+
+    system.combate.movimento = system.combate.movimento ?? { value: 9, label: 'Deslocamento', base: 9, bonusAdHoc: 0, outrosBonus: 0, emDominio: false };
+    const movBase = Number(system.combate.movimento.base ?? 9) || 9;
+    const movBonus = Number(system.combate.movimento.bonusAdHoc ?? 0) || 0;
+    const movOutros = Number(system.combate.movimento.outrosBonus ?? 0) || 0;
+    const movMult = system.combate.movimento.emDominio ? 2 : 1;
+    system.combate.movimento.value = (movBase + movBonus + movOutros) * movMult;
+
+    // Percentuais de barras (HP/PE/Integridade/Humanidade)
+    try {
+      for (const resource of Object.values(system.recursos ?? {})) {
+        if (!resource) continue;
+        const max = Number(resource.max ?? 0) || 0;
+        const val = Number(resource.value ?? 0) || 0;
+        resource.percent = (max > 0)
+          ? Math.max(0, Math.min(100, Math.round((val / max) * 100)))
+          : 0;
+      }
+    } catch (e) { /* ignore */ }
   }
 
   /**

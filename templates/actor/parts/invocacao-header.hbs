@@ -1,0 +1,78 @@
+<header class="sheet-header">
+  <img class="profile-img" src="{{actor.img}}" data-edit="img" title="{{actor.name}}" height="100" width="100"/>
+
+  <div class="header-fields">
+    <h1 class="charname">
+      <input name="name" type="text" value="{{actor.name}}" placeholder="Nome da Invocação"/>
+    </h1>
+
+    <div class="resources grid grid-4col" style="gap: 12px; align-items: end;">
+      <div class="resource flex-group-center">
+        <label>{{system.invocacao.tipo.label}}</label>
+        <select name="system.invocacao.tipo.value">
+          <option value="shikigami" {{#if (eq system.invocacao.tipo.value "shikigami")}}selected{{/if}}>Shikigami</option>
+          <option value="corpo_amaldicoado" {{#if (eq system.invocacao.tipo.value "corpo_amaldicoado")}}selected{{/if}}>Corpo Amaldiçoado</option>
+          <option value="maldicao_domada" {{#if (eq system.invocacao.tipo.value "maldicao_domada")}}selected{{/if}}>Maldição Domada</option>
+        </select>
+      </div>
+
+      <div class="resource flex-group-center">
+        <label>{{system.invocacao.grau.label}}</label>
+        <select name="system.invocacao.grau.value">
+          <option value="quarto" {{#if (eq system.invocacao.grau.value "quarto")}}selected{{/if}}>4º Grau</option>
+          <option value="terceiro" {{#if (eq system.invocacao.grau.value "terceiro")}}selected{{/if}}>3º Grau</option>
+          <option value="segundo" {{#if (eq system.invocacao.grau.value "segundo")}}selected{{/if}}>2º Grau</option>
+          <option value="primeiro" {{#if (eq system.invocacao.grau.value "primeiro")}}selected{{/if}}>1º Grau</option>
+          <option value="especial" {{#if (eq system.invocacao.grau.value "especial")}}selected{{/if}}>Grau Especial</option>
+        </select>
+      </div>
+
+      <div class="resource flex-group-center">
+        <label>{{system.invocacao.custoInvocarPe.label}}</label>
+        <input type="number" name="system.invocacao.custoInvocarPe.value" value="{{system.invocacao.custoInvocarPe.value}}" data-dtype="Number"/>
+      </div>
+
+      <div class="resource flex-group-center">
+        <label>{{system.invocacao.intermediario.label}}</label>
+        <select name="system.invocacao.intermediario.value">
+          <option value="talisma" {{#if (eq system.invocacao.intermediario.value "talisma")}}selected{{/if}}>Talismã</option>
+          <option value="dispositivo" {{#if (eq system.invocacao.intermediario.value "dispositivo")}}selected{{/if}}>Dispositivo</option>
+          <option value="tecnica" {{#if (eq system.invocacao.intermediario.value "tecnica")}}selected{{/if}}>Técnica</option>
+        </select>
+      </div>
+
+      <div class="resource flex-group-center" style="grid-column: span 2;">
+        <label>{{system.invocacao.intermediarioNome.label}}</label>
+        <input type="text" name="system.invocacao.intermediarioNome.value" value="{{system.invocacao.intermediarioNome.value}}" placeholder="Ex: Talismã do Cão Negro"/>
+      </div>
+
+      <div class="resource flex-group-center" style="grid-column: span 2;">
+        <label>{{system.invocacao.ownerActorId.label}}</label>
+        <select name="system.invocacao.ownerActorId.value">
+          <option value="">—</option>
+          {{selectOptions listasInvocacao.donos selected=system.invocacao.ownerActorId.value}}
+        </select>
+      </div>
+
+      <div class="resource flex-group-center">
+        <label>{{system.invocacao.autoSyncOwner.label}}</label>
+        <input type="checkbox" name="system.invocacao.autoSyncOwner.value" {{checked system.invocacao.autoSyncOwner.value}} />
+      </div>
+
+      <div class="resource flex-group-center">
+        <label>Nível (Dono)</label>
+        <input type="number" value="{{system.invocacao.owner.nivel}}" readonly disabled />
+      </div>
+
+      <div class="resource flex-group-center">
+        <label>BT (Dono)</label>
+        <input type="number" value="{{system.invocacao.owner.bt}}" readonly disabled />
+      </div>
+
+      <div class="resource flex-group-center">
+        <label>Controlador (Dono)</label>
+        <input type="number" value="{{system.invocacao.owner.nivelControlador}}" readonly disabled />
+      </div>
+    </div>
+  </div>
+</header>
