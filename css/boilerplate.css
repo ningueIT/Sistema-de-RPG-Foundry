@@ -4122,7 +4122,7 @@ body .ultima-acao select.ultima-acao-select option {
 .feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet h3,
 .feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet h4,
 .feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .sheet-tabs .item {
-    color: #fff !important;
+    color: #fff;
 }
 
 .feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .sheet-tabs .item {
@@ -4145,7 +4145,7 @@ body .ultima-acao select.ultima-acao-select option {
 
 .feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .tab.attributes .field input,
 .feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .tab.attributes .field select {
-    color: #fff !important;
+    color: #fff;
 }
 
 .feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .uniform-table th,
@@ -4176,5 +4176,5 @@ body .ultima-acao select.ultima-acao-select option {
 }
 
 .feiticeiros-e-maldicoes .item-sheet form.jem-weapon-sheet input[name="system.ataque.alcance.valor.value"] {
-    width: 100% !important;
+    width: 100%;
 }
