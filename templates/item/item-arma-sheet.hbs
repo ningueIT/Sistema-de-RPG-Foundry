@@ -8,7 +8,7 @@
           <div class="weapon-meta">
             <div class="meta-row"><strong>Empunhadura:</strong> {{system.ataque.detalhes.empunhadura.value}}</div>
             <div class="meta-row"><strong>Alcance:</strong> {{system.ataque.alcance.valor.value}}{{system.ataque.alcance.unidade.value}}</div>
-            <div class="meta-row"><strong>Dano:</strong> {{system.damage.base.value}} {{system.damage.bonus.value}} ({{system.damage.type.value}})</div>
+            <div class="meta-row"><strong>Dano:</strong> {{scaledDamage}} {{system.damage.bonus.value}} ({{system.damage.type.value}})</div>
           </div>
         </div>
       </div>
@@ -117,7 +117,7 @@
         </div>
         <div class="actions-row">
           <button type="button" class="roll-button test-damage">Testar Dano</button>
-          <div class="muted">Preview: <span class="preview-damage">{{system.damage.base.value}} {{system.damage.bonus.value}}</span></div>
+          <div class="muted">Preview: <span class="preview-damage">{{scaledDamage}} {{system.damage.bonus.value}}</span></div>
         </div>
       </fieldset>
     </div>

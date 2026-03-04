@@ -2,6 +2,7 @@ import {
   onManageActiveEffect,
   prepareActiveEffectCategories,
 } from '../helpers/effects.mjs';
+import { convertDamageLevel } from '../helpers/damage-scale.mjs';
 
 /**
  * Extend the basic ItemSheet with some very simple modifications
@@ -97,6 +98,33 @@ export class BoilerplateItemSheet extends ItemSheet {
           aptitudes: Number(entry.aptitudes ?? 0),
         };
       });
+    }
+
+    // Compute scaled damage preview for weapon (arma) items using damage-scale
+    if (this.item?.type === 'arma') {
+      try {
+        const dmg = itemData.system?.damage ?? {};
+        const base = String(dmg.base?.value ?? '');
+        let levelBoost = Number(dmg.levelBoost?.value ?? 0);
+
+        // For unarmed weapons (soco/desarmado), include the actor's training boost
+        const norm = (s) => String(s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+        const itemName = norm(this.item?.name ?? '');
+        const isUnarmed = itemName === 'soco' || itemName === 'desarmado';
+        if (isUnarmed) {
+          const t = this.item.actor?.system?.treinamentoDerivados ?? {};
+          const unarmedBoost = Number(t?.bonuses?.luta?.unarmedLevelBoost ?? 0) || 0;
+          levelBoost += unarmedBoost;
+        }
+
+        if (base) {
+          context.scaledDamage = convertDamageLevel(base, levelBoost);
+        } else {
+          context.scaledDamage = base;
+        }
+      } catch (e) {
+        context.scaledDamage = itemData.system?.damage?.base?.value ?? '';
+      }
     }
 
     return context;
