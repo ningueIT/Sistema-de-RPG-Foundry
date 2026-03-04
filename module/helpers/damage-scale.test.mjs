@@ -10,7 +10,9 @@ const cases = [
   { base: "2d8", boost: 1, expected: "2d10" },
   { base: "2d12", boost: 1, expected: "2d12 + 1d4" },
   { base: "6d6", boost: 1, expected: "3d12 + 1d4" },
+  { base: "10 + 1d6", boost: 1, expected: "10 + 1d8" },
   { base: "1d2", boost: -4, expected: "1" },
+  // Dano totalmente fixo (sem dado) permanece inalterado.
   { base: "2", boost: 2, expected: "2" }
 ];
 

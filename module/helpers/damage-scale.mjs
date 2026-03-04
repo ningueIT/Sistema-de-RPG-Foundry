@@ -131,8 +131,9 @@ export function convertDamageLevel(baseFormula, levelBoost) {
   if (!levelBoost || levelBoost === 0) return baseFormula;
 
   // Captura o primeiro bloco de dados (ex: "1d12 + 1d6") preservando o resto da fórmula
-  const diceBlockRegex = /((?:\d*d\d+|1)(?:\s*\+\s*\d*d\d+)*)/i;
-  const match = String(baseFormula).match(diceBlockRegex);
+  const baseText = String(baseFormula);
+  const diceBlockRegex = /\b((?:\d*d\d+)(?:\s*\+\s*\d*d\d+)*)\b/i;
+  const match = baseText.match(diceBlockRegex) ?? baseText.match(/\b(1)\b/i);
   if (!match) return baseFormula;
 
   const originalBlock = match[1];
@@ -161,6 +162,6 @@ export function convertDamageLevel(baseFormula, levelBoost) {
     steps += 1;
   }
 
-  const finalFormula = String(baseFormula).replace(originalBlock, formatDamageExpression(current));
+  const finalFormula = baseText.replace(originalBlock, formatDamageExpression(current));
   return finalFormula;
 }
