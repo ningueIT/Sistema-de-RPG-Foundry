@@ -94,11 +94,16 @@
       {{#if weaponItem}}
         <div class="weapon-card" data-item-id="{{weaponItem._id}}" style="display:flex; gap:10px; align-items:center;">
           <img src="{{weaponItem.img}}" width="48" height="48" style="border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.04);"/>
-          <div style="display:flex; flex-direction:column;">
+          <div style="display:flex; flex-direction:column; flex:1;">
             <strong style="color:#fff">{{weaponItem.name}}</strong>
             <small style="color:#cfcfcf">Dano: {{weaponItem.system.damage.base.value}} {{weaponItem.system.damage.bonus.value}}</small>
           </div>
-          <a class="item-control weapon-remove" title="Remover Arma" style="margin-left:auto; color:#ff8a8a; text-decoration:none; display:flex; align-items:center; padding:6px; border-radius:6px;">
+          {{#if allWeapons.length}}
+            <button type="button" class="weapon-selector-btn" title="Selecionar outra arma" style="margin-left:auto; color:#ffd700; text-decoration:none; display:flex; align-items:center; padding:6px 10px; border-radius:6px; background:rgba(255,215,0,0.06); border:1px solid rgba(255,215,0,0.1); cursor:pointer; transition:all 0.2s ease;">
+              <i class="fas fa-list" style="margin-right:4px;"></i> <span style="font-size:11px;">Armas</span>
+            </button>
+          {{/if}}
+          <a class="item-control weapon-remove" title="Remover Arma" style="margin-left:6px; color:#ff8a8a; text-decoration:none; display:flex; align-items:center; padding:6px; border-radius:6px;">
             <i class="fas fa-times"></i>
           </a>
         </div>
@@ -106,6 +111,11 @@
         <div style="text-align:center; color:#ccc;">
           <i class="fas fa-khanda" style="font-size:22px; display:block; margin-bottom:6px; color:rgba(255,172,102,0.8)"></i>
           <div>Arraste uma <strong>Arma</strong> aqui</div>
+          {{#if allWeapons.length}}
+            <button type="button" class="weapon-selector-btn" style="margin-top:8px; padding:6px 12px; background:rgba(255,215,0,0.08); border:1px solid rgba(255,215,0,0.15); color:#ffd700; border-radius:6px; cursor:pointer; font-size:12px; transition:all 0.2s ease;">
+              <i class="fas fa-list"></i> Ver {{allWeapons.length}} arma(s)
+            </button>
+          {{/if}}
         </div>
       {{/if}}
     </div>

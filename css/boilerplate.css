@@ -4180,3 +4180,77 @@ body .ultima-acao select.ultima-acao-select option {
 .feiticeiros-e-maldicoes .item-sheet form.jem-weapon-sheet input[name="system.ataque.alcance.valor.value"] {
     width: 100%;
 }
+/* ============================================================
+   WEAPON SELECTOR — Estilo do seletor de armas
+   ============================================================ */
+.weapon-selector-btn {
+    transition: all 0.2s ease;
+    font-weight: 600;
+}
+
+.weapon-selector-btn:hover {
+    background: rgba(255, 215, 0, 0.15) !important;
+    border-color: rgba(255, 215, 0, 0.25) !important;
+    color: #ffed4e !important;
+    transform: translateY(-1px);
+}
+
+.weapon-selector-btn:active {
+    transform: translateY(0);
+}
+
+.weapon-selector-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.weapon-selector-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.weapon-selector-form .form-group label {
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.weapon-selector-form .weapon-select-dropdown {
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    color: #fff;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.weapon-selector-form .weapon-select-dropdown:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 215, 0, 0.3);
+}
+
+.weapon-selector-form .weapon-select-dropdown:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 215, 0, 0.4);
+    box-shadow: 0 0 8px rgba(255, 215, 0, 0.15);
+}
+
+.weapon-selector-form .weapon-select-dropdown option {
+    background: #2a2a2a;
+    color: #fff;
+}
+
+#weapon-details {
+    color: #cfcfcf;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+#weapon-details strong {
+    color: #ffd700;
+}

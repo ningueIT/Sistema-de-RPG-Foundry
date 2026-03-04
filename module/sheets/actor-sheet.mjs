@@ -939,9 +939,17 @@ export class BoilerplateActorSheet extends ActorSheet {
     }
 
     try {
-      context.weaponItem = Array.isArray(context.items) ? context.items.find(i => i.type === 'arma') : null;
+      const allWeapons = Array.isArray(context.items) ? context.items.filter(i => i.type === 'arma') : [];
+      context.allWeapons = allWeapons;
+      
+      // Pega a arma selecionada via flag, ou a primeira se não houver seleção
+      const selectedWeaponId = this.actor.getFlag('feiticeiros-e-maldicoes', 'selectedWeaponId');
+      context.weaponItem = selectedWeaponId 
+        ? allWeapons.find(w => w._id === selectedWeaponId) 
+        : allWeapons[0] || null;
     } catch (e) {
       context.weaponItem = null;
+      context.allWeapons = [];
     }
   }
 
@@ -1464,6 +1472,96 @@ export class BoilerplateActorSheet extends ActorSheet {
         default: 'no'
       }).render(true);
     });
+
+    html.on('click', '.weapon-selector-btn', async (ev) => {
+      ev.stopPropagation();
+      const weapons = Array.isArray(this.actor.items) ? this.actor.items.filter(i => i.type === 'arma') : [];
+      if (!weapons.length) return ui.notifications.warn('Nenhuma arma disponível.');
+
+      const options = weapons
+        .map(w => `<option value="${w._id}" ${w._id === (this.actor.getFlag('feiticeiros-e-maldicoes', 'selectedWeaponId') || weapons[0]?._id) ? 'selected' : ''}>${w.name} (Dano: ${w.system.damage.base.value} ${w.system.damage.bonus.value || ''})</option>`)
+        .join('');
+
+      const content = `
+        <form class="weapon-selector-form">
+          <div class="form-group">
+            <label>Selecione uma arma:</label>
+            <select name="weaponId" class="weapon-select-dropdown">
+              ${options}
+            </select>
+          </div>
+          <div style="margin-top:12px;">
+            <div id="weapon-details" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:6px; border:1px solid rgba(255,255,255,0.1); max-height:200px; overflow-y:auto;">
+              <!-- Carregado dinamicamente -->
+            </div>
+          </div>
+        </form>
+      `;
+
+      const dialog = new Dialog({
+        title: 'Seletor de Armas',
+        content: content,
+        buttons: {
+          select: { label: 'Selecionar', callback: async (htmlDlg) => {
+            const selectedId = htmlDlg.find('select[name="weaponId"]').val();
+            if (!selectedId) return;
+            try {
+              await this.actor.setFlag('feiticeiros-e-maldicoes', 'selectedWeaponId', selectedId);
+              this.render(false);
+            } catch (err) {
+              console.error('Falha ao selecionar arma:', err);
+              ui.notifications.error('Falha ao selecionar arma.');
+            }
+          } },
+          cancel: { label: 'Cancelar' }
+        },
+        default: 'select'
+      }, { 
+        id: `weapon-selector-${this.actor._id}`,
+        resizable: true,
+        width: 400,
+        height: 'auto'
+      });
+
+      dialog.render(true);
+
+      // Update details quando mudar de arma
+      dialog.element.on('change', 'select[name="weaponId"]', (ev) => {
+        const selectedId = $(ev.currentTarget).val();
+        const selectedWeapon = weapons.find(w => w._id === selectedId);
+        if (!selectedWeapon) return;
+
+        const details = `
+          <strong style="color:#ffd700;">${selectedWeapon.name}</strong><br/>
+          <small style="color:#cfcfcf;">
+            Dano: <strong>${selectedWeapon.system.damage.base.value}</strong> ${selectedWeapon.system.damage.bonus.value || ''}<br/>
+            Tipo: <strong>${selectedWeapon.system.damage.type.value || 'N/A'}</strong><br/>
+            Atributo: <strong>${selectedWeapon.system.ataque?.atributo?.value || 'N/A'}</strong><br/>
+            Alcance: <strong>${selectedWeapon.system.ataque?.alcance?.valor?.value || 'Corpo-a-corpo'}</strong>m<br/>
+            Crítico: <strong>${selectedWeapon.system.ataque?.critico?.min?.value || 20}/${selectedWeapon.system.ataque?.critico?.mult?.value || 2}x</strong>
+          </small>
+        `;
+        dialog.element.find('#weapon-details').html(details);
+      });
+
+      // Mostrar detalhes da arma selecionada ao abrir
+      const initialId = dialog.element.find('select[name="weaponId"]').val();
+      const initialWeapon = weapons.find(w => w._id === initialId);
+      if (initialWeapon) {
+        const details = `
+          <strong style="color:#ffd700;">${initialWeapon.name}</strong><br/>
+          <small style="color:#cfcfcf;">
+            Dano: <strong>${initialWeapon.system.damage.base.value}</strong> ${initialWeapon.system.damage.bonus.value || ''}<br/>
+            Tipo: <strong>${initialWeapon.system.damage.type.value || 'N/A'}</strong><br/>
+            Atributo: <strong>${initialWeapon.system.ataque?.atributo?.value || 'N/A'}</strong><br/>
+            Alcance: <strong>${initialWeapon.system.ataque?.alcance?.valor?.value || 'Corpo-a-corpo'}</strong>m<br/>
+            Crítico: <strong>${initialWeapon.system.ataque?.critico?.min?.value || 20}/${initialWeapon.system.ataque?.critico?.mult?.value || 2}x</strong>
+          </small>
+        `;
+        dialog.element.find('#weapon-details').html(details);
+      }
+    });
+
     html.on('click', '.item-create', this._onItemCreate.bind(this));
     html.on('click', '.death-test-btn', this._onDeathTest.bind(this));
     html.on('click', '.death-reset-btn', this._onDeathReset.bind(this));
