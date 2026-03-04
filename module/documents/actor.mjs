@@ -716,6 +716,13 @@ export class BoilerplateActor extends Actor {
             continue;
           }
 
+          if (String(it.type) === 'escudo') {
+            const u = Number(s?.escudo?.total ?? s?.escudo?.bonusCa ?? 0) || 0;
+            BONUS_UNIFORM += u;
+            if (u) equipContribs.push({ name: it.name || '<Escudo>', value: u, kind: 'escudo' });
+            continue;
+          }
+
           const b1 = Number(s?.bonus?.ca ?? s?.bonusCa ?? s?.mitigacao ?? 0) || 0;
           const b2 = Number(s?.armor?.mitigacao ?? s?.armor?.value ?? 0) || 0;
           const b3 = Number(s?.shield?.mitigacao ?? s?.shield?.value ?? 0) || 0;
@@ -766,7 +773,7 @@ export class BoilerplateActor extends Actor {
 
       if (equipContribs.length > 0) {
         defesaLog.push('Contribuições de equipamento (itens equipados):');
-        for (const c of equipContribs) defesaLog.push(` - ${c.name}: +${c.value}${c.kind === 'uniforme' ? ' [uniforme]' : ''}`);
+        for (const c of equipContribs) defesaLog.push(` - ${c.name}: +${c.value}${c.kind === 'uniforme' ? ' [uniforme]' : c.kind === 'escudo' ? ' [escudo]' : ''}`);
       } else {
         defesaLog.push('Contribuições de equipamento (itens equipados): nenhuma');
       }

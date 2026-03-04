@@ -113,6 +113,8 @@ Hooks.once('init', function () {
     CONFIG.Item = CONFIG.Item || {};
     CONFIG.Item.typeLabels = CONFIG.Item.typeLabels || {};
     if (!CONFIG.Item.typeLabels.uniforme) CONFIG.Item.typeLabels.uniforme = 'Uniforme';
+    if (!CONFIG.Item.typeLabels.escudo) CONFIG.Item.typeLabels.escudo = 'Escudo';
+    if (!CONFIG.Item.typeLabels.arma) CONFIG.Item.typeLabels.arma = 'Arma';
   } catch (e) {
     console.warn('Falha ao verificar/registrar tipo uniforme em runtime:', e);
   }

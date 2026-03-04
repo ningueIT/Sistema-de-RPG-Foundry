@@ -1,0 +1,111 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}" draggable="true" data-uuid="{{item.uuid}}" />
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Nome do Escudo"/></h1>
+      <div class="item-meta grid grid-2col">
+        <div>
+          <label>Fonte</label>
+          <input type="text" name="system.fonte.value" value="{{system.fonte.value}}" placeholder="Ex: Livro / Mestre"/>
+        </div>
+        <div>
+          <label>Requisito</label>
+          <input type="text" name="system.requisito.value" value="{{system.requisito.value}}" placeholder="Ex: Rank / Permissão"/>
+        </div>
+      </div>
+    </div>
+    <a class="header-button control close" role="button" title="Fechar">
+      <i class="fas fa-times"></i>&nbsp;Fechar
+    </a>
+  </header>
+
+  {{! Sheet Tab Navigation }}
+  <nav class='sheet-tabs tabs' data-group='primary'>
+    <a class='item' data-tab='descricao'>Descrição</a>
+    <a class='item' data-tab='opcoes'>Opções</a>
+  </nav>
+
+  <section class='sheet-body'>
+    <div class='tab' data-group='primary' data-tab='descricao'>
+      <div class="editor-container">
+        {{editor system.descricao.value target="system.descricao.value" engine="prosemirror" button=true owner=owner editable=editable}}
+      </div>
+    </div>
+
+    <div class='tab attributes' data-group='primary' data-tab='opcoes'>
+      <h3 class="item-section-title">Personalização e Mecânicas</h3>
+
+      <div class="field">
+        <label>Tipo de Escudo</label>
+        <select name="system.escudo.tipo">
+          <option value="normal" {{#if (eq system.escudo.tipo "normal")}}selected{{/if}}>Escudo Normal</option>
+          <option value="reforcado" {{#if (eq system.escudo.tipo "reforcado")}}selected{{/if}}>Escudo Reforçado</option>
+          <option value="tatico" {{#if (eq system.escudo.tipo "tatico")}}selected{{/if}}>Escudo Tático</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Equipável</label>
+        <select name="system.equipado">
+          <option value="">— Nenhum —</option>
+          <option value="braco" {{#if (eq system.equipado "braco")}}selected{{/if}}>Braço (Off-Hand)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Bônus (texto)</label>
+        <input type="text" name="system.escudo.bonusText" value="{{system.escudo.bonusText}}" placeholder="ex: resistente; reforçado" />
+      </div>
+
+      <div class="field">
+        <label>Bônus de CA (numérico, opcional)</label>
+        <input type="number" name="system.escudo.bonusCa" value="{{system.escudo.bonusCa}}" placeholder="ex: 1" step="1" />
+      </div>
+
+      <div class="field">
+        <label>Total de CA (calculado)</label>
+        <input type="number" name="system.escudo.total" value="{{system.escudo.total}}" readonly />
+      </div>
+
+      <p class="note">Como funciona: Escolha o tipo de escudo. Marque como equipado para aplicar o bônus de Defesa. O bônus numérico opcional é somado ao valor base do tipo de escudo.</p>
+
+      <h4 style="margin-top:12px;">Tabela de Tipos de Escudo (valores padrão)</h4>
+      <table class="uniform-table" style="width:100%; border-collapse:collapse; margin-top:8px;">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Bônus de CA</th>
+            <th>Penalidade</th>
+            <th>Observação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Escudo Normal</td>
+            <td>+2</td>
+            <td>0</td>
+            <td>N/A</td>
+          </tr>
+          <tr>
+            <td>Escudo Reforçado</td>
+            <td>+4</td>
+            <td>-1</td>
+            <td>Penalidade em perícias de Destreza</td>
+          </tr>
+          <tr>
+            <td>Escudo Tático</td>
+            <td>+3</td>
+            <td>0</td>
+            <td>Concede +1 em Acrobacia</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="sheet-footer">
+    <div class="footer-controls" style="display:flex; align-items:center; gap:12px;">
+      <button type="submit" class="jem-btn jem-btn--primary">Salvar</button>
+    </div>
+  </footer>
+</form>
