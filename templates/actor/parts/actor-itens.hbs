@@ -89,6 +89,27 @@
       {{/if}}
     </div>
 
+    <h3 class="jem-section-title" style="margin-top: 14px;">Arma</h3>
+    <div class="weapon-slot" title="Arraste uma Arma aqui" style="min-height:80px; display:flex; align-items:center; justify-content:center; border:1px dashed rgba(255,255,255,0.06); border-radius:8px; padding:8px; background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);">
+      {{#if weaponItem}}
+        <div class="weapon-card" data-item-id="{{weaponItem._id}}" style="display:flex; gap:10px; align-items:center;">
+          <img src="{{weaponItem.img}}" width="48" height="48" style="border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.04);"/>
+          <div style="display:flex; flex-direction:column;">
+            <strong style="color:#fff">{{weaponItem.name}}</strong>
+            <small style="color:#cfcfcf">Dano: {{weaponItem.system.damage.base.value}} {{weaponItem.system.damage.bonus.value}}</small>
+          </div>
+          <a class="item-control weapon-remove" title="Remover Arma" style="margin-left:auto; color:#ff8a8a; text-decoration:none; display:flex; align-items:center; padding:6px; border-radius:6px;">
+            <i class="fas fa-times"></i>
+          </a>
+        </div>
+      {{else}}
+        <div style="text-align:center; color:#ccc;">
+          <i class="fas fa-khanda" style="font-size:22px; display:block; margin-bottom:6px; color:rgba(255,172,102,0.8)"></i>
+          <div>Arraste uma <strong>Arma</strong> aqui</div>
+        </div>
+      {{/if}}
+    </div>
+
     <h3 class="jem-section-title" style="margin-top: 14px;">CD de Técnica</h3>
     <div style="border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:10px; background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); color:#fff;">
       <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">

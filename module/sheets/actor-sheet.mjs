@@ -937,6 +937,12 @@ export class BoilerplateActorSheet extends ActorSheet {
     } catch (e) {
       context.shieldItem = null;
     }
+
+    try {
+      context.weaponItem = Array.isArray(context.items) ? context.items.find(i => i.type === 'arma') : null;
+    } catch (e) {
+      context.weaponItem = null;
+    }
   }
 
 
@@ -1233,6 +1239,10 @@ export class BoilerplateActorSheet extends ActorSheet {
 
         try {
           if (payload && payload.type === 'Item' && payload.data) {
+            if (payload.data.type !== 'arma') {
+              ui.notifications.warn('Apenas itens do tipo Arma podem ser adicionados neste slot.');
+              return;
+            }
             await this.actor.createEmbeddedDocuments('Item', [payload.data]);
             this.render(false);
             return;
@@ -1243,6 +1253,10 @@ export class BoilerplateActorSheet extends ActorSheet {
               const doc = await fromUuid(uri);
               if (doc && doc.toObject) {
                 const data = doc.toObject(false);
+                if (data.type !== 'arma') {
+                  ui.notifications.warn('Apenas itens do tipo Arma podem ser adicionados neste slot.');
+                  return;
+                }
                 await this.actor.createEmbeddedDocuments('Item', [data]);
                 this.render(false);
                 return;
@@ -1275,6 +1289,60 @@ export class BoilerplateActorSheet extends ActorSheet {
 
         try {
           if (payload && payload.type === 'Item' && payload.data) {
+            if (payload.data.type !== 'arma') {
+              ui.notifications.warn('Apenas itens do tipo Arma podem ser adicionados neste slot.');
+              return;
+            }
+            const previous = this.actor.items.find(i => i.type === 'arma');
+            if (previous) await this.actor.deleteEmbeddedDocuments('Item', [previous.id]);
+            await this.actor.createEmbeddedDocuments('Item', [payload.data]);
+            this.render(false);
+            return;
+          }
+          const uri = dt.getData('text/uri-list') || dt.getData('text/uri');
+          if (uri) {
+            try {
+              const doc = await fromUuid(uri);
+              if (doc && doc.toObject) {
+                const data = doc.toObject(false);
+                if (data.type !== 'arma') {
+                  ui.notifications.warn('Apenas itens do tipo Arma podem ser adicionados neste slot.');
+                  return;
+                }
+                const previous = this.actor.items.find(i => i.type === 'arma');
+                if (previous) await this.actor.deleteEmbeddedDocuments('Item', [previous.id]);
+                await this.actor.createEmbeddedDocuments('Item', [data]);
+                this.render(false);
+                return;
+              }
+            } catch (err) { /* ignore */ }
+          }
+        } catch (err) {
+          console.warn('Falha ao processar drop no slot de escudo:', err);
+        }
+      });
+    } catch (e) { console.warn('Falha ao registrar drop para shield-slot', e); }
+
+    try {
+      html.find('.weapon-slot').on('dragover', (ev) => {
+        ev.preventDefault();
+        ev.currentTarget.classList.add('drag-over');
+      });
+      html.find('.weapon-slot').on('dragleave', (ev) => {
+        ev.currentTarget.classList.remove('drag-over');
+      });
+      html.find('.weapon-slot').on('drop', async (ev) => {
+        ev.preventDefault();
+        ev.currentTarget.classList.remove('drag-over');
+        const dt = ev.originalEvent?.dataTransfer;
+        if (!dt) return;
+        let payload = dt.getData('application/json') || dt.getData('text/plain');
+        try {
+          if (payload) payload = JSON.parse(payload);
+        } catch (e) { /* keep raw */ }
+
+        try {
+          if (payload && payload.type === 'Item' && payload.data) {
             await this.actor.createEmbeddedDocuments('Item', [payload.data]);
             this.render(false);
             return;
@@ -1292,10 +1360,10 @@ export class BoilerplateActorSheet extends ActorSheet {
             } catch (err) { /* ignore */ }
           }
         } catch (err) {
-          console.warn('Falha ao processar drop no slot de escudo:', err);
+          console.warn('Falha ao processar drop no slot de arma:', err);
         }
       });
-    } catch (e) { console.warn('Falha ao registrar drop para shield-slot', e); }
+    } catch (e) { console.warn('Falha ao registrar drop para weapon-slot', e); }
 
     if (!this.isEditable) return;
     html.on('click', '.item-edit', (ev) => {
@@ -1361,6 +1429,34 @@ export class BoilerplateActorSheet extends ActorSheet {
             } catch (err) {
               console.error('Falha ao remover escudo:', err);
               ui.notifications.error('Falha ao remover escudo. Veja o console.');
+            }
+          } },
+          no: { label: 'Cancelar' }
+        },
+        default: 'no'
+      }).render(true);
+    });
+
+    html.on('click', '.weapon-remove', async (ev) => {
+      ev.stopPropagation();
+      const $card = $(ev.currentTarget).closest('.weapon-card');
+      const itemId = $card.data('itemId');
+      if (!itemId) return;
+      if (!this.actor.isOwner) return ui.notifications.warn('Sem permissão para remover esta arma.');
+      const item = this.actor.items.get(itemId);
+      if (!item) return ui.notifications.warn('Item não encontrado.');
+
+      new Dialog({
+        title: 'Remover Arma',
+        content: `<p>Remover <strong>${item.name}</strong> deste ator?</p>`,
+        buttons: {
+          yes: { label: 'Remover', callback: async () => {
+            try {
+              await this.actor.deleteEmbeddedDocuments('Item', [itemId]);
+              this.render(false);
+            } catch (err) {
+              console.error('Falha ao remover arma:', err);
+              ui.notifications.error('Falha ao remover arma. Veja o console.');
             }
           } },
           no: { label: 'Cancelar' }

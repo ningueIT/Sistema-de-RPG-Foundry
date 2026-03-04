@@ -3882,10 +3882,12 @@ body .ultima-acao select.ultima-acao-select option {
 .itens-grid { margin-top: 6px; }
 .itens-list-column { min-width: 0; }
 .uniform-column { min-width: 160px; }
-.uniform-slot { transition: background .12s ease, border-color .12s ease; }
-.uniform-slot.drag-over { background: linear-gradient(180deg, rgba(157,78,221,0.06), rgba(157,78,221,0.02)); border-color: rgba(157,78,221,0.28); }
+.uniform-slot, .shield-slot, .weapon-slot { transition: background .12s ease, border-color .12s ease; }
+.uniform-slot.drag-over, .shield-slot.drag-over, .weapon-slot.drag-over { background: linear-gradient(180deg, rgba(157,78,221,0.06), rgba(157,78,221,0.02)); border-color: rgba(157,78,221,0.28); }
 .uniform-card { color: #fff; }
 .uniform-card small { color: #cfcfcf; }
+.shield-card, .weapon-card { color: #fff; }
+.shield-card small, .weapon-card small { color: #cfcfcf; }
 .uniform-empty { color: #bfbfbf; }
 
 /* ============================================================
@@ -4109,3 +4111,72 @@ body .ultima-acao select.ultima-acao-select option {
 .jem-skillcheck__result.success { color: #d69dfc; text-shadow: 0 0 8px #9b4dca; }
 .jem-skillcheck__result.great { color: #ffe066; text-shadow: 0 0 10px #ffd700; }
 .jem-skillcheck__result.fail { color: #ff5252; text-shadow: 0 0 8px #c03939; }
+
+/* ============================================================
+   ARMA / UNIFORME / ESCUDO — legibilidade e organização
+   ============================================================ */
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet,
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet label,
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .meta-row,
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .note,
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .muted,
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet legend,
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet h3,
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet h4,
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .sheet-tabs .item {
+    color: #fff;
+}
+
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .sheet-tabs .item {
+    opacity: 0.9;
+}
+
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .sheet-tabs .item.active {
+    opacity: 1;
+}
+
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .tab.attributes .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(157, 78, 221, 0.18);
+}
+
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .tab.attributes .field input,
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .tab.attributes .field select {
+    color: #fff;
+}
+
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .uniform-table th,
+.feiticeiros-e-maldicoes .item-sheet form.jem-gear-sheet .uniform-table td {
+    color: #fff;
+}
+
+.feiticeiros-e-maldicoes .item-sheet form.jem-weapon-sheet .weapon-attributes.grid.grid-2col {
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.feiticeiros-e-maldicoes .item-sheet form.jem-weapon-sheet .attack-fieldset,
+.feiticeiros-e-maldicoes .item-sheet form.jem-weapon-sheet .damage-fieldset {
+    margin: 0;
+    padding: 12px;
+    border: 1px solid rgba(157, 78, 221, 0.22);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.18);
+}
+
+.feiticeiros-e-maldicoes .item-sheet form.jem-weapon-sheet .actions-row {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.feiticeiros-e-maldicoes .item-sheet form.jem-weapon-sheet input[name="system.ataque.alcance.valor.value"] {
+    width: 100%;
+}
