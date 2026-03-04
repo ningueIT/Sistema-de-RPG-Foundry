@@ -1,18 +1,125 @@
 // module/helpers/damage-scale.mjs
 
-/**
- * Tabela de Escala de Dano conforme Feiticeiros & Maldições
- * Índices:
- * 0: 1
- * 1: 1d2
- * 2: 1d3
- * 3: 1d4
- * 4: 1d6
- * 5: 1d8
- * 6: 1d10
- * 7: 1d12
- */
-const DAMAGE_SCALE = ["1", "1d2", "1d3", "1d4", "1d6", "1d8", "1d10", "1d12"];
+const SINGLE_BASE_SCALE = ["1", "1d2", "1d3", "1d4", "1d6", "1d8", "1d10", "1d12"];
+const DOUBLE_BASE_SCALE = ["2d4", "2d6", "2d8", "2d10", "2d12"];
+const EXTRA_DIE_SCALE = [4, 6, 8, 10];
+
+function normalizeDamageExpression(value) {
+  return String(value ?? "").toLowerCase().replace(/\s+/g, "");
+}
+
+function formatDamageExpression(value) {
+  const clean = normalizeDamageExpression(value);
+  if (!clean.includes("+")) return clean;
+  return clean.split("+").join(" + ");
+}
+
+function detectStyle(value) {
+  const clean = normalizeDamageExpression(value);
+  if (/^2d\d+/.test(clean)) return "double";
+  return "single";
+}
+
+function parseD12Expression(value) {
+  const clean = normalizeDamageExpression(value);
+  const match = clean.match(/^(\d+)d12(?:\+1d(4|6|8|10))?$/);
+  if (!match) return null;
+  return {
+    count: Number(match[1]),
+    extra: match[2] ? Number(match[2]) : null
+  };
+}
+
+function stepUpDamage(value) {
+  const clean = normalizeDamageExpression(value);
+
+  const singleIdx = SINGLE_BASE_SCALE.indexOf(clean);
+  if (singleIdx !== -1) {
+    if (singleIdx < SINGLE_BASE_SCALE.length - 1) return SINGLE_BASE_SCALE[singleIdx + 1];
+    return "1d12 + 1d4";
+  }
+
+  const doubleIdx = DOUBLE_BASE_SCALE.indexOf(clean);
+  if (doubleIdx !== -1) {
+    if (doubleIdx < DOUBLE_BASE_SCALE.length - 1) return DOUBLE_BASE_SCALE[doubleIdx + 1];
+    return "2d12 + 1d4";
+  }
+
+  const parsed = parseD12Expression(clean);
+  if (!parsed) return clean;
+
+  if (parsed.extra == null) return `${parsed.count}d12 + 1d4`;
+  const extraIdx = EXTRA_DIE_SCALE.indexOf(parsed.extra);
+  if (extraIdx === -1) return clean;
+  if (extraIdx < EXTRA_DIE_SCALE.length - 1) {
+    return `${parsed.count}d12 + 1d${EXTRA_DIE_SCALE[extraIdx + 1]}`;
+  }
+  return `${parsed.count + 1}d12`;
+}
+
+function stepDownDamage(value, style = "single") {
+  const clean = normalizeDamageExpression(value);
+  if (clean === "1") return "1";
+
+  const singleIdx = SINGLE_BASE_SCALE.indexOf(clean);
+  if (singleIdx > 0) return SINGLE_BASE_SCALE[singleIdx - 1];
+
+  const doubleIdx = DOUBLE_BASE_SCALE.indexOf(clean);
+  if (doubleIdx !== -1) {
+    if (doubleIdx > 0) return DOUBLE_BASE_SCALE[doubleIdx - 1];
+    return "1d6";
+  }
+
+  const parsed = parseD12Expression(clean);
+  if (!parsed) return clean;
+
+  if (parsed.extra != null) {
+    const extraIdx = EXTRA_DIE_SCALE.indexOf(parsed.extra);
+    if (extraIdx === -1) return clean;
+    if (extraIdx === 0) return `${parsed.count}d12`;
+    return `${parsed.count}d12 + 1d${EXTRA_DIE_SCALE[extraIdx - 1]}`;
+  }
+
+  if (parsed.count <= 1) return "1d10";
+  if (parsed.count === 2) {
+    return style === "double" ? "2d10" : "1d12 + 1d10";
+  }
+  return `${parsed.count - 1}d12 + 1d10`;
+}
+
+function buildSingleScale(limit = 40) {
+  const levels = ["1"];
+  while (levels.length < limit) {
+    levels.push(normalizeDamageExpression(stepUpDamage(levels[levels.length - 1])));
+  }
+  return levels;
+}
+
+function getMaxDamageFromExpression(value) {
+  const clean = normalizeDamageExpression(value);
+  const diceMatches = [...clean.matchAll(/(\d*)d(\d+)/g)];
+  if (!diceMatches.length) return null;
+  return diceMatches.reduce((sum, m) => {
+    const count = Number(m[1] || 1);
+    const faces = Number(m[2] || 0);
+    return sum + (count * faces);
+  }, 0);
+}
+
+function findNearestSingleScaleExpression(maxValue) {
+  const scale = buildSingleScale(60);
+  let best = scale[0];
+  let bestDiff = Infinity;
+  for (const expr of scale) {
+    const exprMax = getMaxDamageFromExpression(expr) ?? Number(expr);
+    const diff = Math.abs(exprMax - maxValue);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      best = expr;
+    }
+  }
+  return best;
+}
 
 /**
  * Converte uma fórmula de dado base ajustando seus níveis de dano.
@@ -23,64 +130,38 @@ const DAMAGE_SCALE = ["1", "1d2", "1d3", "1d4", "1d6", "1d8", "1d10", "1d12"];
 export function convertDamageLevel(baseFormula, levelBoost) {
   if (!levelBoost || levelBoost === 0) return baseFormula;
 
-  // Regex para encontrar o primeiro dado (ex: 1d6, d8, 1d12)
-  const diceRegex = /(\d*d\d+|1)(?![a-z])/i;
-  const match = baseFormula.match(diceRegex);
-
-  // Se não achar dado (ex: dano fixo "2"), retorna como está
+  // Captura o primeiro bloco de dados (ex: "1d12 + 1d6") preservando o resto da fórmula
+  const baseText = String(baseFormula);
+  const diceBlockRegex = /\b((?:\d*d\d+)(?:\s*\+\s*\d*d\d+)*)\b/i;
+  const match = baseText.match(diceBlockRegex) ?? baseText.match(/\b(1)\b/i);
   if (!match) return baseFormula;
 
-  const originalDie = match[0]; // Ex: "1d6"
+  const originalBlock = match[1];
+  let current = normalizeDamageExpression(originalBlock);
+  let style = detectStyle(current);
 
-  // Normaliza para busca (d6 vira 1d6 para bater com a array)
-  let searchDie = originalDie.toLowerCase();
-  if (searchDie.startsWith("d")) searchDie = "1" + searchDie;
+  const knownBase =
+    SINGLE_BASE_SCALE.includes(current) ||
+    DOUBLE_BASE_SCALE.includes(current) ||
+    !!parseD12Expression(current);
 
-  // Encontra o índice na tabela
-  let currentIndex = DAMAGE_SCALE.indexOf(searchDie);
-
-  // Se o dado não estiver na tabela padrão (ex: 2d6), não alteramos a escala
-  if (currentIndex === -1) return baseFormula;
-
-  // Calcula o novo índice
-  let newIndex = currentIndex + Number(levelBoost);
-
-  let newDieString = "";
-
-  if (newIndex < 0) {
-    // Redução abaixo do mínimo: retorna "1"
-    newDieString = "1";
-  } else if (newIndex < DAMAGE_SCALE.length) {
-    // Escala normal
-    newDieString = DAMAGE_SCALE[newIndex];
-  } else {
-    // Lógica de Excedente (> 1d12) — acumula múltiplos dados conforme níveis extra
-    // Estratégia:
-    // - Enquanto o índice total exceder o máximo (7), extraímos 1d12 e reduzimos o excesso
-    // - O restante (<=7) vira um dado da tabela; quando o restante estiver entre 1..5
-    //   mapeamos para 1d4..1d12. Se o restante for 0 usamos 1d12.
-    const parts = [];
-    let remaining = newIndex;
-
-    // Extrai 1d12s enquanto o índice exceder o máximo
-    while (remaining > 7) {
-      parts.push(DAMAGE_SCALE[7]); // 1d12
-      // Cada 1d12 "consome" 5 níveis além do índice 7 (mapeamento: 1 -> d4, ... ,5 -> d12)
-      remaining -= 5;
-    }
-
-    if (remaining <= 0) {
-      parts.push("1");
-    } else if (remaining < DAMAGE_SCALE.length) {
-      parts.push(DAMAGE_SCALE[remaining]);
-    } else {
-      parts.push(DAMAGE_SCALE[DAMAGE_SCALE.length - 1]);
-    }
-
-    newDieString = parts.join(" + ");
+  if (!knownBase) {
+    const maxValue = getMaxDamageFromExpression(current);
+    if (maxValue == null) return baseFormula;
+    current = findNearestSingleScaleExpression(maxValue);
+    style = "single";
   }
 
-  // Substitui apenas a primeira ocorrência do dado na string original
-  const finalFormula = baseFormula.replace(originalDie, newDieString);
+  let steps = Number(levelBoost);
+  while (steps > 0) {
+    current = normalizeDamageExpression(stepUpDamage(current));
+    steps -= 1;
+  }
+  while (steps < 0) {
+    current = normalizeDamageExpression(stepDownDamage(current, style));
+    steps += 1;
+  }
+
+  const finalFormula = baseText.replace(originalBlock, formatDamageExpression(current));
   return finalFormula;
 }

@@ -1475,7 +1475,7 @@ export class BoilerplateActorSheet extends ActorSheet {
 
     html.on('click', '.weapon-selector-btn', async (ev) => {
       ev.stopPropagation();
-      const weapons = Array.isArray(this.actor.items) ? this.actor.items.filter(i => i.type === 'arma') : [];
+      const weapons = Array.from(this.actor?.items ?? []).filter(i => i.type === 'arma');
       if (!weapons.length) return ui.notifications.warn('Nenhuma arma disponível.');
 
       const options = weapons
