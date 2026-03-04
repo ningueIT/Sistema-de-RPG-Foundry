@@ -3882,10 +3882,12 @@ body .ultima-acao select.ultima-acao-select option {
 .itens-grid { margin-top: 6px; }
 .itens-list-column { min-width: 0; }
 .uniform-column { min-width: 160px; }
-.uniform-slot { transition: background .12s ease, border-color .12s ease; }
-.uniform-slot.drag-over { background: linear-gradient(180deg, rgba(157,78,221,0.06), rgba(157,78,221,0.02)); border-color: rgba(157,78,221,0.28); }
+.uniform-slot, .shield-slot, .weapon-slot { transition: background .12s ease, border-color .12s ease; }
+.uniform-slot.drag-over, .shield-slot.drag-over, .weapon-slot.drag-over { background: linear-gradient(180deg, rgba(157,78,221,0.06), rgba(157,78,221,0.02)); border-color: rgba(157,78,221,0.28); }
 .uniform-card { color: #fff; }
 .uniform-card small { color: #cfcfcf; }
+.shield-card, .weapon-card { color: #fff; }
+.shield-card small, .weapon-card small { color: #cfcfcf; }
 .uniform-empty { color: #bfbfbf; }
 
 /* ============================================================
