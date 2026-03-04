@@ -931,6 +931,12 @@ export class BoilerplateActorSheet extends ActorSheet {
     } catch (e) {
       context.uniformItem = null;
     }
+
+    try {
+      context.shieldItem = (Array.isArray(context.items) ? context.items.find(i => i.type === 'escudo') : null) || null;
+    } catch (e) {
+      context.shieldItem = null;
+    }
   }
 
 
@@ -1249,6 +1255,48 @@ export class BoilerplateActorSheet extends ActorSheet {
       });
     } catch (e) { console.warn('Falha ao registrar drop para uniform-slot', e); }
 
+    try {
+      html.find('.shield-slot').on('dragover', (ev) => {
+        ev.preventDefault();
+        ev.currentTarget.classList.add('drag-over');
+      });
+      html.find('.shield-slot').on('dragleave', (ev) => {
+        ev.currentTarget.classList.remove('drag-over');
+      });
+      html.find('.shield-slot').on('drop', async (ev) => {
+        ev.preventDefault();
+        ev.currentTarget.classList.remove('drag-over');
+        const dt = ev.originalEvent?.dataTransfer;
+        if (!dt) return;
+        let payload = dt.getData('application/json') || dt.getData('text/plain');
+        try {
+          if (payload) payload = JSON.parse(payload);
+        } catch (e) { /* keep raw */ }
+
+        try {
+          if (payload && payload.type === 'Item' && payload.data) {
+            await this.actor.createEmbeddedDocuments('Item', [payload.data]);
+            this.render(false);
+            return;
+          }
+          const uri = dt.getData('text/uri-list') || dt.getData('text/uri');
+          if (uri) {
+            try {
+              const doc = await fromUuid(uri);
+              if (doc && doc.toObject) {
+                const data = doc.toObject(false);
+                await this.actor.createEmbeddedDocuments('Item', [data]);
+                this.render(false);
+                return;
+              }
+            } catch (err) { /* ignore */ }
+          }
+        } catch (err) {
+          console.warn('Falha ao processar drop no slot de escudo:', err);
+        }
+      });
+    } catch (e) { console.warn('Falha ao registrar drop para shield-slot', e); }
+
     if (!this.isEditable) return;
     html.on('click', '.item-edit', (ev) => {
       ev.stopPropagation();
@@ -1285,6 +1333,34 @@ export class BoilerplateActorSheet extends ActorSheet {
             } catch (err) {
               console.error('Falha ao remover uniforme:', err);
               ui.notifications.error('Falha ao remover uniforme. Veja o console.');
+            }
+          } },
+          no: { label: 'Cancelar' }
+        },
+        default: 'no'
+      }).render(true);
+    });
+
+    html.on('click', '.shield-remove', async (ev) => {
+      ev.stopPropagation();
+      const $card = $(ev.currentTarget).closest('.shield-card');
+      const itemId = $card.data('itemId');
+      if (!itemId) return;
+      if (!this.actor.isOwner) return ui.notifications.warn('Sem permissão para remover este escudo.');
+      const item = this.actor.items.get(itemId);
+      if (!item) return ui.notifications.warn('Item não encontrado.');
+
+      new Dialog({
+        title: 'Remover Escudo',
+        content: `<p>Remover <strong>${item.name}</strong> deste ator?</p>`,
+        buttons: {
+          yes: { label: 'Remover', callback: async () => {
+            try {
+              await this.actor.deleteEmbeddedDocuments('Item', [itemId]);
+              this.render(false);
+            } catch (err) {
+              console.error('Falha ao remover escudo:', err);
+              ui.notifications.error('Falha ao remover escudo. Veja o console.');
             }
           } },
           no: { label: 'Cancelar' }

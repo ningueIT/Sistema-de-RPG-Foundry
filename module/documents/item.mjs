@@ -38,6 +38,24 @@ export class BoilerplateItem extends Item {
         this.system.uniforme = this.system.uniforme || {};
         this.system.uniforme.total = Number(total);
       }
+
+      // Compute derived total CA for shield based on tipo + optional numeric bonus
+      if (String(this.type) === 'escudo') {
+        const tipo = String(this.system?.escudo?.tipo ?? '').toLowerCase();
+        const bonusCa = Number(this.system?.escudo?.bonusCa ?? NaN);
+        const SHIELD_MAP = {
+          'normal':    { bonus: 2, penalty: 0 },
+          'reforcado': { bonus: 4, penalty: -1 },
+          'tatico':    { bonus: 3, penalty: 0 }
+        };
+        const def = SHIELD_MAP[tipo] || { bonus: 2, penalty: 0 };
+        const baseBonus = def.bonus || 0;
+        const numericBonus = Number.isFinite(bonusCa) ? Number(bonusCa) : 0;
+        const total = baseBonus + numericBonus;
+        this.system = this.system || {};
+        this.system.escudo = this.system.escudo || {};
+        this.system.escudo.total = Number(total);
+      }
     } catch (e) {
       // non-fatal
     }
@@ -57,14 +75,15 @@ export class BoilerplateItem extends Item {
   }
 
   /**
-   * After update: if this is a `uniforme` and the `system.equipado` flag changed,
+   * After update: if this is a `uniforme` or `escudo` and the `system.equipado` flag changed,
    * apply or remove an ActiveEffect on the owning actor.
    */
   async _onUpdate(changed, options, userId) {
     await super._onUpdate(changed, options, userId);
 
     try {
-      if (String(this.type) !== 'uniforme') return;
+      const itemType = String(this.type);
+      if (itemType !== 'uniforme' && itemType !== 'escudo') return;
       const actor = this.actor;
       if (!actor) return;
 
@@ -80,8 +99,10 @@ export class BoilerplateItem extends Item {
       const nowEquipped = (typeof newEquip !== 'undefined') ? newEquip : (this.system?.equipado ?? null);
 
       if (nowEquipped) {
-        // Create ActiveEffect on actor representing the uniform's mechanical effect (if parseable)
-        const effectData = this._buildUniformEffectData();
+        // Create ActiveEffect on actor representing the item's mechanical effect (if parseable)
+        const effectData = itemType === 'escudo'
+          ? this._buildShieldEffectData()
+          : this._buildUniformEffectData();
         if (effectData) {
           // Avoid duplicates: remove any existing effects from this origin first
           const existing = actor.effects.filter(e => String(e.origin || '') === String(this.uuid));
@@ -91,14 +112,14 @@ export class BoilerplateItem extends Item {
           await actor.createEmbeddedDocuments('ActiveEffect', [effectData]);
         }
       } else {
-        // Remove effects created by this uniform (origin match)
+        // Remove effects created by this item (origin match)
         const toRemove = actor.effects.filter(e => String(e.origin || '') === String(this.uuid));
         for (const eff of toRemove) {
           try { await eff.delete(); } catch (err) { /* non-fatal */ }
         }
       }
     } catch (e) {
-      console.warn('Erro ao aplicar/remover ActiveEffect de uniforme:', e);
+      console.warn('Erro ao aplicar/remover ActiveEffect de equipamento:', e);
     }
   }
 
@@ -169,9 +190,57 @@ export class BoilerplateItem extends Item {
   }
 
   /**
-   * Prepare a data object which defines the data schema used by dice roll commands against this Item
-   * @override
+   * Build an ActiveEffect data object for a shield item based on its tipo and optional bonus.
+   * Applies CA bonus to `system.combate.defesa.value`. Reforçado shields apply a Destreza
+   * skill penalty; Tático shields grant a bonus to Acrobacia.
    */
+  _buildShieldEffectData() {
+    try {
+      const tipo = String(this.system?.escudo?.tipo ?? '').toLowerCase();
+      const explicitBonus = Number(this.system?.escudo?.bonusCa ?? NaN);
+
+      const SHIELD_MAP = {
+        'normal':    { bonus: 2, penalty: 0, acrobaciaBonus: 0 },
+        'reforcado': { bonus: 4, penalty: -1, acrobaciaBonus: 0 },
+        'tatico':    { bonus: 3, penalty: 0,  acrobaciaBonus: 1 }
+      };
+
+      const def = SHIELD_MAP[tipo] || { bonus: 2, penalty: 0, acrobaciaBonus: 0 };
+      const baseBonus = def.bonus || 0;
+      const numericBonus = Number.isFinite(explicitBonus) ? Number(explicitBonus) : 0;
+      const bonus = baseBonus + numericBonus;
+      const penalty = def.penalty || 0;
+
+      const changes = [];
+      if (bonus) {
+        changes.push({ key: 'system.combate.defesa.value', mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(bonus), priority: 20 });
+      }
+
+      if (penalty) {
+        const dexSkills = ['system.pericias.acrobacia.value', 'system.pericias.furtividade.value'];
+        for (const k of dexSkills) changes.push({ key: k, mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(penalty), priority: 20 });
+      }
+
+      if (def.acrobaciaBonus) {
+        changes.push({ key: 'system.pericias.acrobacia.value', mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(def.acrobaciaBonus), priority: 20 });
+      }
+
+      if (!changes.length) return null;
+
+      return {
+        label: `${this.name} (Escudo)`,
+        icon: this.img || 'icons/svg/shield.svg',
+        origin: this.uuid,
+        disabled: false,
+        changes
+      };
+    } catch (e) {
+      console.warn('Falha ao construir ActiveEffect para escudo:', e);
+      return null;
+    }
+  }
+
+  /**
   getRollData() {
     // Starts off by populating the roll data with a shallow copy of `this.system`
     const rollData = { ...this.system };

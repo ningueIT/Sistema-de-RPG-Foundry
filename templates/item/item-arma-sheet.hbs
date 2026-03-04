@@ -1,0 +1,137 @@
+<form class="{{cssClass}}" autocomplete="off">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{item.img}}" data-edit="img" title="{{item.name}}" draggable="true" data-uuid="{{item.uuid}}" />
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Nome da Arma"/></h1>
+      <div class="item-meta grid grid-2col">
+        <div class="weapon-header">
+          <div class="weapon-meta">
+            <div class="meta-row"><strong>Empunhadura:</strong> {{system.ataque.detalhes.empunhadura.value}}</div>
+            <div class="meta-row"><strong>Alcance:</strong> {{system.ataque.alcance.valor.value}}{{system.ataque.alcance.unidade.value}}</div>
+            <div class="meta-row"><strong>Dano:</strong> {{system.damage.base.value}} {{system.damage.bonus.value}} ({{system.damage.type.value}})</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <a class="header-button control close" role="button" title="Fechar">
+      <i class="fas fa-times"></i>&nbsp;Fechar
+    </a>
+  </header>
+
+  {{! Sheet Tab Navigation }}
+  <nav class='sheet-tabs tabs' data-group='primary'>
+    <a class='item' data-tab='ataque'>Ataque</a>
+    <a class='item' data-tab='dano'>Dano</a>
+    <a class='item' data-tab='descricao'>Descrição</a>
+  </nav>
+
+  <section class='sheet-body'>
+    <div class='tab' data-group='primary' data-tab='ataque'>
+      <fieldset class="attack-fieldset">
+        <legend>Ataque</legend>
+        <div class="weapon-attributes grid grid-2col">
+          <div class="field">
+            <label>Atributo</label>
+            <select name="system.ataque.atributo.value">
+              <option value="forca" {{#if (eq system.ataque.atributo.value "forca")}}selected{{/if}}>Força</option>
+              <option value="destreza" {{#if (eq system.ataque.atributo.value "destreza")}}selected{{/if}}>Destreza</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Perícia</label>
+            <select name="system.ataque.pericia.value">
+              <option value="">— Nenhuma —</option>
+              {{#each actorPericiasList}}
+                <option value="{{this.key}}" {{#if (eq ../system.ataque.pericia.value this.key)}}selected{{/if}}>{{this.label}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <div class="field">
+            <label>Bônus de Ataque</label>
+            <input type="number" name="system.ataque.bonus.value" value="{{system.ataque.bonus.value}}"/>
+          </div>
+          <div class="field">
+            <label>Alcance (m)</label>
+            <input type="number" step="0.5" name="system.ataque.alcance.valor.value" value="{{system.ataque.alcance.valor.value}}" style="width:80px;"/>
+          </div>
+          <div class="field">
+            <label>Crítico (Ameaça / Mult.)</label>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <input class="small" type="number" min="1" max="20" name="system.ataque.critico.min.value" value="{{system.ataque.critico.min.value}}"/>
+              <span style="opacity:0.7;">/ x</span>
+              <input class="small" type="number" min="1" name="system.ataque.critico.mult.value" value="{{system.ataque.critico.mult.value}}"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Empunhadura</label>
+            <select name="system.ataque.detalhes.empunhadura.value">
+              <option value="uma mão" {{#if (eq system.ataque.detalhes.empunhadura.value "uma mão")}}selected{{/if}}>Uma Mão</option>
+              <option value="duas mãos" {{#if (eq system.ataque.detalhes.empunhadura.value "duas mãos")}}selected{{/if}}>Duas Mãos</option>
+              <option value="versátil" {{#if (eq system.ataque.detalhes.empunhadura.value "versátil")}}selected{{/if}}>Versátil</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tipo de Arma</label>
+            <select name="system.ataque.detalhes.tipo.value">
+              <option value="impacto" {{#if (eq system.ataque.detalhes.tipo.value "impacto")}}selected{{/if}}>Impacto</option>
+              <option value="corte" {{#if (eq system.ataque.detalhes.tipo.value "corte")}}selected{{/if}}>Corte</option>
+              <option value="perfurante" {{#if (eq system.ataque.detalhes.tipo.value "perfurante")}}selected{{/if}}>Perfurante</option>
+              <option value="longa distância" {{#if (eq system.ataque.detalhes.tipo.value "longa distância")}}selected{{/if}}>Longa Distância</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Grau</label>
+            <input type="number" min="0" name="system.ataque.detalhes.grau.value" value="{{system.ataque.detalhes.grau.value}}"/>
+          </div>
+        </div>
+        <div class="actions-row">
+          <button type="button" class="roll-button test-attack">Testar Ataque</button>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class='tab' data-group='primary' data-tab='dano'>
+      <fieldset class="damage-fieldset">
+        <legend>Dano</legend>
+        <div class="weapon-attributes grid grid-2col">
+          <div class="field">
+            <label>Dano Base</label>
+            <input type="text" name="system.damage.base.value" value="{{system.damage.base.value}}" placeholder="1d6"/>
+          </div>
+          <div class="field">
+            <label>Bônus de Dano</label>
+            <input type="text" name="system.damage.bonus.value" value="{{system.damage.bonus.value}}" placeholder="@forca"/>
+          </div>
+          <div class="field">
+            <label>Tipo de Dano</label>
+            <input type="text" name="system.damage.type.value" value="{{system.damage.type.value}}" placeholder="corte, impacto, fogo..."/>
+          </div>
+          <div class="field">
+            <label>Aumento de Nível</label>
+            <input type="number" name="system.damage.levelBoost.value" value="{{system.damage.levelBoost.value}}"/>
+          </div>
+          <div class="field">
+            <label>Dano na Alma</label>
+            <input type="checkbox" name="system.damage.isSoulDamage.value" {{checked system.damage.isSoulDamage.value}}/>
+          </div>
+        </div>
+        <div class="actions-row">
+          <button type="button" class="roll-button test-damage">Testar Dano</button>
+          <div class="muted">Preview: <span class="preview-damage">{{system.damage.base.value}} {{system.damage.bonus.value}}</span></div>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class='tab' data-group='primary' data-tab='descricao'>
+      <div class="editor-container">
+        {{editor system.descricao.value target="system.descricao.value" engine="prosemirror" button=true owner=owner editable=editable}}
+      </div>
+    </div>
+  </section>
+
+  <footer class="sheet-footer">
+    <div class="footer-controls" style="display:flex; align-items:center; gap:12px;">
+      <button type="submit" class="jem-btn jem-btn--primary">Salvar</button>
+    </div>
+  </footer>
+</form>

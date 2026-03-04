@@ -32,7 +32,9 @@ export class BoilerplateItemSheet extends ItemSheet {
     const path = 'systems/feiticeiros-e-maldicoes/templates/item';
     // Return a specialized sheet for class items.
     if (this.item?.type === 'class') return `${path}/item-class-sheet.hbs`;
+    if (this.item?.type === 'arma') return `${path}/item-arma-sheet.hbs`;
     if (this.item?.type === 'uniforme') return `${path}/item-uniform-sheet.hbs`;
+    if (this.item?.type === 'escudo') return `${path}/item-escudo-sheet.hbs`;
     if (this.item?.type === 'acao-npc') return `${path}/item-acao-npc-sheet.hbs`;
     if (this.item?.type === 'dote') return `${path}/item-dote-sheet.hbs`;
     if (this.item?.type === 'caracteristica') return `${path}/item-caracteristica-sheet.hbs`;

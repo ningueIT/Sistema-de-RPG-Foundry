@@ -62,6 +62,33 @@
       {{/if}}
     </div>
 
+    <h3 class="jem-section-title" style="margin-top: 14px;">Escudo</h3>
+    <div class="shield-slot" title="Arraste um Escudo aqui" style="min-height:80px; display:flex; align-items:center; justify-content:center; border:1px dashed rgba(255,255,255,0.06); border-radius:8px; padding:8px; background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);">
+      {{#if shieldItem}}
+        <div class="shield-card" data-item-id="{{shieldItem._id}}" style="display:flex; gap:10px; align-items:center;">
+          <img src="{{shieldItem.img}}" width="48" height="48" style="border-radius:6px; object-fit:cover; border:1px solid rgba(255,255,255,0.04);"/>
+          <div style="display:flex; flex-direction:column;">
+            <strong style="color:#fff">{{shieldItem.name}}</strong>
+            {{#if shieldItem.system.equipado}}
+              <span style="margin-top:4px; padding:3px 7px; background:rgba(102,214,255,0.06); color:#66d6ff; border-radius:6px; font-size:0.85em;">Equipado
+                {{#if shieldItem.system.escudo.total}}
+                  <small style="margin-left:6px; color:#d9f9ff; font-weight:700;">(CA +{{shieldItem.system.escudo.total}})</small>
+                {{/if}}
+              </span>
+            {{/if}}
+          </div>
+          <a class="item-control shield-remove" title="Remover Escudo" style="margin-left:auto; color:#ff8a8a; text-decoration:none; display:flex; align-items:center; padding:6px; border-radius:6px;">
+            <i class="fas fa-times"></i>
+          </a>
+        </div>
+      {{else}}
+        <div style="text-align:center; color:#ccc;">
+          <i class="fas fa-shield-alt" style="font-size:22px; display:block; margin-bottom:6px; color:rgba(102,214,255,0.7)"></i>
+          <div>Arraste um <strong>Escudo</strong> aqui</div>
+        </div>
+      {{/if}}
+    </div>
+
     <h3 class="jem-section-title" style="margin-top: 14px;">CD de Técnica</h3>
     <div style="border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:10px; background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); color:#fff;">
       <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
