@@ -2,6 +2,8 @@ import {
   onManageActiveEffect,
   prepareActiveEffectCategories,
 } from '../helpers/effects.mjs';
+import { convertDamageLevel } from '../helpers/damage-scale.mjs';
+import { getEncantamentosCatalog, getGrauTable, getTotalEncantamentoSlots } from '../helpers/encantamentos.mjs';
 
 /**
  * Extend the basic ItemSheet with some very simple modifications
@@ -97,6 +99,75 @@ export class BoilerplateItemSheet extends ItemSheet {
           aptitudes: Number(entry.aptitudes ?? 0),
         };
       });
+    }
+
+    // Compute scaled damage preview for weapon (arma) items using damage-scale
+    if (this.item?.type === 'arma') {
+      try {
+        const dmg = itemData.system?.damage ?? {};
+        const base = String(dmg.base?.value ?? '');
+        let levelBoost = Number(dmg.levelBoost?.value ?? 0);
+
+        // For unarmed weapons (soco/desarmado), include the actor's training boost
+        const norm = (s) => String(s ?? '').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
+        const itemName = norm(this.item?.name ?? '');
+        const isUnarmed = itemName === 'soco' || itemName === 'desarmado';
+        if (isUnarmed) {
+          const t = this.item.actor?.system?.treinamentoDerivados ?? {};
+          const unarmedBoost = Number(t?.bonuses?.luta?.unarmedLevelBoost ?? 0) || 0;
+          levelBoost += unarmedBoost;
+        }
+
+        if (base) {
+          context.scaledDamage = convertDamageLevel(base, levelBoost);
+        } else {
+          context.scaledDamage = base;
+        }
+      } catch (e) {
+        context.scaledDamage = itemData.system?.damage?.base?.value ?? '';
+      }
+    }
+
+    // Prepare enchantment (encantamento) data for cursed tool items (arma, escudo, uniforme)
+    const itemType = this.item?.type;
+    if (['arma', 'escudo', 'uniforme'].includes(itemType)) {
+      try {
+        const ferramenta = itemData.system?.ferramenta ?? {};
+        const grau = String(ferramenta.grau?.value ?? '');
+        const grauTable = getGrauTable(itemType);
+        const grauInfo = grauTable[grau] ?? null;
+        const totalSlots = grau ? getTotalEncantamentoSlots(itemType, grau) : 0;
+        const currentEnchants = Array.isArray(ferramenta.encantamentos) ? ferramenta.encantamentos : [];
+        const catalog = getEncantamentosCatalog(itemType);
+
+        // Build list of available enchantments (not already selected)
+        const selectedKeys = new Set(currentEnchants.map(e => e.key ?? e));
+        const availableEncantamentos = catalog.filter(e => !selectedKeys.has(e.key));
+
+        // Build list of selected enchantments with full info
+        const selectedEncantamentos = currentEnchants.map(e => {
+          const key = e.key ?? e;
+          const info = catalog.find(c => c.key === key);
+          return info ?? { key, nome: key, descricao: '', preRequisito: '' };
+        });
+
+        context.ferramenta = {
+          grau,
+          grauInfo,
+          grauTable,
+          grauOptions: Object.entries(grauTable).map(([k, v]) => ({ key: k, label: v.label, selected: k === grau })),
+          totalSlots,
+          currentCount: selectedEncantamentos.length,
+          selectedEncantamentos,
+          availableEncantamentos,
+          cargas: ferramenta.cargas ?? { value: 0, max: 0 },
+          habilidadeUnica: ferramenta.habilidadeUnica?.value ?? '',
+          isEspecial: grau === 'especial',
+          isFerramenta: !!grau
+        };
+      } catch (e) {
+        context.ferramenta = { grau: '', grauInfo: null, grauOptions: [], totalSlots: 0, currentCount: 0, selectedEncantamentos: [], availableEncantamentos: [], cargas: { value: 0, max: 0 }, habilidadeUnica: '', isEspecial: false, isFerramenta: false };
+      }
     }
 
     return context;
@@ -258,5 +329,28 @@ export class BoilerplateItemSheet extends ItemSheet {
     html.on('click', '.effect-control', (ev) =>
       onManageActiveEffect(ev, this.item)
     );
+
+    // Enchantment management for cursed tools
+    html.on('click', '.add-encantamento', async (ev) => {
+      ev.preventDefault();
+      const select = html.find('.encantamento-select')[0];
+      if (!select || !select.value) return;
+      const key = select.value;
+      const item = this.item;
+      const current = Array.isArray(item.system?.ferramenta?.encantamentos) ? [...item.system.ferramenta.encantamentos] : [];
+      if (current.some(e => (e.key ?? e) === key)) return;
+      current.push({ key });
+      await item.update({ 'system.ferramenta.encantamentos': current });
+    });
+
+    html.on('click', '.remove-encantamento', async (ev) => {
+      ev.preventDefault();
+      const key = ev.currentTarget.dataset.key;
+      if (!key) return;
+      const item = this.item;
+      const current = Array.isArray(item.system?.ferramenta?.encantamentos) ? [...item.system.ferramenta.encantamentos] : [];
+      const filtered = current.filter(e => (e.key ?? e) !== key);
+      await item.update({ 'system.ferramenta.encantamentos': filtered });
+    });
   }
 }

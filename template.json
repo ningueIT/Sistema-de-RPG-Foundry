@@ -968,6 +968,22 @@
         "bonusCa": 0,
         "bonusText": "",
         "total": 0
+      },
+      "ferramenta": {
+        "grau": {
+          "value": "",
+          "label": "Grau de Ferramenta Amaldiçoada"
+        },
+        "encantamentos": [],
+        "cargas": {
+          "value": 0,
+          "max": 0,
+          "label": "Cargas de Encantamento"
+        },
+        "habilidadeUnica": {
+          "value": "",
+          "label": "Habilidade Única (Grau Especial)"
+        }
       }
     },
     "arma": {
@@ -1046,6 +1062,22 @@
             "value": "impacto",
             "label": "Tipo"
           }
+        }
+      },
+      "ferramenta": {
+        "grau": {
+          "value": "",
+          "label": "Grau de Ferramenta Amaldiçoada"
+        },
+        "encantamentos": [],
+        "cargas": {
+          "value": 0,
+          "max": 0,
+          "label": "Cargas de Encantamento"
+        },
+        "habilidadeUnica": {
+          "value": "",
+          "label": "Habilidade Única (Grau Especial)"
         }
       }
     },
@@ -1272,6 +1304,22 @@
         "bonusCa": 0,
         "bonusText": "",
         "total": 2
+      },
+      "ferramenta": {
+        "grau": {
+          "value": "",
+          "label": "Grau de Ferramenta Amaldiçoada"
+        },
+        "encantamentos": [],
+        "cargas": {
+          "value": 0,
+          "max": 0,
+          "label": "Cargas de Encantamento"
+        },
+        "habilidadeUnica": {
+          "value": "",
+          "label": "Habilidade Única (Grau Especial)"
+        }
       }
     }
   }

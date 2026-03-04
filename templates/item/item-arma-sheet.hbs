@@ -8,7 +8,7 @@
           <div class="weapon-meta">
             <div class="meta-row"><strong>Empunhadura:</strong> {{system.ataque.detalhes.empunhadura.value}}</div>
             <div class="meta-row"><strong>Alcance:</strong> {{system.ataque.alcance.valor.value}}{{system.ataque.alcance.unidade.value}}</div>
-            <div class="meta-row"><strong>Dano:</strong> {{system.damage.base.value}} {{system.damage.bonus.value}} ({{system.damage.type.value}})</div>
+            <div class="meta-row"><strong>Dano:</strong> {{scaledDamage}} {{system.damage.bonus.value}} ({{system.damage.type.value}})</div>
           </div>
         </div>
       </div>
@@ -22,6 +22,7 @@
   <nav class='sheet-tabs tabs' data-group='primary'>
     <a class='item' data-tab='ataque'>Ataque</a>
     <a class='item' data-tab='dano'>Dano</a>
+    <a class='item' data-tab='encantamentos'>Encantamentos</a>
     <a class='item' data-tab='descricao'>Descrição</a>
   </nav>
 
@@ -117,8 +118,90 @@
         </div>
         <div class="actions-row">
           <button type="button" class="roll-button test-damage">Testar Dano</button>
-          <div class="muted">Preview: <span class="preview-damage">{{system.damage.base.value}} {{system.damage.bonus.value}}</span></div>
+          <div class="muted">Preview: <span class="preview-damage">{{scaledDamage}} {{system.damage.bonus.value}}</span></div>
         </div>
+      </fieldset>
+    </div>
+
+    <div class='tab' data-group='primary' data-tab='encantamentos'>
+      <fieldset class="enchantment-fieldset">
+        <legend>Ferramenta Amaldiçoada</legend>
+
+        <div class="weapon-attributes grid grid-2col">
+          <div class="field">
+            <label>Grau da Ferramenta</label>
+            <select name="system.ferramenta.grau.value">
+              <option value="">— Nenhum (Arma Comum) —</option>
+              {{#each ferramenta.grauOptions}}
+                <option value="{{this.key}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+              {{/each}}
+            </select>
+          </div>
+          {{#if ferramenta.isFerramenta}}
+            <div class="field">
+              <label>Cargas de Encantamento</label>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <input type="number" min="0" name="system.ferramenta.cargas.value" value="{{ferramenta.cargas.value}}" style="width:60px;"/>
+                <span style="opacity:0.7;">/</span>
+                <input type="number" min="0" name="system.ferramenta.cargas.max" value="{{ferramenta.cargas.max}}" style="width:60px;"/>
+              </div>
+            </div>
+          {{/if}}
+        </div>
+
+        {{#if ferramenta.isFerramenta}}
+          {{#if ferramenta.grauInfo}}
+            <div class="note" style="margin-top:8px; padding:8px; background:rgba(157,78,221,0.1); border-radius:6px;">
+              <strong>{{ferramenta.grauInfo.label}}</strong> —
+              Bônus de Dano: <strong>+{{ferramenta.grauInfo.bonusDano}}</strong> |
+              Encantamentos acumulados: <strong>{{ferramenta.totalSlots}}</strong>
+              (usando {{ferramenta.currentCount}})
+            </div>
+          {{/if}}
+
+          {{#if ferramenta.isEspecial}}
+            <div class="field" style="margin-top:10px;">
+              <label>Habilidade Única (Grau Especial)</label>
+              <textarea name="system.ferramenta.habilidadeUnica.value" rows="3" style="width:100%;">{{ferramenta.habilidadeUnica}}</textarea>
+            </div>
+          {{/if}}
+
+          <h4 style="margin-top:12px;">Encantamentos Ativos</h4>
+          {{#if ferramenta.selectedEncantamentos.length}}
+            <div class="enchantment-list" style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+              {{#each ferramenta.selectedEncantamentos}}
+                <div class="enchantment-entry" style="padding:8px; background:rgba(111,66,193,0.12); border:1px solid rgba(157,78,221,0.3); border-radius:6px; display:flex; justify-content:space-between; align-items:flex-start;">
+                  <div>
+                    <strong>{{this.nome}}</strong>
+                    <div style="font-size:0.85rem; opacity:0.85; margin-top:2px;">{{this.descricao}}</div>
+                    {{#if this.preRequisito}}
+                      <div style="font-size:0.8rem; color:#d4a017; margin-top:2px;"><em>Pré-requisito: {{this.preRequisito}}</em></div>
+                    {{/if}}
+                  </div>
+                  <button type="button" class="remove-encantamento" data-key="{{this.key}}" title="Remover" style="background:none; border:none; color:#f44; cursor:pointer; font-size:1rem; padding:4px;">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              {{/each}}
+            </div>
+          {{else}}
+            <p class="note" style="margin-top:6px;">Nenhum encantamento aplicado.</p>
+          {{/if}}
+
+          {{#if ferramenta.availableEncantamentos.length}}
+            <div style="margin-top:10px; display:flex; gap:6px; align-items:center;">
+              <select class="encantamento-select" style="flex:1;">
+                <option value="">— Selecionar Encantamento —</option>
+                {{#each ferramenta.availableEncantamentos}}
+                  <option value="{{this.key}}">{{this.nome}}{{#if this.preRequisito}} (Req: {{this.preRequisito}}){{/if}}</option>
+                {{/each}}
+              </select>
+              <button type="button" class="add-encantamento" style="white-space:nowrap;">
+                <i class="fas fa-plus"></i> Adicionar
+              </button>
+            </div>
+          {{/if}}
+        {{/if}}
       </fieldset>
     </div>
 
