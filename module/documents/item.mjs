@@ -6,6 +6,7 @@ import { convertDamageLevel } from "../helpers/damage-scale.mjs";
 import { rollFormula } from '../helpers/rolls.mjs';
 import { getSureHitTargetsForAttack } from '../helpers/dominio.mjs';
 import { requestStartDominioClash } from "../helpers/dominio-clash.mjs";
+import { MAPA_ATRIBUTOS } from '../sheets/actor-sheet/atributos.mjs';
 export class BoilerplateItem extends Item {
   /**
    * Augment the basic Item data model with additional dynamic data.
@@ -636,13 +637,59 @@ export class BoilerplateItem extends Item {
     const rollData = this.getRollData();
 
     const attackBlock = this.system?.ataque ?? {};
-    const atributoKey = String(attackBlock?.atributo?.value ?? attackBlock?.atributo ?? 'forca');
+    const periciaKey = String(attackBlock?.pericia?.value ?? attackBlock?.pericia ?? '').trim();
+
+    // Por padrão usa o atributo configurado no ataque, mas se uma perícia estiver
+    // definida (corpo/distancia) usamos o mapeamento de atributos das perícias.
+    let atributoKey = String(attackBlock?.atributo?.value ?? attackBlock?.atributo ?? 'forca');
+    if (periciaKey) {
+      try { atributoKey = MAPA_ATRIBUTOS?.[periciaKey] ?? atributoKey; } catch (_) {}
+    }
 
     const actorAttrs = rollData.actor?.atributos ?? {};
     const attrVal = Number(actorAttrs?.[atributoKey]?.value ?? rollData.actor?.[atributoKey] ?? 10);
     const attrMod = Number(actorAttrs?.[atributoKey]?.mod ?? Math.floor((attrVal - 10) / 2));
 
-    const training = Number(rollData.actor?.detalhes?.treinamento?.value ?? rollData.actor?.detalhes?.treinamento ?? 0);
+    // Treinamento base do personagem (BT)
+    const baseTreino = Number(rollData.actor?.detalhes?.treinamento?.value ?? rollData.actor?.detalhes?.treinamento ?? 0);
+    // Se estivermos usando uma perícia, respeitamos o grau de treino dela.
+    let training = Number(baseTreino || 0);
+    try {
+      if (periciaKey && rollData.actor?.ataques && rollData.actor?.ataques[periciaKey]) {
+        const grau = Number(rollData.actor.ataques[periciaKey].value ?? 0) || 0;
+        if (grau === 1) training = Number(baseTreino || 0);
+        else if (grau === 2) training = Math.floor(Number(baseTreino || 0) * 1.5);
+        else training = 0;
+      } else {
+        training = Number(baseTreino || 0);
+      }
+    } catch (_) { training = Number(baseTreino || 0); }
+
+    // Bônus extras provenientes de flags (tests) e nível metade (presente nas perícias)
+    let periciaExtraBonus = 0;
+    try {
+      const sysId = game?.system?.id ?? 'feiticeiros-e-maldicoes';
+      const bonuses = (await this.actor.getFlag(sysId, 'bonuses')) || {};
+      if (periciaKey) periciaExtraBonus += Number(bonuses?.tests?.ataques?.[periciaKey] ?? 0) || 0;
+
+      const temp = (await this.actor.getFlag(sysId, 'temp')) || {};
+      const tempBonus = periciaKey ? Number(temp?.tests?.ataques?.[periciaKey] ?? 0) || 0 : 0;
+      if (tempBonus) {
+        periciaExtraBonus += tempBonus;
+        const next = foundry.utils.deepClone(temp);
+        next.tests = next.tests || {};
+        next.tests.ataques = next.tests.ataques || {};
+        delete next.tests.ataques[periciaKey];
+        try { await this.actor.setFlag(sysId, 'temp', next); } catch (_) {}
+      }
+    } catch (_) {}
+
+    // Metade do nível do personagem (quando aplicar como nas perícias)
+    const nivelTotalDerivado = rollData.actor?.detalhes?.nivel?.value ?? ((rollData.actor?.detalhes?.niveis?.principal?.value || 0) + (rollData.actor?.detalhes?.niveis?.secundario?.value || 0));
+    const metadeNivel = Math.floor(Number(nivelTotalDerivado || 0) / 2) || 0;
+    if (metadeNivel) periciaExtraBonus += metadeNivel;
+
+    // itemBonus já foi calculado acima; iremos somá-lo ao total final do teste abaixo.
     let itemBonus = Number(attackBlock?.bonus?.value ?? attackBlock?.bonus ?? 0);
 
     // Treinamento: Manejo de Arma (bônus só para a arma escolhida)
@@ -663,9 +710,34 @@ export class BoilerplateItem extends Item {
     const critMult = Number(attackBlock?.critico?.mult?.value ?? attackBlock?.critico?.mult ?? 2) || 2;
 
     const doRoll = async (mode) => {
-      let formula = `1d20`;
-      if (mode === 'adv') formula = '2d20kh1';
-      if (mode === 'dis') formula = '2d20kl1';
+      // Determina termo do d20 (normal/adv/dis)
+      let dieTerm = `1d20`;
+      if (mode === 'adv') dieTerm = '2d20kh1';
+      if (mode === 'dis') dieTerm = '2d20kl1';
+
+      // Aplicar penalidades provenientes de condições ativas no ator (precisa antes da fórmula)
+      let attackPenalty = 0;
+      try {
+        const effects = this.actor?.effects?.filter?.(e => !e.disabled) ?? [];
+        for (const eff of effects) {
+          try {
+            const cond = eff?.flags?.['feiticeiros-e-maldicoes']?.condition;
+            if (!cond) continue;
+            if (cond === 'condicoes.fisicas.envenenado') attackPenalty += 2;
+            if (cond === 'condicoes.movimento.enredado') attackPenalty += 2;
+            if (cond === 'condicoes.mentais.abalado') attackPenalty += 1;
+            if (cond === 'condicoes.mentais.amedrontado') attackPenalty += 3;
+            if (cond === 'condicoes.fisicas.paralisado') attackPenalty += 9999; // effectively prevents
+          } catch (e) { /* ignore effect parsing errors */ }
+        }
+      } catch (e) { /* ignore */ }
+
+      // Monta a fórmula completa (igual ao _rollPericiaByKey para ataques), incluindo bônus da arma
+      let formula = `${dieTerm} + ${attrMod}`;
+      if (training > 0) formula += ` + ${training}`;
+      if (periciaExtraBonus) formula += ` + ${periciaExtraBonus}`;
+      if (itemBonus) formula += ` + ${itemBonus}`;
+      if (attackPenalty) formula += ` - ${attackPenalty}`;
 
       const roll = await rollFormula(formula, rollData, { asyncEval: true, toMessage: false });
 
@@ -688,31 +760,12 @@ export class BoilerplateItem extends Item {
       if (usedD20 == null) {
         try {
           const raw = Number(roll.total) || 0;
-          const approx = raw - (attrMod + training + itemBonus);
+          const approx = raw - (attrMod + training + periciaExtraBonus + itemBonus - attackPenalty);
           if (!isNaN(approx)) usedD20 = Math.max(1, Math.min(20, Math.round(approx)));
         } catch (e) { /* ignore */ }
       }
 
-      const raw = Number(roll.total) || 0;
-
-      // Aplicar penalidades provenientes de condições ativas no ator
-      let attackPenalty = 0;
-      try {
-        const effects = this.actor?.effects?.filter?.(e => !e.disabled) ?? [];
-        for (const eff of effects) {
-          try {
-            const cond = eff?.flags?.['feiticeiros-e-maldicoes']?.condition;
-            if (!cond) continue;
-            if (cond === 'condicoes.fisicas.envenenado') attackPenalty += 2;
-            if (cond === 'condicoes.movimento.enredado') attackPenalty += 2;
-            if (cond === 'condicoes.mentais.abalado') attackPenalty += 1;
-            if (cond === 'condicoes.mentais.amedrontado') attackPenalty += 3;
-            if (cond === 'condicoes.fisicas.paralisado') attackPenalty += 9999; // effectively prevents
-          } catch (e) { /* ignore effect parsing errors */ }
-        }
-      } catch (e) { /* ignore */ }
-
-      const total = raw + attrMod + training + itemBonus - attackPenalty;
+      const total = Number(roll.total) || 0;
 
       // Regra da casa: 20 natural NÃO é crítico. Ele pode virar Kokusen.
       // Crítico ainda pode existir por outras fontes, mas não por um 20 natural.
@@ -752,7 +805,7 @@ export class BoilerplateItem extends Item {
 
       const flavor = `Ataque — ${item.name}`;
       // Construir cartão estilizado parecido com skill-roll
-      const formulaShort = `1d20 + ${attrMod}${training ? ' + ' + training + '[Treino]' : ''}${itemBonus ? ' + ' + itemBonus + '[Item]' : ''}${attackPenalty ? ' - ' + attackPenalty + '[Cond]' : ''}`;
+      const formulaShort = `1d20 + ${attrMod}${training ? ' + ' + training + '[Treino]' : ''}${periciaExtraBonus ? ' + ' + periciaExtraBonus + '[Perícia]' : ''}${itemBonus ? ' + ' + itemBonus + '[Item]' : ''}${attackPenalty ? ' - ' + attackPenalty + '[Cond]' : ''}`;
 
       const sureHitForPrimary = Boolean(primaryTarget && sureHitIds.has(primaryTarget.id));
       const hitComputed = (primaryTarget && hasPrimaryDefense)
@@ -779,23 +832,30 @@ export class BoilerplateItem extends Item {
         : '';
 
       const canRollDamage = (hitComputed === null) ? true : Boolean(hitComputed);
+      const periciaLabel = periciaKey ? (rollData.actor?.pericias?.[periciaKey]?.label ?? periciaKey) : item.name;
+      const parts = ['1d20'];
+      parts.push((attrMod >= 0 ? '+ ' : '- ') + Math.abs(Number(attrMod || 0)));
+      if (training > 0) parts.push('+ ' + training);
+      if (periciaExtraBonus) parts.push('+ ' + periciaExtraBonus);
+      if (itemBonus) parts.push('+ ' + itemBonus);
+      const formulaDisplay = parts.join(' ');
+
       const content = `
-        <div class="card chat-card skill-roll">
-          <div class="die"><i class="fas fa-dice-d20"></i><span>${usedD20 ?? '-'}</span></div>
-          <div class="skill-info">
+        <div class="card chat-card skill-roll" style="background:#000; color:#fff; padding:8px; display:flex; gap:12px; align-items:center; border-radius:6px;">
+          <div class="die" style="width:56px;height:56px;border-radius:8px;background:#111;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#fff">
+            <i class="fas fa-dice-d20" style="color:#fff;margin-right:6px"></i><span>${usedD20 ?? '-'}</span>
+          </div>
+          <div class="skill-info" style="flex:1;">
             <div style="display:flex; align-items:center; gap:8px; justify-content:space-between;">
-              <div style="font-weight:700; font-size:1rem">${item.name}</div>
-              <div style="font-weight:700; color:#fff; background:#6f42c1; padding:4px 8px; border-radius:6px;">${total}</div>
+              <div style="font-weight:700; font-size:1rem">${periciaLabel}</div>
+              <div style="font-weight:700; color:#fff; background:#6f42c1; padding:4px 8px; border-radius:6px">${total >= 0 ? (total >= 0 ? (total >= 0 ? (total) : total) : total) : total}</div>
             </div>
-            <div style="margin-top:6px; font-size:0.9rem; color:#ddd; display:flex; gap:12px; align-items:center;">
-              <span style="background:#111; padding:3px 6px; border-radius:4px;">Fórmula: <code style="background:transparent; color:#fff;">${formulaShort}</code></span>
-              ${kokusenTag || ''}
+            <div style="margin-top:6px; font-size:0.9rem; color:#ddd;">
+              <span style="background:#111; padding:3px 6px; border-radius:4px; color:#eaeaea;">Fórmula: <code style="background:transparent;color:#fff">${formulaDisplay}</code></span>
+              <span style="margin-left:12px">Total: <strong>${total}</strong></span>
             </div>
             ${defenseLine}
             ${multiSureHitLine}
-            <div style="margin-top:8px;">
-              ${canRollDamage ? `<button class="button roll-weapon-damage" data-actor-id="${this.actor?.id ?? ''}" data-item-id="${this.id}" data-item-uuid="${this.uuid ?? ''}" data-item-name="${this.name ?? ''}" data-critical="${isCritical}" data-crit-mult="${critMult}">Rolar Dano</button>` : `<div style="opacity:0.85; font-weight:700;">Sem dano (ataque errou).</div>`}
-            </div>
           </div>
         </div>`;
 
