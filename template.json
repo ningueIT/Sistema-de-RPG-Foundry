@@ -1163,6 +1163,10 @@
         "value": 0,
         "label": "Dano Médio (estimado)"
       },
+      "bonusAtaque": {
+        "value": 0,
+        "label": "Bônus de Ataque"
+      },
       "aplicaCondicao": {
         "value": false,
         "label": "Aplica Condição"
