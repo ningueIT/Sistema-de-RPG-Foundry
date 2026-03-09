@@ -1001,10 +1001,12 @@ Hooks.once('ready', function () {
             const attrVal = Number(actor.system?.atributos?.[atributo]?.value ?? 10) || 10;
             const attrMod = Number(actor.system?.atributos?.[atributo]?.mod ?? Math.floor((attrVal - 10) / 2)) || 0;
             const bt = Number(actor.system?.detalhes?.treinamento?.value ?? actor.system?.treinamento ?? actor.system?.bt ?? 0) || 0;
-            const formula = `1d20 + ${attrMod + bt}`;
+            const itemBonus = Number(item.system?.bonusAtaque?.value ?? item.system?.bonusAtaque ?? 0) || 0;
+            const totalMod = attrMod + bt + itemBonus;
+            const formula = `1d20 + ${totalMod}`;
             const roll = await (new Roll(formula)).roll({async: true});
             await roll.toMessage({ flavor: `${actor.name} — ${item.name} (Ataque de NPC)` });
-            resultHtml += `<div>Rolagem: <strong>${roll.total}</strong> (1d20 + ${attrMod} + ${bt}).</div>`;
+            resultHtml += `<div>Rolagem: <strong>${roll.total}</strong> (1d20 + ${attrMod}[Atributo] + ${bt}[BT]${itemBonus ? ' + ' + itemBonus + '[Bônus]' : ''}).</div>`;
           }
 
           if (danoMedio) {
